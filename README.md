@@ -10,10 +10,21 @@ colors.
 * Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
 * Try also with normal GANs
 * See if we can come up with varying colors by passing in a noise vector with the image.
-* Can we pretrain the generator?
+* Can we pretrain the generator? Basically do the Colorization paper with a random seed
+and the grayscale image, when it converges start training it on a GAN.
 * Use the LAB colorspace as in the state of the art paper?
 * Generate the channels (r,g,b) individually with multiple adversaries?
 * Try and create a 'real time' variation that could colorize videos as they are playing.
+
+#### Things to compare
+* State of the art colorization mentioned above.
+* One or more state of the art general models (Alexnet, Inception, ResNet, etc)
+* GANs
+* Energy-Based GANs
+* Pretrained versions of the generator for the different GANs
+
+At this point I think the architecture of the generator should be the same architecture used
+in the Colorization paper.
 
 **Important Note**: What we will essentially be learning is the transform from whatever function we use to
 make the images gray to a colorized version, so we should also provide test results on "true" black and white
@@ -33,7 +44,8 @@ Data for us is essentially free because our "label" is the colorized image. I ha
 baseline we have to compare to. It contains 1,281,167 training images, 100,000 test images, and 50,000
 validation images.
 
-I'm also currently downloading 
+I'm also currently downloading [Google Open Images](https://github.com/openimages/dataset) which contains
+about 9 million images. If we had that plus imagenet we'd be set.
 
 #### Useful links:
 
