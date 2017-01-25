@@ -9,6 +9,7 @@ colors.
 * [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 * Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
 * Try also with normal GANs
+* See if we can come up with varying colors by passing in a noise vector with the image.
 * Can we pretrain the generator?
 * Use the LAB colorspace as in the state of the art paper?
 * Generate the channels (r,g,b) individually with multiple adversaries?
