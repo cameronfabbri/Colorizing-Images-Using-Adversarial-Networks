@@ -11,7 +11,8 @@ colors.
 * Can we pretrain the generator?
 * Use the LAB colorspace as in the state of the art paper?
 * Generate the channels (r,g,b) individually with multiple adversaries?
-
+* What we will essentially be learning is the transform from whatever function we use to make the images
+gray to a colorized version, so we should also provide test results on "true" black and white photos.
 
 Can implement both energy based GANs and regular GANs, compare the two.
 
