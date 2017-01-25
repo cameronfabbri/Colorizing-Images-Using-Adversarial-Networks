@@ -7,10 +7,10 @@ colors.
 #### Project Ideas/Goals
 * Implement the [state of the ar](http://richzhang.github.io/colorization/)
 * [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
-** Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
-** Can we pretrain the generator?
-** Use the LAB colorspace as in the state of the art paper?
-** Generate the channels (r,g,b) individually with multiple adversaries?
+* Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
+* Can we pretrain the generator?
+* Use the LAB colorspace as in the state of the art paper?
+* Generate the channels (r,g,b) individually with multiple adversaries?
 
 
 Can implement both energy based GANs and regular GANs, compare the two.
