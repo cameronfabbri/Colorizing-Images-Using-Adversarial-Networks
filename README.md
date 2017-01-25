@@ -11,7 +11,7 @@ Instead of using classification error, use the energy function as shown
 [here](https://openreview.net/pdf?id=ryh9pmcee)
 
 
-Useful links:
+### Useful links:
 
 [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 
