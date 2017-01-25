@@ -5,7 +5,7 @@ problem. Therefore, we would not like to recover the ground truth colors, but ra
 colors.
 
 #### Project Ideas/Goals
-* Implement the [state of the ar](http://richzhang.github.io/colorization/)
+* Implement the [state of the art](http://richzhang.github.io/colorization/) for colorizing grayscale photos.
 * [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 * Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
 * Can we pretrain the generator?
