@@ -1,11 +1,17 @@
 # Colorizing-Images-Using-Adversarial-Networks
-Colorizing images using an adversarial network approach.
+Given a grayscale photgraph as input, can we generate a *plausible* color version of the photograph?
+Grayscale images could contain various degrees and intensities of colors, making this an ill-posed
+problem. Therefore, we would not like to recover the ground truth colors, but rather generate plausible
+colors.
 
-Basically do what I did with the other colorization thing,
-but after it's colorized, send it to the other network along
-with the true color image, and have the adversary determine
-which one is the true image and which one was colored by the
-network.
+#### Project Ideas/Goals
+* Implement the [state of the ar](http://richzhang.github.io/colorization/)
+* [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
+** Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
+** Can we pretrain the generator?
+** Use the LAB colorspace as in the state of the art paper?
+** Generate the channels (r,g,b) individually with multiple adversaries?
+
 
 Can implement both energy based GANs and regular GANs, compare the two.
 
