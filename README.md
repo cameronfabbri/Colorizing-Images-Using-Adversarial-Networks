@@ -40,7 +40,8 @@ I'm also currently downloading
 [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 
 First paper on GANs
-___
+__
+
 
 [A Tutorial on Energy-Based Learning](http://yann.lecun.com/exdb/publis/pdf/lecun-06.pdf)
 
