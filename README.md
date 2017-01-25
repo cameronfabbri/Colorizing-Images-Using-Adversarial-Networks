@@ -12,7 +12,7 @@ colors.
 * Can we pretrain the generator?
 * Use the LAB colorspace as in the state of the art paper?
 * Generate the channels (r,g,b) individually with multiple adversaries?
-
+* Try and create a 'real time' variation that could colorize videos as they are playing.
 
 **Important Note**: What we will essentially be learning is the transform from whatever function we use to
 make the images gray to a colorized version, so we should also provide test results on "true" black and white
@@ -24,7 +24,17 @@ less saturated and more brown/green (averaged) images. Could use their approach 
 the generator. I would also like to try generating color channels individually
 and see what that yields.
 
-### Useful links:
+#### Implementation Ideas
+Use [Tensorflow](https://www.tensorflow.org/) with Python. They have pretty good [tutorials](https://www.tensorflow.org/tutorials/)
+
+Data for us is essentially free because our "label" is the colorized image. I have 
+[image-net](http://image-net.org/) downloaded so that is a great start. It is also the dataset used in the
+baseline we have to compare to. It contains 1,281,167 training images, 100,000 test images, and 50,000
+validation images.
+
+I'm also currently downloading 
+
+#### Useful links:
 
 [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 
