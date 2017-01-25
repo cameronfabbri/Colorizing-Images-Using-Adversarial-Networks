@@ -7,6 +7,14 @@ with the true color image, and have the adversary determine
 which one is the true image and which one was colored by the
 network.
 
+Can implement both energy based GANs and regular GANs, compare the two.
+
+Need to think about how the generator will actually work. [This](http://richzhang.github.io/colorization/)
+work explains why just taking the L2 norm between true and generated images produces
+less saturated and more brown/green (averaged) images. Could use their approach for
+the generator. I would also like to try generating color channels individually
+and see what that yields.
+
 Instead of using classification error, use the energy function as shown
 [here](https://openreview.net/pdf?id=ryh9pmcee)
 
