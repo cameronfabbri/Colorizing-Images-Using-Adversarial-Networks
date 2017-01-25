@@ -8,6 +8,7 @@ colors.
 * Implement the [state of the art](http://richzhang.github.io/colorization/) for colorizing grayscale photos.
 * [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 * Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
+* Try also with normal GANs
 * Can we pretrain the generator?
 * Use the LAB colorspace as in the state of the art paper?
 * Generate the channels (r,g,b) individually with multiple adversaries?
@@ -17,17 +18,11 @@ colors.
 make the images gray to a colorized version, so we should also provide test results on "true" black and white
 photos.
 
-Can implement both energy based GANs and regular GANs, compare the two.
-
 Need to think about how the generator will actually work. [This](http://richzhang.github.io/colorization/)
 work explains why just taking the L2 norm between true and generated images produces
 less saturated and more brown/green (averaged) images. Could use their approach for
 the generator. I would also like to try generating color channels individually
 and see what that yields.
-
-Instead of using classification error, use the energy function as shown
-[here](https://openreview.net/pdf?id=ryh9pmcee)
-
 
 ### Useful links:
 
@@ -38,12 +33,12 @@ ___
 
 [A Tutorial on Energy-Based Learning](http://yann.lecun.com/exdb/publis/pdf/lecun-06.pdf)
 
-Tutorial on energy based learning by Yann Lecunn
+If we go with Energy-Based GANs, this tutorial on energy based learning by Yann Lecunn is helpful.
 ___
 
 [Loss Functions for Discriminative Training of Energy-Based Models](http://yann.lecun.com/exdb/publis/pdf/lecun-huang-05.pdf)
 
-More from Lecunn
+More from Lecunn on Energy-Based Models
 ___
 
 [Tips and Tricks for Training GANs](https://github.com/soumith/ganhacks)
