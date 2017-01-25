@@ -37,34 +37,34 @@ I'm also currently downloading
 
 #### Useful links:
 
-[Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
-
 First paper on GANs
+
+[Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 ___
 
-
-[A Tutorial on Energy-Based Learning](http://yann.lecun.com/exdb/publis/pdf/lecun-06.pdf)
 
 If we go with Energy-Based GANs, this tutorial on energy based learning by Yann Lecunn is helpful.
-___
 
-[Loss Functions for Discriminative Training of Energy-Based Models](http://yann.lecun.com/exdb/publis/pdf/lecun-huang-05.pdf)
+[A Tutorial on Energy-Based Learning](http://yann.lecun.com/exdb/publis/pdf/lecun-06.pdf)
+___
 
 More from Lecunn on Energy-Based Models
-___
 
-[Tips and Tricks for Training GANs](https://github.com/soumith/ganhacks)
+[Loss Functions for Discriminative Training of Energy-Based Models](http://yann.lecun.com/exdb/publis/pdf/lecun-huang-05.pdf)
+___
 
 Tips and tricks for training GANs by Soumith Chintala (Facebook AI Research)
-___
 
-[NIPS Accepted Papers for the Adversarial Training Workshop](https://sites.google.com/site/nips2016adversarial/home/accepted-papers)
+[Tips and Tricks for Training GANs](https://github.com/soumith/ganhacks)
+___
 
 All papers on GANs accepted for publication at NIPS 2016
+
+[NIPS Accepted Papers for the Adversarial Training Workshop](https://sites.google.com/site/nips2016adversarial/home/accepted-papers)
 ___
 
-[NIPS Tutorial on GANs](https://arxiv.org/pdf/1701.00160v3.pdf)
-
 Tutorial by Ian Goodfellow (wrote the first paper on GANs) given at NIPS 2016
+
+[NIPS Tutorial on GANs](https://arxiv.org/pdf/1701.00160v3.pdf)
 ___
 
