@@ -7,4 +7,6 @@ with the true color image, and have the adversary determine
 which one is the true image and which one was colored by the
 network.
 
+Instead of using classification error, use the energy function as shown [here](https://openreview.net/pdf?id=ryh9pmcee)
+
 
