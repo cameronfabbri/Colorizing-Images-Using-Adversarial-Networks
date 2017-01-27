@@ -46,6 +46,7 @@ validation images.
 
 I'm also currently downloading [Google Open Images](https://github.com/openimages/dataset) which contains
 about 9 million images. If we had that plus imagenet we'd be set.
+Downloaded the first 124044 and last 31332
 
 #### Useful links:
 
