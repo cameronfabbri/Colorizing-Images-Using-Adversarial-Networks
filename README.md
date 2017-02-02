@@ -15,6 +15,8 @@ and the grayscale image, when it converges start training it on a GAN.
 * Use the LAB colorspace as in the state of the art paper?
 * Generate the channels (r,g,b) individually with multiple adversaries?
 * Try and create a 'real time' variation that could colorize videos as they are playing.
+* Maybe somehow parts of the image with low probabilites for what the color should be
+can have some way of altering the color.
 
 #### Things to compare
 * State of the art colorization mentioned above.
