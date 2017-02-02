@@ -1,0 +1,10 @@
+*.pyc
+*.swp
+*.*swp
+*~
+*.*~
+*.aux
+*.log
+*.png
+*.DS
+*.*DS
