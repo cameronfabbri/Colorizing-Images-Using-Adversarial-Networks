@@ -52,6 +52,16 @@ Downloaded the first 124044 and last 31332
 
 #### Useful links:
 
+[Colorful Image Colorization](https://arxiv.org/pdf/1603.08511.pdf)
+
+[Let there be Color!](http://hi.cs.waseda.ac.jp/~/projects/colorization/data/colorization_sig2016.pdf)
+
+[Learning Representations for Automatic Colorization](https://arxiv.org/pdf/1603.06668v1.pdf)
+
+[Automatic Colorization of Grayscale Images](http://cs229.stanford.edu/proj2013/KabirzadehSousaBlaes-AutomaticColorizationOfGrayscaleImages.pdf)
+
+
+
 First paper on GANs
 
 [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
