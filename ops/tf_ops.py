@@ -11,7 +11,6 @@ def activation_summary(x):
 '''
 
 '''
-#def _variable_on_cpu(name, shape, initializer):
 def _variable_on_gpu(name, shape, initializer):
    with tf.device('/gpu:0'):
       var = tf.get_variable(name, shape, initializer=initializer)
@@ -62,6 +61,9 @@ def batch_norm(x, name, epsilon=1e-5, momentum=0.9, train=True):
 def lrelu(x, leak=0.1, name='lrelu'):
    return tf.maximum(leak*x, x)
 
+
+def relu(x, name='relu'):
+   return tf.nn.relu(x)
 
 '''
 '''
