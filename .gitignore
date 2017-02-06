@@ -8,3 +8,6 @@
 *.png
 *.DS
 *.*DS
+temp/
+models/
+model/

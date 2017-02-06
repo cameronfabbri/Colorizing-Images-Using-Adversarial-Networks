@@ -9,16 +9,17 @@ import os
 sys.path.insert(0, '../architecture/')
 sys.path.insert(0, '../../ops/')
 import architecture as arch
+#from imagenet import imagenet
 from mnist import mnist
 
-def train(checkpoint_dir, batch_size, d_learning_rate, g_learning_rate):
+def train(checkpoint_dir, batch_size, learning_rate):
+   #imnet = imagenet(split='train', gray=False)
+   mnist_obj = mnist()
+   train_images = mnist_obj.get_train_images()
+   test_images  = mnist_obj.get_test_images()
 
-
-   train_images = np.asarray(train_images)
-
-   # keep the step and epoch numbers in the graph so they are ready when reloading a model
+   # keep the step number in the graph so it is ready when reloading a model
    global_step = tf.Variable(0, name='global_step', trainable=False)
-   epoch_num   = tf.Variable(0, name='epoch_num', trainable=False)
 
    # placeholder for the real images
    images = tf.placeholder(tf.float32, shape=(batch_size, 28, 28, 1), name='real_images')
@@ -100,9 +101,7 @@ def train(checkpoint_dir, batch_size, d_learning_rate, g_learning_rate):
 
    while True:
 
-      # get a random position to start at in the list of images that ensures you won't overshoot the end
-      random_batch_start = randint(0,len(train_images)-batch_size)
-      batch_images = train_images[random_batch_start:random_batch_start+batch_size]
+      batch_images = random.sample(train_images, batch_size)
 
       # generate random z vector for feeding into G
       batch_z = np.random.uniform(-1, 1, [batch_size, 100]).astype(np.float32)
@@ -113,7 +112,7 @@ def train(checkpoint_dir, batch_size, d_learning_rate, g_learning_rate):
       _, loss_g, gen_images = sess.run([g_optim, g_loss, G], feed_dict={z: batch_z})
 
       # save the model every 100 steps and also save for tensorboard (not yet written)
-      if step % 100 == 0:
+      if step % 1000 == 0:
          try:
             os.system('rm images/*')
          except:
@@ -140,21 +139,19 @@ def train(checkpoint_dir, batch_size, d_learning_rate, g_learning_rate):
 def main(argv=None):
    checkpoint_dir = sys.argv[1]
 
-   g_learning_rate = 1e-4
-   d_learning_rate = 1e-4
+   learning_rate = 0.0002
    batch_size = 128
 
    if checkpoint_dir[-1] != '/':
       checkpoint_dir+='/'
 
    print
-   print 'checkpoint_dir:  ', checkpoint_dir
-   print 'batch_size:      ', batch_size
-   print 'd_learning_rate: ', d_learning_rate
-   print 'g_learning_rate: ', g_learning_rate
+   print 'checkpoint_dir: ', checkpoint_dir
+   print 'batch_size:     ', batch_size
+   print 'learning_rate:  ', learning_rate
    print
 
-   train(checkpoint_dir, batch_size, d_learning_rate, g_learning_rate)
+   train(checkpoint_dir, batch_size, learning_rate)
 
 
 if __name__ == '__main__':

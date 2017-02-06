@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 import math
 
-
 def activation_summary(x):
   tensor_name = x.op.name
   tf.histogram_summary(tensor_name + '/activations', x)
