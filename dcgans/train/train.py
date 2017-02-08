@@ -135,18 +135,18 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
    # run the optimizer
-   D_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(D_loss, var_list=d_vars)
-   G_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(G_loss, var_list=g_vars)
+   D_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(D_loss, var_list=d_vars, global_step=global_step)
+   G_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(G_loss, var_list=g_vars, global_step=global_step)
    
    # stop tensorflow from using all of the GPU memory
-   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
+   #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
 
    # initialize global variables, then create a session
    init      = tf.global_variables_initializer()
-   sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+   #sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+   sess      = tf.Session()
 
-   saver = tf.train.Saver()
-
+   saver = tf.train.Saver(max_to_keep=5)
 
    # run the session with the variables
    sess.run(init)
@@ -216,7 +216,7 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
       if step % 1000 == 0:
 
          print 'Saving model...'
-         saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=step)
+         saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
          print 'Model saved\n'
          print 'Evaluating...'
          _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:False})
