@@ -97,8 +97,8 @@ def train(batch_size, checkpoint_dir, data):
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
    # run the optimizer
-   D_train_op = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5).minimize(D_loss, var_list=d_vars)
-   G_train_op = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5).minimize(G_loss, var_list=g_vars)
+   D_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(D_loss, var_list=d_vars)
+   G_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(G_loss, var_list=g_vars)
 
    # initialize global variables, then create a session
    init      = tf.global_variables_initializer()
@@ -153,6 +153,7 @@ def train(batch_size, checkpoint_dir, data):
          feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
 
       _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})
+      _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})
 
       print 'epoch:',epoch_num,'step:',step
       print 'd_loss:',d_tot_loss
@@ -171,6 +172,7 @@ def train(batch_size, checkpoint_dir, data):
 
          count = 0
          for img in gen_images:
+            img = np.uint8((img - np.min(img)) * 255 / (np.max(img)-np.min(img)))
             cv2.imwrite('images/step_'+str(step)+'_'+str(count)+'.png', img)
             count += 1
             if count == 10: break
