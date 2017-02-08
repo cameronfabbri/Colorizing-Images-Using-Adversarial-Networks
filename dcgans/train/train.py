@@ -8,10 +8,6 @@
    Cameron Fabbri
    2/7/2017
 
-   Going to be resizing images on the fly because I am not resizing all of imagenet
-   just for this implementation when we are going to be using 224x224 for the main
-   part of the project anyway.
-
    Training details from the paper
 
       - Data should be scaled to [-1, 1] for the TanH activation function.
@@ -63,6 +59,12 @@ def setup_params(dataset, batch_size, checkpoint_dir):
    
    try: os.mkdir(checkpoint_dir)
    except: pass
+
+   try: os.mkdir(checkpoint_dir+'/'+dataset)
+   except: pass
+
+   try: os.mkdir('images/'+dataset)
+   except: pass
    
    # images from the true dataset
    if dataset == 'imagenet' or dataset == 'lsun':
@@ -82,6 +84,8 @@ def setup_params(dataset, batch_size, checkpoint_dir):
    return images_d, pos_labels, neg_labels, z, learning_rate, training
 
 def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
+
+   logs_path = checkpoint_dir+dataset+'/logs/'
 
    images_d      = placeholders[0]
    pos_labels    = placeholders[1]
@@ -114,6 +118,15 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    # G loss is to maximize log(D(G(z))), aka minimize the inverse
    G_loss = tf.reduce_mean(-tf.log(D_gen))
 
+   # create tensorboard summaries for viewing loss visually
+   tf.summary.scalar('d_loss', D_loss)
+   tf.summary.scalar('d_loss_real', D_loss_real)
+   tf.summary.scalar('d_loss_gen', D_loss_gen)
+   tf.summary.scalar('g_loss', G_loss)
+   tf.summary.image('real_images', images_d, max_outputs=100)
+   tf.summary.image('generated_images', generated_image, max_outputs=100)
+   merged_summary_op = tf.summary.merge_all()
+
    # get the variables that can be trained, aka the layers in G and D (look at names)
    t_vars = tf.trainable_variables()
 
@@ -137,6 +150,9 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
 
    # run the session with the variables
    sess.run(init)
+
+   # write the summaries to tensorboard
+   summary_writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
 
    # check to see if there is a previous model. If so, load it.
    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
@@ -185,11 +201,11 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
          
       batch_real_images = np.asarray(batch_real_images)
      
-      _, d_loss_gen, d_loss_real, d_tot_loss = sess.run([D_train_op, D_loss_gen, D_loss_real, D_loss],
-         feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
+      _, d_loss_gen, d_loss_real, d_tot_loss, summary = sess.run([D_train_op, D_loss_gen, D_loss_real, D_loss, merged_summary_op], feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
 
-      #_, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})
       _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})
+
+      summary_writer.add_summary(summary, step)
 
       print 'epoch:',epoch_num,'step:',step
       print 'd_loss:',d_tot_loss
@@ -197,10 +213,11 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
       print
       step += 1
       
-      if step % 1000 == 0:
+      if step % 10 == 0:
 
-         print 'Saving model'
-         saver.save(sess, checkpoint_dir+'checkpoint_', global_step=global_step)
+         print 'Saving model...'
+         saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=step)
+         print 'Model saved\n'
          print 'Evaluating...'
          _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:False})
 
@@ -211,12 +228,12 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
             
             if dataset == 'imagenet' or dataset == 'lsun':
                img = tanh_descale(img)
-               cv2.imwrite('images/step_'+str(step)+'_'+str(count)+'.png', img)
+               cv2.imwrite('images/'+dataset+'/step_'+str(step)+'_'+str(count)+'.png', img)
 
             if dataset == 'mnist':
                img = tanh_descale(img)
                img = np.squeeze(img)
-               plt.imsave('images/step_'+str(step)+'_'+str(count)+'.png', img)
+               plt.imsave('images/mnist/step_'+str(step)+'_'+str(count)+'.png', img)
 
             count += 1
             if count == 10: break
