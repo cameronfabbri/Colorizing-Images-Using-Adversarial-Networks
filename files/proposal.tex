@@ -1,0 +1,84 @@
+\documentclass{article}
+
+\begin{document}
+
+\centerline{\sc \large Project Proposal}
+\vspace{.5pc}
+\centerline{\sc Team Name: Yet Another Layer [YAL]}
+\centerline{\sc Team Members: Cameron Fabbri, MD Jahidul Islam}
+\centerline{\sc 2/6/2017}
+\vspace{2pc}
+
+\centerline{\sc \large Generative Adversarial Networks for Automatic Image Colorization }
+
+\section{Introduction}
+There exists a large amount of photographs and videos, mainly antique, that lack color.
+Providing color to these images provides a modern view to each scene. For a human,
+the task of colorizing these black and white photos leaves open room for imagination. While
+some objects commonly hold the same color (e.g grass is \textit{usually} green), many are
+left up for interpretation. For example, given a black and white photo of someone wearing a dark
+colored shirt, it would be very difficult or near impossible to tell whether that shirt was
+blue or green. The loss of information and the fact that there is not one correct answer,
+automatic colorization is an ill-posed problem.
+
+\section{Approach}
+Recent advances in deep learning and big data provide us with a good starting point for tackling this
+problem. We propose to leverage two specific areas to solve this problem. The first is deep Convolutional
+Neural Networks (CNNs). Literature has shown[1] that these can be used to provide a \textit{plausible}
+colorization of a black and white photo. The second is Generative Adversarial Networks (GANs)[4]. Recently,
+GANs have shown very promising results for generating data. Energy-Based GANs[2] have been shown to
+offer greater stability during training, as well as generate higher resolution images.
+We believe the combination of these two methods should improve on automatic colorization.
+
+\section{Objectives}
+Given the nature of current research in deep learning, there are many variations in which we
+can try. We have four main tasks that we will be exploring that will ultimately converge.
+
+\vspace{2pt}
+(1) Implement the state of the art[1] for image colorization. This will provide
+\indent us not only with a baseline, but given the impressive results, it would make
+\indent sense to use this architecture as the architecture for the generator in our
+\indent GANs.
+
+\vspace{3pt}
+(2) Implement Deep Convolutional Generative Adversarial Networks \newline
+\indent (DCGANs)[3]. 
+
+\vspace{3pt}
+(3) Implement Energy-Based Generative Adversarial Networks (EBGANs).[2]
+
+\vspace{3pt}
+(4) Explore methods to pretrain the model used in 1 and fine tune it as a
+\indent generator in 2 and 3.
+
+(5) Time permitting, develop our own GAN architecture for comparison.
+
+\vspace{4pt}
+
+\noindent Both (2) and (3) will be implemented as they are in their respective papers for generating
+images. After we are certain the results are valid (i.e the implementation is correct), we will alter
+them for the main problem at hand. After each piece has been implemented, it is straight-forward to
+replace the generator in 2 and 3 with the architecture from 1. While much of the work will overlap as the
+project progresses, our current plan for task delegation is as follows. \newline
+
+\noindent Jahidul: 1, 4, 5 \newline
+\noindent Cameron: 2, 3, 5
+
+
+
+\section{References}
+[1] Zhang, Richard, Phillip Isola, and Alexei A. Efros. "Colorful image colorization." 
+European Conference on Computer Vision. Springer International Publishing, 2016.
+\vspace{2pt}
+
+\noindent [2] J. Zhao, M. Mathieu, and Y. LeCun.  Energy-based Generative Adversarial 
+Network. ArXiv e-prints, September 2016.
+\vspace{2pt}
+
+\noindent [3] Radford, Alec, Luke Metz, and Soumith Chintala. "Unsupervised representation learning with deep
+convolutional generative adversarial networks." arXiv preprint arXiv:1511.06434 (2015).
+
+\noindent [4] Goodfellow, Ian, et al. "Generative adversarial nets." Advances in neural information processing systems. 2014.
+
+
+\end{document}

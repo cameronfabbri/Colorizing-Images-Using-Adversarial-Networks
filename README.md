@@ -15,10 +15,15 @@ and the grayscale image, when it converges start training it on a GAN.
 * Use the LAB colorspace as in the state of the art paper?
 * Generate the channels (r,g,b) individually with multiple adversaries?
 * Try and create a 'real time' variation that could colorize videos as they are playing.
+<<<<<<< HEAD
 * Could try pretraining every GAN before colorization, not even on colorization. Just train
 it normally, then you will get all sorts of things for free when starting to train on color.
 Not sure if you would have to alter z to be the same size as the input image, but we'll figure
 that out.
+=======
+* Maybe somehow parts of the image with low probabilites for what the color should be
+can have some way of altering the color.
+>>>>>>> e34715c5355d66c47ff6ad7a179f2bb11c983308
 
 #### Things to compare
 * State of the art colorization mentioned above.
@@ -53,6 +58,16 @@ about 9 million images. If we had that plus imagenet we'd be set.
 Downloaded the first 124044 and last 31332
 
 #### Useful links:
+
+[Colorful Image Colorization](https://arxiv.org/pdf/1603.08511.pdf)
+
+[Let there be Color!](http://hi.cs.waseda.ac.jp/~/projects/colorization/data/colorization_sig2016.pdf)
+
+[Learning Representations for Automatic Colorization](https://arxiv.org/pdf/1603.06668v1.pdf)
+
+[Automatic Colorization of Grayscale Images](http://cs229.stanford.edu/proj2013/KabirzadehSousaBlaes-AutomaticColorizationOfGrayscaleImages.pdf)
+
+
 
 First paper on GANs
 

@@ -1,0 +1,16 @@
+*.pkl
+*.pyc
+*.swp
+*.*swp
+*~
+*.*~
+*.aux
+*.log
+*.png
+*.DS
+*.*DS
+temp/
+images/
+images*
+models/
+model/
