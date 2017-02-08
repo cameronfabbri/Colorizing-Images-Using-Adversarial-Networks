@@ -10,5 +10,7 @@
 *.DS
 *.*DS
 temp/
+images/
+images*
 models/
 model/
