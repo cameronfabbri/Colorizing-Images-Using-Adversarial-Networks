@@ -33,7 +33,7 @@ def linear(input_, output_size, scope=None, stddev=0.02, bias_start=0.0, with_w=
       bias = tf.get_variable("bias", [output_size], initializer=tf.constant_initializer(bias_start))       
       return tf.matmul(input_, matrix) + bias
 
-def generator(z, batch_size, train=True):
+def generator(z, batch_size, dataset, train=True):
 
    print 'z:',z
    # project and reshape z
@@ -52,10 +52,14 @@ def generator(z, batch_size, train=True):
    conv_t3 = lrelu(batch_norm(conv2d_transpose(conv_t2, 5, 2, 128, 'g_conv_t3'), 'g_bn3', train=train))
    print 't_conv3:',conv_t3
    
-   # comment back in for imagenet, 1 dim for mnist
-   #conv_t4 = lrelu(batch_norm(conv2d_transpose(conv_t3, 5, 2, 3, 'g_conv_t4'), 'g_bn4', train=train))
-   conv_t4 = lrelu(batch_norm(conv2d_transpose(conv_t3, 5, 2, 1, 'g_conv_t4'), 'g_bn4', train=train))
-   print 't_conv4:',conv_t4
+   if dataset == 'imagenet' or dataset == 'lsun':
+      conv_t4 = lrelu(batch_norm(conv2d_transpose(conv_t3, 5, 2, 3, 'g_conv_t4'), 'g_bn4', train=train))
+      print 't_conv4:',conv_t4
+
+   if dataset == 'mnist':
+      conv_t4 = lrelu(batch_norm(conv2d_transpose(conv_t3, 5, 2, 1, 'g_conv_t4'), 'g_bn4', train=train))
+      conv_t4 = conv_t4[:,:28,:28,:]
+      print 't_conv4:',conv_t4
 
    return tf.nn.tanh(conv_t4)
 

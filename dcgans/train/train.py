@@ -41,28 +41,34 @@ import random
 import numpy as np
 import cv2
 import os
+import matplotlib.pyplot as plt
+import ntpath
 
 sys.path.insert(0, '../architecture/')
 from architecture import generator, discriminator
 
+sys.path.insert(0, '../../ops/')
+from tf_ops import tanh_scale, tanh_descale
 
-def train(batch_size, checkpoint_dir, data, dataset):
+sys.path.insert(0, 'config/')
+import mnist
 
-   train_size = len(data)
-
+'''
+   Creates the tensorflow placeholders
+'''
+def setup_params(dataset, batch_size, checkpoint_dir):
+   
    # placeholder to pass to the generator and descriminator to indicate training or not
    training = tf.placeholder(tf.bool, name='training')
-
-   # create a step counter that will be saved out with the model
-   global_step = tf.Variable(0, name='global_step', trainable=False)
-
+   
+   try: os.mkdir(checkpoint_dir)
+   except: pass
+   
    # images from the true dataset
-   if dataset == 'imagenet':
+   if dataset == 'imagenet' or dataset == 'lsun':
       images_d = tf.placeholder(tf.float32, shape=(batch_size, 64, 64, 3), name='images_d')
    if dataset == 'mnist':
       images_d = tf.placeholder(tf.float32, shape=(batch_size, 28, 28, 1), name='images_d')
-
-   # no need for gen images placeholder because they get generated below.
 
    # labels for the loss function since I will use label smoothing
    pos_labels = tf.placeholder(tf.float32, shape=(batch_size, 1), name='pos_label')
@@ -71,8 +77,24 @@ def train(batch_size, checkpoint_dir, data, dataset):
    # placeholder for z, which is fed into the generator.
    z = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
 
+   learning_rate = tf.placeholder(tf.float32, shape=(1), name='learning_rate')
+
+   return images_d, pos_labels, neg_labels, z, learning_rate, training
+
+def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
+
+   images_d      = placeholders[0]
+   pos_labels    = placeholders[1]
+   neg_labels    = placeholders[2]
+   z             = placeholders[3]
+   learning_rate = placeholders[4]
+   training      = placeholders[5]
+
+   # create a step counter that will be saved out with the model
+   global_step = tf.Variable(0, name='global_step', trainable=False)
+
    # get a generated image from G
-   generated_image = generator(z, batch_size)
+   generated_image = generator(z, batch_size, dataset, train=training)
 
    # send the real images to D
    D_real = discriminator(images_d, batch_size, train=training)
@@ -102,7 +124,7 @@ def train(batch_size, checkpoint_dir, data, dataset):
    # run the optimizer
    D_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(D_loss, var_list=d_vars)
    G_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(G_loss, var_list=g_vars)
-
+   
    # stop tensorflow from using all of the GPU memory
    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
 
@@ -112,8 +134,6 @@ def train(batch_size, checkpoint_dir, data, dataset):
 
    saver = tf.train.Saver()
 
-   try: os.mkdir(checkpoint_dir)
-   except: pass
 
    # run the session with the variables
    sess.run(init)
@@ -139,26 +159,36 @@ def train(batch_size, checkpoint_dir, data, dataset):
       # sample from a normal distribution instead of a uniform distribution 
       batch_z = np.random.normal(-1, 1, [batch_size, 100]).astype(np.float32)
       
-      # get random batch of image paths
-      batch_paths = random.sample(data, batch_size)
-     
       # create noisy positive and negative labels
       p_lab = np.random.uniform(0.7, 1.2, [batch_size, 1])
       n_lab = np.random.uniform(0.0, 0.3, [batch_size, 1])
+      
+      # get random batch of image paths if using imagenet or lsun
+      if dataset == 'imagenet' or dataset == 'lsun':
+         batch_real_images = []
+         batch_paths = random.sample(data, batch_size)
 
-      batch_real_images = []
-      for img in batch_paths:
-         #img = cv2.imread(img).astype('float32') # read in image
-         #img = cv2.resize(img, (64,64)) # resize 
-         img = 2*((img-np.min(img))/(np.max(img)-np.min(img))) - 1 # scale to [-1, 1]
-         batch_real_images.append(img)
+         for img in batch_paths:
+            img = cv2.imread(img).astype('float32') # read in image
+            # scale to [-1, 1] for tanh
+            img = tanh_scale(img)
+            batch_real_images.append(img)
 
+      # mnist is already loaded so just pick a random batch
+      if dataset == 'mnist':
+         batch_real_images = []
+         mnist_batch = random.sample(data, batch_size)
+         for img in mnist_batch:
+            # scale to [-1, 1] for tanh
+            img = tanh_scale(img)
+            batch_real_images.append(img)
+         
       batch_real_images = np.asarray(batch_real_images)
      
       _, d_loss_gen, d_loss_real, d_tot_loss = sess.run([D_train_op, D_loss_gen, D_loss_real, D_loss],
          feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
 
-      _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})
+      #_, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})
       _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})
 
       print 'epoch:',epoch_num,'step:',step
@@ -167,7 +197,7 @@ def train(batch_size, checkpoint_dir, data, dataset):
       print
       step += 1
       
-      if step % 100 == 0:
+      if step % 1000 == 0:
 
          print 'Saving model'
          saver.save(sess, checkpoint_dir+'checkpoint_', global_step=global_step)
@@ -178,18 +208,42 @@ def train(batch_size, checkpoint_dir, data, dataset):
 
          count = 0
          for img in gen_images:
-            img = np.uint8((img - np.min(img)) * 255 / (np.max(img)-np.min(img)))
-            cv2.imwrite('images/step_'+str(step)+'_'+str(count)+'.png', img)
+            
+            if dataset == 'imagenet' or dataset == 'lsun':
+               img = tanh_descale(img)
+               cv2.imwrite('images/step_'+str(step)+'_'+str(count)+'.png', img)
+
+            if dataset == 'mnist':
+               img = tanh_descale(img)
+               img = np.squeeze(img)
+               plt.imsave('images/step_'+str(step)+'_'+str(count)+'.png', img)
+
             count += 1
             if count == 10: break
 
 
+'''
 
+   The main just loads up the parameters from the config file,
+   creates tensorflow variables and stuff in setup_params, then
+   calls train.
+
+'''
 def main():
 
-   #dataset = 'imagenet'
-   dataset = 'mnist'
-   batch_size = 128
+   try:
+      config_file = ntpath.basename(sys.argv[1]).split('.py')[0]
+      config = __import__(config_file)
+   except:
+      print 'config',sys.argv[1],'not found'
+      raise
+      exit()
+
+   # load parameters from config file passed in
+   dataset        = config.dataset
+   batch_size     = config.batch_size
+   checkpoint_dir = config.checkpoint_dir
+   learning_rate  = config.learning_rate
 
    if dataset == 'imagenet':
       print 'Loading imagenet...'
@@ -199,30 +253,28 @@ def main():
 
    if dataset == 'mnist':
       print 'Loading mnist...'
-      pf = open('/home/fabbric/data/images/mnist/mnist.pkl', 'rb')
-      data = pickle.load(pf)
-      pf.close()
 
-      train_set, valid_set, test_set = data
+      # loads mnist and resizes to (28, 28, 1) as well as converts to float.
+      train_images, val_images, test_images = mnist.load_mnist()
 
-      data = []
-      for train_img, val_img, test_img in zip(train_set[0], valid_set[0], test_set[0]):
-         train_img = np.resize(train_img, (28,28))
-         train_img = np.expand_dims(train_img, 2)
+      # since we don't care about train/test/val, just group them together
+      data = np.concatenate((train_images, val_images), axis=0)
+      data = np.concatenate((data, test_images), axis=0)
+  
+   train_size = len(data)
 
-         test_img = np.resize(test_img, (28,28))
-         test_img = np.expand_dims(test_img, 2)
+   # set up tensorflow variables to pass to train.
+   images_d, pos_labels, neg_labels, z, learning_rate, training = setup_params(dataset, batch_size, checkpoint_dir)
+  
+   placeholders    = []
+   placeholders.append(images_d)
+   placeholders.append(pos_labels)
+   placeholders.append(neg_labels)
+   placeholders.append(z)
+   placeholders.append(learning_rate)
+   placeholders.append(training)
+   
 
-         val_img = np.resize(val_img, (28,28))
-         val_img = np.expand_dims(val_img, 2)
-
-         data.append(train_img)
-         data.append(test_img)
-         data.append(val_img)
-      
-
-   checkpoint_dir = 'models/'
-
-   train(batch_size, checkpoint_dir, data, dataset)
+   train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders)
 
 if __name__ == '__main__': main()

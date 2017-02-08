@@ -38,7 +38,11 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
       tf.add_to_collection('losses', weight_decay)
    return var
 
+def tanh_scale(img):
+   return 2*((img-np.min(img))/(np.max(img)-np.min(img))) - 1
 
+def tanh_descale(img):
+   return (img - np.max(img)) / (np.max(img)-np.min(img))
 
 
 '''
