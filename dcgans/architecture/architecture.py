@@ -52,7 +52,9 @@ def generator(z, batch_size, train=True):
    conv_t3 = lrelu(batch_norm(conv2d_transpose(conv_t2, 5, 2, 128, 'g_conv_t3'), 'g_bn3', train=train))
    print 't_conv3:',conv_t3
    
-   conv_t4 = lrelu(batch_norm(conv2d_transpose(conv_t3, 5, 2, 3, 'g_conv_t4'), 'g_bn4', train=train))
+   # comment back in for imagenet, 1 dim for mnist
+   #conv_t4 = lrelu(batch_norm(conv2d_transpose(conv_t3, 5, 2, 3, 'g_conv_t4'), 'g_bn4', train=train))
+   conv_t4 = lrelu(batch_norm(conv2d_transpose(conv_t3, 5, 2, 1, 'g_conv_t4'), 'g_bn4', train=train))
    print 't_conv4:',conv_t4
 
    return tf.nn.tanh(conv_t4)

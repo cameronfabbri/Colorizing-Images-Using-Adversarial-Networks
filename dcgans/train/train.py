@@ -46,7 +46,7 @@ sys.path.insert(0, '../architecture/')
 from architecture import generator, discriminator
 
 
-def train(batch_size, checkpoint_dir, data):
+def train(batch_size, checkpoint_dir, data, dataset):
 
    train_size = len(data)
 
@@ -57,7 +57,10 @@ def train(batch_size, checkpoint_dir, data):
    global_step = tf.Variable(0, name='global_step', trainable=False)
 
    # images from the true dataset
-   images_d = tf.placeholder(tf.float32, shape=(batch_size, 64, 64, 3), name='images_d')
+   if dataset == 'imagenet':
+      images_d = tf.placeholder(tf.float32, shape=(batch_size, 64, 64, 3), name='images_d')
+   if dataset == 'mnist':
+      images_d = tf.placeholder(tf.float32, shape=(batch_size, 28, 28, 1), name='images_d')
 
    # no need for gen images placeholder because they get generated below.
 
@@ -100,9 +103,12 @@ def train(batch_size, checkpoint_dir, data):
    D_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(D_loss, var_list=d_vars)
    G_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(G_loss, var_list=g_vars)
 
+   # stop tensorflow from using all of the GPU memory
+   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
+
    # initialize global variables, then create a session
    init      = tf.global_variables_initializer()
-   sess      = tf.Session()
+   sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
    saver = tf.train.Saver()
 
@@ -142,8 +148,8 @@ def train(batch_size, checkpoint_dir, data):
 
       batch_real_images = []
       for img in batch_paths:
-         img = cv2.imread(img).astype('float32') # read in image
-         img = cv2.resize(img, (64,64)) # resize 
+         #img = cv2.imread(img).astype('float32') # read in image
+         #img = cv2.resize(img, (64,64)) # resize 
          img = 2*((img-np.min(img))/(np.max(img)-np.min(img))) - 1 # scale to [-1, 1]
          batch_real_images.append(img)
 
@@ -181,7 +187,8 @@ def train(batch_size, checkpoint_dir, data):
 
 def main():
 
-   dataset = 'imagenet'
+   #dataset = 'imagenet'
+   dataset = 'mnist'
    batch_size = 128
 
    if dataset == 'imagenet':
@@ -190,8 +197,32 @@ def main():
       data = pickle.load(pf)
       pf.close()
 
+   if dataset == 'mnist':
+      print 'Loading mnist...'
+      pf = open('/home/fabbric/data/images/mnist/mnist.pkl', 'rb')
+      data = pickle.load(pf)
+      pf.close()
+
+      train_set, valid_set, test_set = data
+
+      data = []
+      for train_img, val_img, test_img in zip(train_set[0], valid_set[0], test_set[0]):
+         train_img = np.resize(train_img, (28,28))
+         train_img = np.expand_dims(train_img, 2)
+
+         test_img = np.resize(test_img, (28,28))
+         test_img = np.expand_dims(test_img, 2)
+
+         val_img = np.resize(val_img, (28,28))
+         val_img = np.expand_dims(val_img, 2)
+
+         data.append(train_img)
+         data.append(test_img)
+         data.append(val_img)
+      
+
    checkpoint_dir = 'models/'
 
-   train(batch_size, checkpoint_dir, data)
+   train(batch_size, checkpoint_dir, data, dataset)
 
 if __name__ == '__main__': main()
