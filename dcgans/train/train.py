@@ -123,8 +123,8 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    tf.summary.scalar('d_loss_real', D_loss_real)
    tf.summary.scalar('d_loss_gen', D_loss_gen)
    tf.summary.scalar('g_loss', G_loss)
-   tf.summary.image('real_images', images_d, max_outputs=100)
-   tf.summary.image('generated_images', generated_image, max_outputs=100)
+   tf.summary.image('real_images', images_d, max_outputs=10)
+   tf.summary.image('generated_images', generated_image, max_outputs=10)
    merged_summary_op = tf.summary.merge_all()
 
    # get the variables that can be trained, aka the layers in G and D (look at names)
@@ -213,7 +213,7 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
       print
       step += 1
       
-      if step % 10 == 0:
+      if step % 1000 == 0:
 
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=step)

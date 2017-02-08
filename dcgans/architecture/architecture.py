@@ -79,8 +79,8 @@ def discriminator(image, batch_size, reuse=False, train=True):
    conv4 = lrelu(batch_norm(conv2d(conv3, 5, 2, 512, 'd_conv4'), 'd_bn3', train=train))
    print 'd_conv4:',conv4
 
-   #conv4 = linear(tf.reshape(conv4, [batch_size, -1]), 1, 'd_conv4_lin')
-   #fc1 = fc_layer(conv4, 1, True, 'd_fc1')
+   # conv that is the same size as the feature maps with same stride size so returns (batch_size, 1, 1, 1)
+   # then resized to (batch_size, 1) for the logit
    conv5 = tf.reshape(lrelu(batch_norm(conv2d(conv4, 4, 4, 1, 'd_conv5'), 'd_bn4', train=train)), [batch_size, 1])
    print 'd_conv5:',conv5
 
