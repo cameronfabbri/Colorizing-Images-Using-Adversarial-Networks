@@ -63,6 +63,9 @@ def setup_params(dataset, batch_size, checkpoint_dir):
    try: os.mkdir(checkpoint_dir+'/'+dataset)
    except: pass
 
+   try: os.mkdir('images/')
+   except: pass
+
    try: os.mkdir('images/'+dataset)
    except: pass
    
@@ -135,8 +138,8 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
    # run the optimizer
-   D_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(D_loss, var_list=d_vars, global_step=global_step)
-   G_train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5).minimize(G_loss, var_list=g_vars, global_step=global_step)
+   D_train_op = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5).minimize(D_loss, var_list=d_vars, global_step=global_step)
+   G_train_op = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5).minimize(G_loss, var_list=g_vars, global_step=global_step)
    
    # stop tensorflow from using all of the GPU memory
    #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
@@ -201,6 +204,7 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
          
       batch_real_images = np.asarray(batch_real_images)
      
+      _, d_loss_gen, d_loss_real, d_tot_loss, summary = sess.run([D_train_op, D_loss_gen, D_loss_real, D_loss, merged_summary_op], feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
       _, d_loss_gen, d_loss_real, d_tot_loss, summary = sess.run([D_train_op, D_loss_gen, D_loss_real, D_loss, merged_summary_op], feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
 
       _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})

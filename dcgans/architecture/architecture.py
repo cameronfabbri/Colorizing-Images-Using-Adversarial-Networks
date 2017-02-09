@@ -51,6 +51,7 @@ def generator(z, batch_size, dataset, train=True):
 
    conv_t3 = lrelu(batch_norm(conv2d_transpose(conv_t2, 5, 2, 128, 'g_conv_t3'), 'g_bn3', train=train))
    print 't_conv3:',conv_t3
+   conv_t3 = tf.nn.dropout(conv_t3, 0.5)
    
    if dataset == 'imagenet' or dataset == 'lsun':
       conv_t4 = lrelu(batch_norm(conv2d_transpose(conv_t3, 5, 2, 3, 'g_conv_t4'), 'g_bn4', train=train))
@@ -81,11 +82,17 @@ def discriminator(image, batch_size, reuse=False, train=True):
 
    # conv that is the same size as the feature maps with same stride size so returns (batch_size, 1, 1, 1)
    # then resized to (batch_size, 1) for the logit
-   conv5 = tf.reshape(lrelu(batch_norm(conv2d(conv4, 4, 4, 1, 'd_conv5'), 'd_bn4', train=train)), [batch_size, 1])
-   print 'd_conv5:',conv5
+   #conv5 = tf.reshape(lrelu(batch_norm(conv2d(conv4, 4, 4, 1, 'd_conv5'), 'd_bn4', train=train)), [batch_size, 1])
 
+   # need to flatten before because after transpose conv size is lost
+   #conv4_flat = tf.reshape(conv4, [batch_size, -1])
+
+   conv4_flat = linear(tf.reshape(conv4, [batch_size, -1]), 1, 'd_conv4_lin')
+   fc1 = batch_norm(fc_layer(conv4_flat, 1, False, 'd_fc1'), 'd_bn4', train=train)
+   #print 'd_conv5:',conv5
+   return tf.nn.sigmoid(fc1)
    # returning the decision made by D
-   return tf.nn.sigmoid(conv5)
+   #return tf.nn.sigmoid(conv5)
 
 
 
