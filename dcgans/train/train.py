@@ -104,10 +104,10 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    generated_image = generator(z, batch_size, dataset, train=training)
 
    # send the real images to D
-   D_real = discriminator(images_d, batch_size, train=training)
+   D_real, _ = discriminator(images_d, batch_size, train=training)
 
    # returns D's decision on the generated images
-   D_gen  = discriminator(generated_image, batch_size, reuse=True, train=training)
+   D_gen, D_gen_grad  = discriminator(generated_image, batch_size, reuse=True, train=training)
 
    # compute the loss for D on the real images
    D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(pos_labels, D_real))
@@ -119,7 +119,10 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    D_loss = D_loss_real+D_loss_gen
 
    # G loss is to maximize log(D(G(z))), aka minimize the inverse
-   G_loss = tf.reduce_mean(-tf.log(D_gen))
+   #G_loss = tf.reduce_mean(-tf.log(D_gen))
+   #G_loss = tf.reduce_mean(1 - tf.log(D_gen))
+   G_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(D_gen_grad, tf.ones_like(D_gen_grad)))
+   #G_loss = tf.reduce_mean(-tf.log(D_gen_grad))
 
    # create tensorboard summaries for viewing loss visually
    tf.summary.scalar('d_loss', D_loss)
@@ -142,7 +145,7 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    G_train_op = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5).minimize(G_loss, var_list=g_vars, global_step=global_step)
    
    # stop tensorflow from using all of the GPU memory
-   #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
+   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
 
    # initialize global variables, then create a session
    init      = tf.global_variables_initializer()
@@ -177,11 +180,17 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
 
       # sample from a normal distribution instead of a uniform distribution 
       batch_z = np.random.normal(-1, 1, [batch_size, 100]).astype(np.float32)
+      #batch_z = np.random.uniform(-1, 1, [batch_size, 100]).astype(np.float32)
       
       # create noisy positive and negative labels
       p_lab = np.random.uniform(0.7, 1.2, [batch_size, 1])
       n_lab = np.random.uniform(0.0, 0.3, [batch_size, 1])
-      
+     
+      #p_lab = np.ones(batch_size)
+      #n_lab = np.zeros(batch_size)
+      #p_lab = np.expand_dims(p_lab, 1)
+      #n_lab = np.expand_dims(n_lab, 1)
+
       # get random batch of image paths if using imagenet or lsun
       if dataset == 'imagenet' or dataset == 'lsun':
          batch_real_images = []
@@ -204,7 +213,6 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
          
       batch_real_images = np.asarray(batch_real_images)
      
-      _, d_loss_gen, d_loss_real, d_tot_loss, summary = sess.run([D_train_op, D_loss_gen, D_loss_real, D_loss, merged_summary_op], feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
       _, d_loss_gen, d_loss_real, d_tot_loss, summary = sess.run([D_train_op, D_loss_gen, D_loss_real, D_loss, merged_summary_op], feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
 
       _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})

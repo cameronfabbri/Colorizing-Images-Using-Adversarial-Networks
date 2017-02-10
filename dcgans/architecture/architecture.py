@@ -73,12 +73,14 @@ def discriminator(image, batch_size, reuse=False, train=True):
    print 'd_image:',image
    conv1 = lrelu(conv2d(image, 5, 2, 64, 'd_conv1'))
    print 'd_conv1:',conv1
-   conv2 = lrelu(batch_norm(conv2d(conv1, 5, 2, 128, 'd_conv2'), 'd_bn1', train=train))
+   conv2 = lrelu(batch_norm(conv2d(conv1, 5, 2, 128, 'd_conv2'), 'd_bn1'))
+   #conv2 = lrelu(batch_norm(conv2d(conv1, 5, 2, 128, 'd_conv2'), 'd_bn1', train=train))
    print 'd_conv2:',conv2
    conv3 = lrelu(batch_norm(conv2d(conv2, 5, 2, 256, 'd_conv3'), 'd_bn2', train=train))
    print 'd_conv3:',conv3
    conv4 = lrelu(batch_norm(conv2d(conv3, 5, 2, 512, 'd_conv4'), 'd_bn3', train=train))
    print 'd_conv4:',conv4
+   conv5 = lrelu(batch_norm(conv2d(conv4, 5, 2, 256, 'd_conv5'), 'd_bn5', train=train))
 
    # conv that is the same size as the feature maps with same stride size so returns (batch_size, 1, 1, 1)
    # then resized to (batch_size, 1) for the logit
@@ -87,10 +89,10 @@ def discriminator(image, batch_size, reuse=False, train=True):
    # need to flatten before because after transpose conv size is lost
    #conv4_flat = tf.reshape(conv4, [batch_size, -1])
 
-   conv4_flat = linear(tf.reshape(conv4, [batch_size, -1]), 1, 'd_conv4_lin')
-   fc1 = batch_norm(fc_layer(conv4_flat, 1, False, 'd_fc1'), 'd_bn4', train=train)
+   conv5_flat = linear(tf.reshape(conv5, [batch_size, -1]), 1, 'd_conv5_lin')
+   #fc1 = batch_norm(fc_layer(conv4_flat, 1, False, 'd_fc1'), 'd_bn4', train=train)
    #print 'd_conv5:',conv5
-   return tf.nn.sigmoid(fc1)
+   return tf.nn.sigmoid(conv5_flat), conv5_flat
    # returning the decision made by D
    #return tf.nn.sigmoid(conv5)
 
