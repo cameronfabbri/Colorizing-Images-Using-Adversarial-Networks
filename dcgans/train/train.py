@@ -111,7 +111,7 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
 
    # compute the loss for D on the real images
    D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(pos_labels, D_real))
-   
+
    # compute the loss for D on the generated images
    D_loss_gen  = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(neg_labels, D_gen))
 
@@ -141,18 +141,18 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
    # run the optimizer
-   D_train_op = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5).minimize(D_loss, var_list=d_vars, global_step=global_step)
-   G_train_op = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5).minimize(G_loss, var_list=g_vars, global_step=global_step)
+   D_train_op = tf.train.AdamOptimizer(learning_rate=0.0002).minimize(D_loss, var_list=d_vars, global_step=global_step)
+   G_train_op = tf.train.AdamOptimizer(learning_rate=0.0002).minimize(G_loss, var_list=g_vars, global_step=global_step)
    
    # stop tensorflow from using all of the GPU memory
-   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+   #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
 
    # initialize global variables, then create a session
    init      = tf.global_variables_initializer()
    #sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
    sess      = tf.Session()
 
-   saver = tf.train.Saver(max_to_keep=5)
+   saver = tf.train.Saver(max_to_keep=1)
 
    # run the session with the variables
    sess.run(init)
@@ -174,6 +174,8 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    # get the current step. If just starting then 0, else it will be loaded from the previous model.
    step = int(sess.run(global_step))
    epoch_num = step/(train_size/batch_size)
+   p_lab = np.ones([batch_size, 1])
+   n_lab = np.zeros([batch_size, 1])
 
    # train forever
    while True:
@@ -183,9 +185,9 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
       #batch_z = np.random.uniform(-1, 1, [batch_size, 100]).astype(np.float32)
       
       # create noisy positive and negative labels
-      p_lab = np.random.uniform(0.7, 1.2, [batch_size, 1])
-      n_lab = np.random.uniform(0.0, 0.3, [batch_size, 1])
-     
+      #p_lab = np.random.uniform(0.7, 1.2, [batch_size, 1])
+      #n_lab = np.random.uniform(0.0, 0.3, [batch_size, 1])
+
       #p_lab = np.ones(batch_size)
       #n_lab = np.zeros(batch_size)
       #p_lab = np.expand_dims(p_lab, 1)
@@ -216,8 +218,8 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
       _, d_loss_gen, d_loss_real, d_tot_loss, summary = sess.run([D_train_op, D_loss_gen, D_loss_real, D_loss, merged_summary_op], feed_dict={images_d: batch_real_images, z: batch_z, pos_labels: p_lab, neg_labels: n_lab, training:True})
 
       _, g_loss, gen_images = sess.run([G_train_op, G_loss, generated_image], feed_dict={z:batch_z, training:True})
-
       summary_writer.add_summary(summary, step)
+
 
       print 'epoch:',epoch_num,'step:',step
       print 'd_loss:',d_tot_loss
@@ -226,6 +228,7 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
       step += 1
       
       if step % 1000 == 0:
+      
 
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
