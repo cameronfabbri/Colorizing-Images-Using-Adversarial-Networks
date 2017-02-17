@@ -33,7 +33,7 @@ def _variable_on_gpu(name, shape, initializer):
 def _variable_with_weight_decay(name, shape, stddev, wd):
    var = _variable_on_gpu(name, shape, tf.truncated_normal_initializer(stddev=stddev))
    if wd:
-      weight_decay = tf.mul(tf.nn.l2_loss(var), wd, name='weight_loss')
+      weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
       weight_decay.set_shape([])
       tf.add_to_collection('losses', weight_decay)
    return var

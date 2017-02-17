@@ -164,7 +164,7 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
    summary_writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
 
    # check to see if there is a previous model. If so, load it.
-   ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+   ckpt = tf.train.get_checkpoint_state(checkpoint_dir+dataset+'/')
    if ckpt and ckpt.model_checkpoint_path:
       print "Restoring previous model..."
       try:
@@ -246,7 +246,7 @@ def train(batch_size, checkpoint_dir, data, dataset, train_size, placeholders):
          count = 0
          for (gen, real) in zip(gen_images, batch_color_images):
             cv2.imwrite('images/'+dataset+'/step_'+str(step)+'_gen_'+str(count)+'.png', gen)
-            cv2.imwrite('images/'+dataset+'/step_'+str(step)+'_real_'+str(count)+'.png', real)
+            #cv2.imwrite('images/'+dataset+'/step_'+str(step)+'_real_'+str(count)+'.png', real)
             count += 1
             if count == 10: break
 
