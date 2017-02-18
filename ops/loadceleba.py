@@ -23,7 +23,9 @@ def load(data_dir='/home/fabbric/data/images/celeba/64x64_images/'):
    print 'Loading data...'
    i = 0
    for image in tqdm(image_list):
-      image_data[i, ...] = cv2.imread(image).astype('float32')
+      img = cv2.imread(image).astype('float32')
+      img = 2*((img-np.min(img))/(np.max(img)-np.min(img))) - 1
+      image_data[i, ...] = img
       i += 1
       if i == 100:
          break
