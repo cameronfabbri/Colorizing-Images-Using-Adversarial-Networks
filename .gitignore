@@ -14,3 +14,6 @@ images/
 images*
 models/
 model/
+checkpoint*
+checkpoints*
+checkpoint/
