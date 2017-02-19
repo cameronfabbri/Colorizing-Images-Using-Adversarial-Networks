@@ -22,13 +22,14 @@ def train(image_data, batch_size):
 
    # generated images
    gen_images = netG(z, batch_size)
-   errG       = tf.reduce_mean(netD(gen_images, batch_size))
   
    errD_real = netD(real_images, batch_size)
    errD_fake = netD(gen_images, batch_size, reuse=True)
 
    errD = tf.reduce_mean(errD_real - errD_fake)
-   
+   #errG       = tf.reduce_mean(netD(gen_images, batch_size))
+   errG = tf.reduce_mean(errD_fake)
+
    tf.summary.scalar('d_loss', errD)
    #tf.summary.scalar('d_loss_real', errD_real)
    #tf.summary.scalar('d_loss_gen', errD_fake)
@@ -69,7 +70,6 @@ def train(image_data, batch_size):
    step = sess.run(global_step)
    while True:
 
-
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
          n_critic = 25
@@ -87,9 +87,9 @@ def train(image_data, batch_size):
       sess.run(G_train_op, feed_dict={z:batch_z})
 
       # now get all losses and summary *without* performing a training step
-      batch_real_images = random.sample(image_data, batch_size)
-      batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-      D_loss, D_loss_real, D_loss_fake, G_loss, summary = sess.run([errD, errD_fake, errD_real, errG, merged_summary_op], feed_dict={real_images:batch_real_images, z:batch_z})
+      #batch_real_images = random.sample(image_data, batch_size)
+      #batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
+      D_loss, D_loss_real, D_loss_fake, G_loss, summary = sess.run([errD, errD_real, errD_fake, errG, merged_summary_op], feed_dict={real_images:batch_real_images, z:batch_z})
 
       print 'Step:',step,'D_loss:',D_loss,'G_loss:',G_loss
       step += 1

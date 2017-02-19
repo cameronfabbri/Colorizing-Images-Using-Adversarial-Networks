@@ -17,7 +17,6 @@ def load(data_dir='/home/fabbric/data/images/celeba/64x64_images/'):
             image_list.append(os.path.join(d,filename))
 
    num_images = len(image_list)
-   num_images = 100
    image_data = np.empty((num_images, 64, 64, 3), dtype=np.float32)
 
    print 'Loading data...'
@@ -27,7 +26,6 @@ def load(data_dir='/home/fabbric/data/images/celeba/64x64_images/'):
       img = 2*((img-np.min(img))/(np.max(img)-np.min(img))) - 1
       image_data[i, ...] = img
       i += 1
-      if i == 100:
-         break
+      #if i == 50000: break
 
    return image_data
