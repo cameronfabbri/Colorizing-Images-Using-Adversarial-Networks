@@ -16,13 +16,15 @@ import loadceleba
 '''
 def build_graph(info):
 
+   batch_size = info['batch_size']
+   dataset    = info['dataset']
+   load       = info['load']
+
    # load celeba data
    if dataset == 'celeba':
-      image_data = loadceleba.load()
+      image_data = loadceleba.load(load=True)
 
    train(image_data, batch_size)
-
-
 
 def train(image_data, batch_size):
    num_critic  = 5
@@ -142,10 +144,10 @@ if __name__ == '__main__':
    # set up params from config
    checkpoint_dir = config.checkpoint_dir
    learning_rate  = config.learning_rate
-       = config.load
    batch_size     = config.batch_size
    dataset        = config.dataset
    task           = config.task
+   load           = config.load
    if checkpoint_dir[-1] is not '/': checkpoint_dir+='/'
 
    try: os.mkdir(checkpoint_dir)
