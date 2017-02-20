@@ -49,9 +49,10 @@ def train(image_data, batch_size):
    G_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errG, var_list=g_vars, global_step=global_step)
    D_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errD, var_list=d_vars, global_step=global_step)
    
-   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.75)
+   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
    init      = tf.global_variables_initializer()
    sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+   #sess = tf.Session()
    sess.run(init)
 
    summary_writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
@@ -72,7 +73,7 @@ def train(image_data, batch_size):
 
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 25
+         n_critic = 100
       else: n_critic = 5
 
       # train the discriminator for 5 or 25 runs
@@ -106,7 +107,9 @@ def train(image_data, batch_size):
          num = 0
          for img in gen_imgs[0]:
             img = np.asarray(img)
+            img = (img+1.)/2.
             img *= 255.0/img.max()
+            #img *= 255.0/img.max()
             #img = (img - np.max(img)) / (np.max(img)-np.min(img))
             cv2.imwrite('images/celeba/step_'+str(step)+'_'+str(num)+'.png', img)
             num += 1
