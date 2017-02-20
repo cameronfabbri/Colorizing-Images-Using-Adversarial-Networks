@@ -10,8 +10,8 @@ import cPickle as pickle
    resizes image to 96x96 then crops 64x64 center
 '''
 def crop_(img):
-   height, width, channels = img.shape
-   if height is not 96 and width is not 96: img = cv2.resize(img, (96,96))
+   #height, width, channels = img.shape
+   #if height is not 96 and width is not 96: img = cv2.resize(img, (96,96))
    height, width, channels = img.shape
    center = (height/2, width/2)
    img = img[center[0]-32:center[0]+32,center[1]-32:center[1]+32, :]
@@ -27,7 +27,7 @@ def getPaths(data_dir):
    return image_list
 
 def load(
-         data_dir='/home/fabbric/data/images/celeba/original/',
+         data_dir='/home/fabbric/data/images/celeba/96x96_images/',
          normalize_fn='tanh',
          normalize=True,
          load=False,

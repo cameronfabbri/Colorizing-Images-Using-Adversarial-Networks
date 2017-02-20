@@ -62,10 +62,10 @@ def train(image_data, batch_size):
    G_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errG, var_list=g_vars, global_step=global_step)
    D_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errD, var_list=d_vars, global_step=global_step)
    
-   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+   #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
    init      = tf.global_variables_initializer()
-   sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-   #sess = tf.Session()
+   #sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+   sess = tf.Session()
    sess.run(init)
 
    summary_writer = tf.summary.FileWriter(checkpoint_dir+'logs/', graph=tf.get_default_graph())
