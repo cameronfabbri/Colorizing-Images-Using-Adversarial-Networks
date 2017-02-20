@@ -4,21 +4,33 @@ import sys
 import numpy as np
 import random
 import cv2
+import ntpath
+import os
 
+sys.path.insert(0, 'config/')
 sys.path.insert(0, '../ops/')
-from loadceleba import load
+import loadceleba
+
+'''
+   Builds the computational graph
+'''
+def build_graph(info):
+
+   # load celeba data
+   if dataset == 'celeba':
+      image_data = loadceleba.load()
+
+   train(image_data, batch_size)
+
+
 
 def train(image_data, batch_size):
-   checkpoint_dir = 'checkpoints/'
-   logs_path = 'checkpoints/celeba/logs'
-
    num_critic  = 5
    clip_values = [-0.01, 0.01]
       
    global_step = tf.Variable(0, name='global_step', trainable=False)
    real_images = tf.placeholder(tf.float32, shape=(batch_size, 64, 64, 3), name='color_images')
    z           = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
-
 
    # generated images
    gen_images = netG(z, batch_size)
@@ -27,7 +39,6 @@ def train(image_data, batch_size):
    errD_fake = netD(gen_images, batch_size, reuse=True)
 
    errD = tf.reduce_mean(errD_real - errD_fake)
-   #errG       = tf.reduce_mean(netD(gen_images, batch_size))
    errG = tf.reduce_mean(errD_fake)
 
    tf.summary.scalar('d_loss', errD)
@@ -55,7 +66,7 @@ def train(image_data, batch_size):
    #sess = tf.Session()
    sess.run(init)
 
-   summary_writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
+   summary_writer = tf.summary.FileWriter(checkpoint_dir+'logs/', graph=tf.get_default_graph())
    
    saver = tf.train.Saver(max_to_keep=1)
    ckpt = tf.train.get_checkpoint_state(checkpoint_dir+'celeba/')
@@ -87,12 +98,11 @@ def train(image_data, batch_size):
       batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
       sess.run(G_train_op, feed_dict={z:batch_z})
 
-      # now get all losses and summary *without* performing a training step
-      #batch_real_images = random.sample(image_data, batch_size)
-      #batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-      D_loss, D_loss_real, D_loss_fake, G_loss, summary = sess.run([errD, errD_real, errD_fake, errG, merged_summary_op], feed_dict={real_images:batch_real_images, z:batch_z})
 
-      print 'Step:',step,'D_loss:',D_loss,'G_loss:',G_loss
+      if step % 10 == 0:
+         # now get all losses and summary *without* performing a training step - for tensorboard
+         D_loss, D_loss_real, D_loss_fake, G_loss, summary = sess.run([errD, errD_real, errD_fake, errG, merged_summary_op], feed_dict={real_images:batch_real_images, z:batch_z})
+         print 'Step:',step,'D_loss:',D_loss,'G_loss:',G_loss
       step += 1
 
       summary_writer.add_summary(summary, step)
@@ -109,8 +119,6 @@ def train(image_data, batch_size):
             img = np.asarray(img)
             img = (img+1.)/2.
             img *= 255.0/img.max()
-            #img *= 255.0/img.max()
-            #img = (img - np.max(img)) / (np.max(img)-np.min(img))
             cv2.imwrite('images/celeba/step_'+str(step)+'_'+str(num)+'.png', img)
             num += 1
             if num == 10:
@@ -120,18 +128,49 @@ def train(image_data, batch_size):
 
 if __name__ == '__main__':
 
-   dataset = 'celeba'
-   batch_size = 64
+   # this loads a config file like: import config_name
+   try:
+      config_file = ntpath.basename(sys.argv[1]).split('.py')[0]
+      config = __import__(config_file)
+      print '\nsuccessfully imported',config_file
+   except:
+      print 'config',sys.argv[1],'not found'
+      print
+      raise
+      exit()
 
-   try: os.mkdir('checkpoints/')
+   # set up params from config
+   checkpoint_dir = config.checkpoint_dir
+   learning_rate  = config.learning_rate
+       = config.load
+   batch_size     = config.batch_size
+   dataset        = config.dataset
+   task           = config.task
+   if checkpoint_dir[-1] is not '/': checkpoint_dir+='/'
+
+   try: os.mkdir(checkpoint_dir)
    except: pass
-   try: os.mkdir('checkpoints/celeba')
-   except: pass
 
-   # load celeba data
-   image_data = load()
+   info = dict()
+   info['checkpoint_dir'] = checkpoint_dir
+   info['learning_rate']  = learning_rate
+   info['batch_size']     = batch_size
+   info['dataset']        = dataset
+   info['task']           = task
+   info['load']           = load
 
-   train(image_data, batch_size)
+   print
+   print 'checkpoint_dir:',checkpoint_dir
+   print 'learning_rate: ',learning_rate
+   print 'batch_size:    ',batch_size
+   print 'dataset:       ',dataset
+   print 'task:          ',task
+   print 'load:          ',load
+   print
+   
+   # build the graph - placeholders, loss functions, etc, then call train.
+   build_graph(info)
+
 
 
 
