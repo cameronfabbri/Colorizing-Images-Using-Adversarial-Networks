@@ -34,7 +34,7 @@ def load(
          crop=True,
          gray=False
    ):
-
+   
    '''
 
       gray_celeba.pkl contains color AND gray paths to images.

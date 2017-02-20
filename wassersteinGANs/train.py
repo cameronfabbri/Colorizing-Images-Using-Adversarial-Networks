@@ -24,9 +24,12 @@ def build_graph(info):
    if dataset == 'celeba':
       image_data = loadceleba.load(load=True)
 
-   train(image_data, batch_size)
+   train(image_data, batch_size, info)
 
-def train(image_data, batch_size):
+def train(image_data, batch_size, info):
+   dataset = info['dataset']
+   task    = info['task']
+
    num_critic  = 5
    clip_values = [-0.01, 0.01]
       
@@ -62,16 +65,16 @@ def train(image_data, batch_size):
    G_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errG, var_list=g_vars, global_step=global_step)
    D_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errD, var_list=d_vars, global_step=global_step)
    
-   #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
    init      = tf.global_variables_initializer()
-   #sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-   sess = tf.Session()
+   sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+   #sess = tf.Session()
    sess.run(init)
 
    summary_writer = tf.summary.FileWriter(checkpoint_dir+'logs/', graph=tf.get_default_graph())
    
    saver = tf.train.Saver(max_to_keep=1)
-   ckpt = tf.train.get_checkpoint_state(checkpoint_dir+'celeba/')
+   ckpt = tf.train.get_checkpoint_state(checkpoint_dir+dataset)
    if ckpt and ckpt.model_checkpoint_path:
       print "Restoring previous model..."
       try:
@@ -107,7 +110,7 @@ def train(image_data, batch_size):
       step += 1
 
       summary_writer.add_summary(summary, step)
-      
+     
       if step%500 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
@@ -120,7 +123,7 @@ def train(image_data, batch_size):
             img = np.asarray(img)
             img = (img+1.)/2.
             img *= 255.0/img.max()
-            cv2.imwrite('images/celeba/step_'+str(step)+'_'+str(num)+'.png', img)
+            cv2.imwrite('images/'+dataset+'/'+task+'/'+str(step)+'_'+str(num)+'.png', img)
             num += 1
             if num == 10:
                #os.sys('cp images/celeba/step_'+str(step)+'_'+str(num)+'.png gitimgs/img.png',)
@@ -149,7 +152,16 @@ if __name__ == '__main__':
    load           = config.load
    if checkpoint_dir[-1] is not '/': checkpoint_dir+='/'
 
+   # TODO fix this. os.mkdirs is giving me trouble so just a temp fix
    try: os.mkdir(checkpoint_dir)
+   except: pass
+   try: os.mkdir(checkpoint_dir+dataset)
+   except: pass
+   try: os.mkdir('images/')
+   except: pass
+   try: os.mkdir('images/'+dataset)
+   except: pass
+   try: os.mkdir('images/'+dataset+'/'+task)
    except: pass
 
    info = dict()
