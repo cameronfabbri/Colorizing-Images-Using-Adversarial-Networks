@@ -113,7 +113,10 @@ def train(image_data, batch_size):
             #img = (img - np.max(img)) / (np.max(img)-np.min(img))
             cv2.imwrite('images/celeba/step_'+str(step)+'_'+str(num)+'.png', img)
             num += 1
-            if num == 10: break
+            if num == 10:
+               #os.sys('cp images/celeba/step_'+str(step)+'_'+str(num)+'.png gitimgs/img.png',)
+               #os.sys('git add -f gitimgs/img.png; git commit -m \'added image\'; git push')
+               break
 
 if __name__ == '__main__':
 
