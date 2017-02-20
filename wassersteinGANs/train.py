@@ -71,7 +71,7 @@ def train(image_data, batch_size, info):
    #sess = tf.Session()
    sess.run(init)
 
-   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'logs/', graph=tf.get_default_graph())
+   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/logs/', graph=tf.get_default_graph())
    
    saver = tf.train.Saver(max_to_keep=1)
    ckpt = tf.train.get_checkpoint_state(checkpoint_dir+dataset)
