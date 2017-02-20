@@ -1,0 +1,12 @@
+
+1.
+Levin, Anat, Dani Lischinski, and Yair Weiss. 
+"Colorization using optimization." 
+ACM Transactions on Graphics (ToG). Vol. 23. No. 3. ACM, 2004.
+
+2. 
+Charpiat, Guillaume, Matthias Hofmann, and Bernhard Schölkopf. 
+"Automatic image colorization via multimodal predictions." 
+European conference on computer vision. Springer Berlin Heidelberg, 2008.
+
+
