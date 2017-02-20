@@ -100,7 +100,6 @@ def train(image_data, batch_size):
       batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
       sess.run(G_train_op, feed_dict={z:batch_z})
 
-
       if step % 10 == 0:
          # now get all losses and summary *without* performing a training step - for tensorboard
          D_loss, D_loss_real, D_loss_fake, G_loss, summary = sess.run([errD, errD_real, errD_fake, errG, merged_summary_op], feed_dict={real_images:batch_real_images, z:batch_z})

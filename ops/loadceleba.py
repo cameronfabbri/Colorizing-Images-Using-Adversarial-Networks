@@ -10,7 +10,8 @@ import cPickle as pickle
    resizes image to 96x96 then crops 64x64 center
 '''
 def crop_(img):
-   img = cv2.resize(img, (96,96))
+   height, width, channels = img.shape
+   if height is not 96 and width is not 96: img = cv2.resize(img, (96,96))
    height, width, channels = img.shape
    center = (height/2, width/2)
    img = img[center[0]-32:center[0]+32,center[1]-32:center[1]+32, :]
@@ -81,7 +82,7 @@ def load(
    if not load: return image_paths
 
    # TEMP TODO fix this, and also resize all images to 96x96 instead of the 64x64
-   if not gray: num_images = len(images)
+   if not gray: num_images = len(image_paths['images'])
    # load into memory. At (224,224) the most we can load is ~150,000 images (224*224*3*3*130000) bytes to gb
    if load is True: image_data = np.empty((num_images, 64, 64, 3), dtype=np.float32)
 
