@@ -81,6 +81,7 @@ def load(
    
    if not load: return image_paths
 
+   print len(image_paths['images']), 'images!'
    # TEMP TODO fix this, and also resize all images to 96x96 instead of the 64x64
    if not gray: num_images = len(image_paths['images'])
    # load into memory. At (224,224) the most we can load is ~150,000 images (224*224*3*3*130000) bytes to gb
