@@ -67,7 +67,11 @@ def load(
          image_paths = dict()
          image_paths['color_images'] = color_images
          image_paths['gray_images']  = gray_images
-         pickle.dump(open(pkl_file, 'wb'), image_paths)
+         pf   = open(pkl_file, 'wb')
+         data = pickle.dumps(image_paths)
+         pf.write(data)
+         pf.close()
+      
       else:
          print 'getting paths!'
          image_dir = data_dir+'color/'
@@ -81,20 +85,43 @@ def load(
    
    if not load: return image_paths
 
-   print len(image_paths['images']), 'images!'
-   # TEMP TODO fix this, and also resize all images to 96x96 instead of the 64x64
    if not gray: num_images = len(image_paths['images'])
-   # load into memory. At (224,224) the most we can load is ~150,000 images (224*224*3*3*130000) bytes to gb
-   if load is True: image_data = np.empty((num_images, 64, 64, 3), dtype=np.float32)
+   if gray: num_images     = len(image_paths['color_images'])
 
-   print 'Loading data...'
-   i = 0
-   for image in tqdm(image_paths['images']):
-      img = cv2.imread(image).astype('float32')
-      img = crop_(img)
-      img = img/127.5 - 1. # normalize between -1 and 1
-      image_data[i, ...] = img
-      i += 1
-      #if i == 1000: break
+   '''
+   if not gray and load is True:
+      image_data = np.empty((num_images, 64, 64, 3), dtype=np.float32)
+      print 'Loading data...'
+      i = 0
+      for image in tqdm(image_paths['images']):
+         img = cv2.imread(image).astype('float32')
+         img = crop_(img)
+         img = img/127.5 - 1. # normalize between -1 and 1
+         image_data[i, ...] = img
+         i += 1
+         #if i == 1000: break
+      return image_data
+   '''
+   if gray and load is True:
+      color_image_data = np.empty((num_images, 64, 64, 3), dtype=np.float32)
+      gray_image_data = np.empty((num_images, 64, 64, 1), dtype=np.float32)
 
-   return image_data
+      print 'Loading data...'
+      i = 0
+      for cimage, gimage in tqdm(zip(image_paths['color_images'], image_paths['gray_images'])):
+         color_img = cv2.imread(cimage).astype('float32')
+         gray_img  = np.expand_dims(cv2.imread(gimage).astype('float32')[:,:,1], 2)
+         
+         color_img = crop_(color_img)
+         gray_img  = crop_(gray_img)
+
+         color_img = color_img/127.5 - 1. # normalize between -1 and 1
+         gray_img  = gray_img/127.5 - 1. # normalize between -1 and 1
+         
+         color_image_data[i, ...] = color_img
+         gray_image_data[i, ...] = gray_img
+         i += 1
+         if i == 1000: break
+
+      return color_image_data, gray_image_data
+

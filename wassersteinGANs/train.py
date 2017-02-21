@@ -19,26 +19,34 @@ def build_graph(info):
    batch_size = info['batch_size']
    dataset    = info['dataset']
    load       = info['load']
+   gray       = info['load']
 
-   # load celeba data
-   if dataset == 'celeba':
-      image_data = loadceleba.load(load=True)
+   if gray and load:
+      color_image_data, gray_image_data = loadceleba.load(load=load, gray=gray)
+      image_data = [color_image_data, gray_image_data]
 
    train(image_data, batch_size, info)
 
 def train(image_data, batch_size, info):
    dataset = info['dataset']
    task    = info['task']
+   
+   if task == 'colorize':
+      color_image_data = image_data[0]
+      gray_image_data  = image_data[1]
 
    num_critic  = 5
    clip_values = [-0.01, 0.01]
       
    global_step = tf.Variable(0, name='global_step', trainable=False)
    real_images = tf.placeholder(tf.float32, shape=(batch_size, 64, 64, 3), name='color_images')
-   z           = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
+   
+   gray_images = tf.placeholder(tf.float32, shape=(batch_size, 64, 64, 1), name='gray_images')
+   z = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
 
    # generated images
-   gen_images = netG(z, batch_size)
+   if task == 'generate': gen_images = netG(z, task, batch_size)
+   if task == 'colorize': gen_images = netG(gray_images, task, batch_size)
   
    errD_real = netD(real_images, batch_size)
    errD_fake = netD(gen_images, batch_size, reuse=True)
@@ -50,8 +58,9 @@ def train(image_data, batch_size, info):
    #tf.summary.scalar('d_loss_real', errD_real)
    #tf.summary.scalar('d_loss_gen', errD_fake)
    tf.summary.scalar('g_loss', errG)
-   tf.summary.image('real_images', real_images, max_outputs=20)
-   tf.summary.image('generated_images', gen_images, max_outputs=20)
+   tf.summary.image('real_images', real_images, max_outputs=50)
+   if task == 'generate': tf.summary.image('generated_images', gen_images, max_outputs=50)
+   if task == 'colorize': tf.summary.image('colorized_images', gen_images, max_outputs=50)
    merged_summary_op = tf.summary.merge_all()
    
    t_vars = tf.trainable_variables()
@@ -65,16 +74,21 @@ def train(image_data, batch_size, info):
    G_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errG, var_list=g_vars, global_step=global_step)
    D_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errD, var_list=d_vars, global_step=global_step)
    
-   gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+   #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
    init      = tf.global_variables_initializer()
-   sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-   #sess = tf.Session()
+   #sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+   sess = tf.Session()
    sess.run(init)
 
-   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/logs/', graph=tf.get_default_graph())
+   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/'+task+'/logs/', graph=tf.get_default_graph())
    
    saver = tf.train.Saver(max_to_keep=1)
-   ckpt = tf.train.get_checkpoint_state(checkpoint_dir+dataset)
+   ckpt = tf.train.get_checkpoint_state(checkpoint_dir+dataset+'/'+task+'/')
+
+   num_images = len(color_image_data)
+   print len(color_image_data)
+   print len(gray_image_data)
+   
    if ckpt and ckpt.model_checkpoint_path:
       print "Restoring previous model..."
       try:
@@ -94,28 +108,49 @@ def train(image_data, batch_size, info):
 
       # train the discriminator for 5 or 25 runs
       for critic_itr in range(n_critic):
-         batch_real_images = random.sample(image_data, batch_size)
-         batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-         sess.run(D_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
+         if task == 'generate':
+            batch_real_images = random.sample(image_data, batch_size)
+            batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
+            sess.run(D_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
+         if task == 'colorize':
+            idx = np.random.choice(np.arange(num_images), batch_size, replace=False)
+            batch_color_images = color_image_data[idx]
+            batch_gray_images = gray_image_data[idx]
+            sess.run(D_train_op, feed_dict={real_images:batch_color_images, gray_images:batch_gray_images})
+
          sess.run(clip_discriminator_var_op)
 
       # now train the generator once!
-      batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-      sess.run(G_train_op, feed_dict={z:batch_z})
+      if task == 'generate':
+         batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
+         sess.run(G_train_op, feed_dict={z:batch_z})
+      if task == 'colorize':
+         idx = np.random.choice(np.arange(num_images), batch_size, replace=False)
+         batch_gray_images = gray_image_data[idx]
+         sess.run(G_train_op, feed_dict={gray_images:batch_gray_images})
 
       # now get all losses and summary *without* performing a training step - for tensorboard
-      D_loss, D_loss_real, D_loss_fake, G_loss, summary = sess.run([errD, errD_real, errD_fake, errG, merged_summary_op], feed_dict={real_images:batch_real_images, z:batch_z})
+      if task == 'generate':
+         D_loss, D_loss_real, D_loss_fake, G_loss, summary = sess.run([errD, errD_real, errD_fake, errG, merged_summary_op], feed_dict={real_images:batch_real_images, z:batch_z})
+         
+      if task == 'colorize':
+         D_loss, D_loss_real, D_loss_fake, G_loss, summary = sess.run([errD, errD_real, errD_fake, errG, merged_summary_op], feed_dict={real_images:batch_color_images, gray_images:batch_gray_images})
       print 'Step:',step,'D_loss:',D_loss,'G_loss:',G_loss
       step += 1
 
       summary_writer.add_summary(summary, step)
      
-      if step%500 == 0:
+      if step%2 == 0:
          print 'Saving model...'
-         saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
-      
-         batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-         gen_imgs = sess.run([gen_images], feed_dict={z:batch_z})
+         saver.save(sess, checkpoint_dir+dataset+'/'+task+'/checkpoint-'+str(step), global_step=global_step)
+         idx = np.random.choice(np.arange(num_images), batch_size, replace=False)
+        
+         if task == 'colorize':
+            batch_gray_images = gray_image_data[idx]
+            gen_imgs = sess.run([gen_images], feed_dict={gray_images:batch_gray_images})
+         if task == 'generate':
+            batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
+            gen_imgs = sess.run([gen_images], feed_dict={z:batch_z})
 
          num = 0
          for img in gen_imgs[0]:
@@ -127,6 +162,7 @@ def train(image_data, batch_size, info):
             if num == 10:
                #os.sys('cp images/celeba/step_'+str(step)+'_'+str(num)+'.png gitimgs/img.png',)
                #os.sys('git add -f gitimgs/img.png; git commit -m \'added image\'; git push')
+               exit()
                break
 
 if __name__ == '__main__':
@@ -156,13 +192,15 @@ if __name__ == '__main__':
    except: pass
    try: os.mkdir(checkpoint_dir+dataset)
    except: pass
+   try: os.mkdir(checkpoint_dir+dataset+'/'+task)
+   except: pass
    try: os.mkdir('images/')
    except: pass
    try: os.mkdir('images/'+dataset)
    except: pass
    try: os.mkdir('images/'+dataset+'/'+task)
    except: pass
-
+   
    info = dict()
    info['checkpoint_dir'] = checkpoint_dir
    info['learning_rate']  = learning_rate
