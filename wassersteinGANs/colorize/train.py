@@ -11,6 +11,8 @@ sys.path.insert(0, 'config/')
 sys.path.insert(0, '../../ops/')
 import loadceleba
 
+from tf_ops import tanh_scale, tanh_descale
+
 '''
    Builds the graph and sets up params, then starts training
 '''
@@ -20,18 +22,17 @@ def buildAndTrain(info):
    batch_size     = info['batch_size']
    dataset        = info['dataset']
    load           = info['load']
-   gray           = info['load']
 
    # load data
-   image_data = loadceleba.load(load=load)
+   color_image_data, gray_image_data = loadceleba.load(load=load)
 
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
-   real_images = tf.placeholder(tf.float32, shape=(batch_size, 64, 64, 3), name='color_images')
-   z           = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
+   color_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 3), name='color_images')
+   gray_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='gray_images')
 
-   # generated images
-   gen_images = netG(z, batch_size)
+   # images colorized by network
+   gen_images = netG(gray_images, batch_size)
 
    # get the output from D on the real and fake data
    errD_real = netD(real_images, batch_size)
@@ -44,7 +45,7 @@ def buildAndTrain(info):
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
    tf.summary.scalar('g_loss', errG)
-   tf.summary.image('real_images', real_images, max_outputs=batch_size)
+   tf.summary.image('color_images', color_images, max_outputs=batch_size)
    tf.summary.image('generated_images', gen_images, max_outputs=batch_size)
    merged_summary_op = tf.summary.merge_all()
 
@@ -54,7 +55,8 @@ def buildAndTrain(info):
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
    # clip weights in D
-   clip_values = [-0.01, 0.01]
+   #clip_values = [-0.01, 0.01]
+   clip_values = [-0.005, 0.005]
    clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for
       var in d_vars]
 
@@ -91,7 +93,8 @@ def buildAndTrain(info):
    ########################################### training portion
 
    step = sess.run(global_step)
-   
+   num_images = len(gray_image_data)
+
    while True:
 
       # get the discriminator properly trained at the start
@@ -101,14 +104,27 @@ def buildAndTrain(info):
 
       # train the discriminator for 5 or 25 runs
       for critic_itr in range(n_critic):
-         batch_real_images = random.sample(image_data, batch_size)
-         batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-         sess.run(D_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
+         #batch_real_images = random.sample(image_data, batch_size)
+         #batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
+
+         # have to load images from disk
+         idx = np.random.choice(np.arange(num_images), batch_size, replace=False)
+
+         # get color images
+         batch_color_images = np.empty((num_images, 256, 256, 3), dtype=np.float32)
+         batch_gray_image   = np.empty((num_images, 256, 256, 1), dtype=np.float32)
+
+         for cim, gim in zip(color_image_data[idx], gray_image_data[idx]):
+            batch_color_images[i, ...] = tanh_scale(cv2.imread(cim).astype('float32'))
+            batch_gray_images[i, ...]  = tanh_scale(cv2.imread(gim).astype('float32'))
+         sess.run(D_train_op, feed_dict={color_images:batch_color_images, gray_images:batch_gray_images})
          sess.run(clip_discriminator_var_op)
 
-      # now train the generator once! use normal distribution, not uniform!!
-      batch_z = np.random.normal(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-      sess.run(G_train_op, feed_dict={z:batch_z})
+      idx = np.random.choice(np.arange(num_images), batch_size, replace=False)
+      batch_gray_image = np.empty((num_images, 256, 256, 1), dtype=np.float32)
+      for gim in gray_image_data[idx]:
+         batch_gray_images[i, ...] = tanh_scale(cv2.imread(gim).astype('float32'))
+      sess.run(G_train_op, feed_dict={gray_images:batch_gray_images})
 
       # now get all losses and summary *without* performing a training step - for tensorboard
       D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op],
@@ -130,13 +146,14 @@ def buildAndTrain(info):
          num = 0
          for img in gen_imgs[0]:
             img = np.asarray(img)
-            img = (img+1.)/2. # these two lines properly scale from [-1, 1] to [0, 255]
-            img *= 255.0/img.max()
+            #img = (img+1.)/2. # these two lines properly scale from [-1, 1] to [0, 255]
+            #img *= 255.0/img.max()
+            img = tanh_descale(img)
             cv2.imwrite('images/'+dataset+'/'+str(step)+'_'+str(num)+'.png', img)
             num += 1
             if num == 20:
                break
-
+         print 'Done saving'
 
 
 

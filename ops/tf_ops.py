@@ -26,7 +26,6 @@ def _variable_on_gpu(name, shape, initializer):
       var = tf.get_variable(name, shape, initializer=initializer)
    return var
 
-
 '''
    Creates a variable with weight decay
 '''
@@ -39,11 +38,12 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
    return var
 
 def tanh_scale(img):
-   return 2*((img-np.min(img))/(np.max(img)-np.min(img))) - 1
+   return img/127.5 - 1.
 
 def tanh_descale(img):
-   return (img - np.max(img)) / (np.max(img)-np.min(img))
-
+   img = (img+1.)/2.
+   img = 255.0/img.max()
+   return img
 
 '''
    taken from: http://stackoverflow.com/a/33950177 and
