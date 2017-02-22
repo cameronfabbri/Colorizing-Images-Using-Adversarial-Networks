@@ -2,16 +2,15 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import sys
 
-sys.path.insert(0, '../ops/')
+sys.path.insert(0, '../../ops/')
 from tf_ops import lrelu
 
-def netG(z, task, batch_size):
+def netG(z, batch_size):
 
    print 'GENERATOR'
-   if task == 'generate':
-      z = slim.fully_connected(z, 4*4*1024, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_z')
-      z = tf.reshape(z, [batch_size, 4, 4, 1024])
-      print 'z:',z
+   z = slim.fully_connected(z, 4*4*1024, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_z')
+   z = tf.reshape(z, [batch_size, 4, 4, 1024])
+   print 'z:',z
 
    print 'z:',z
    conv1 = slim.convolution2d_transpose(z, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv1')
@@ -26,27 +25,14 @@ def netG(z, task, batch_size):
    conv3 = tf.nn.relu(conv3)
    print 'conv3:',conv3
 
-   if task == 'generate':
-      conv4 = slim.convolution2d_transpose(conv3, 3, 5, stride=2, activation_fn=tf.identity, scope='g_conv4')
-      conv4 = tf.nn.tanh(conv4)
-      print 'conv4:',conv4
-      print
-      print 'END G'
-      print
-      return conv4 
+   conv4 = slim.convolution2d_transpose(conv3, 3, 5, stride=2, activation_fn=tf.identity, scope='g_conv4')
+   conv4 = tf.nn.tanh(conv4)
+   print 'conv4:',conv4
+   print
+   print 'END G'
+   print
+   return conv4 
 
-   conv5 = slim.convolution2d(conv3, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv5')
-   conv5 = tf.nn.relu(conv5)
-   print 'conv5:',conv5
-   
-   conv6 = slim.convolution2d(conv5, 256, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv6')
-   conv6 = tf.nn.relu(conv6)
-   print 'conv6:',conv6
-   
-   conv7 = slim.convolution2d(conv6, 3, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv7')
-   conv7 = tf.nn.relu(conv7)
-   print 'conv7:',conv7
-   return conv7 
 
 '''
    Discriminator network
@@ -77,6 +63,6 @@ def netD(input_images, batch_size, reuse=False):
       #print 'conv5:',conv5
       #conv5 = slim.flatten(conv4)
       #fc = slim.fully_connected(conv5, 1, activation_fn=tf.identity)
-      print 'END D'
+      print 'END D\n'
       return conv4
 
