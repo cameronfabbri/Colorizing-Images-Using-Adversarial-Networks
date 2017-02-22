@@ -54,7 +54,8 @@ def buildAndTrain(info):
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
    # clip weights in D
-   clip_values = [-0.01, 0.01]
+   #clip_values = [-0.01, 0.01]
+   clip_values = [-0.005, 0.005]
    clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for
       var in d_vars]
 
@@ -136,7 +137,7 @@ def buildAndTrain(info):
             num += 1
             if num == 20:
                break
-
+         print 'Done saving'
 
 
 

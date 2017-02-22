@@ -56,11 +56,13 @@ def netD(input_images, batch_size, reuse=False):
       print 'conv3:',conv3
 
       conv4 = slim.convolution(conv3, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
+      #conv4 = slim.convolution(conv3, 512, 5, stride=2, activation_fn=tf.identity, scope='d_conv4')
       conv4 = lrelu(conv4)
       print 'conv4:',conv4
 
-      #conv5 = slim.convolution(conv4, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv5')
-      #print 'conv5:',conv5
+      conv5 = slim.convolution(conv4, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv5')
+      print 'conv5:',conv5
+      
       #conv5 = slim.flatten(conv4)
       #fc = slim.fully_connected(conv5, 1, activation_fn=tf.identity)
       print 'END D\n'
