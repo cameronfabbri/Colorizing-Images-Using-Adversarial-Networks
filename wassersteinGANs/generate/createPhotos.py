@@ -14,14 +14,14 @@ if __name__ == '__main__':
 
    checkpoint_dir = sys.argv[1]
 
-   n = 16 # cols
-   m = 4  # rows
+   n = 15 # cols
+   m = 5  # rows
 
    num_images = n*m
 
    img_size = (64, 64, 3)
 
-   canvas = 255*np.ones((m*img_size[0]+50, n*img_size[1]+170, 3), dtype=np.uint8)
+   canvas = 255*np.ones((m*img_size[0]+(10*m)+10, n*img_size[1]+(10*n)+10, 3), dtype=np.uint8)
    
    z = tf.placeholder(tf.float32, shape=(num_images, 100), name='z')
    generated_images = netG(z, num_images)
@@ -52,7 +52,6 @@ if __name__ == '__main__':
    x = 0
    y = 0
 
-   current_row = 1
    for img in gen_imgs:
       img = (img+1.)/2. # these two lines properly scale from [-1, 1] to [0, 255]
       img *= 255.0/img.max()
@@ -62,27 +61,16 @@ if __name__ == '__main__':
       
       canvas[start_y:end_y, start_x:end_x, :] = img
 
-      # go across if y steps is less than n
       if x < n:
          start_x += 64+10
          x += 1
       if x == n:
-         x = 0
+         x       = 0
          start_x = 10
          start_y = end_y + 10
+         end_y   = start_y+64
 
-         end_y = start_y+64
-         current_row += 1
-
+   cv2.imwrite('results.jpg', canvas)
    cv2.imshow('canvas', canvas)
    cv2.waitKey(0)
    cv2.destroyAllWindows()
-
-      
-      
-      #if y < m and x == n:
-      #   start_y += y*64+10
-      #   y += 1
-
-
-
