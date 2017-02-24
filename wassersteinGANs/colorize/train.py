@@ -1,5 +1,5 @@
 import tensorflow as tf
-from architecture import netD, netG
+from architecture import netD, netG_encoder, netG_decoder
 import numpy as np
 import random
 import ntpath
@@ -7,11 +7,15 @@ import sys
 import cv2
 import os
 
+# for lab colorspace
+from scipy import misc
+from skimage import color
+
 sys.path.insert(0, 'config/')
 sys.path.insert(0, '../../ops/')
-import loadceleba
+import loadceleba_colorize
+from data_ops import normalizeImage, saveImage
 
-from tf_ops import tanh_scale, tanh_descale
 
 '''
    Builds the graph and sets up params, then starts training
@@ -24,19 +28,25 @@ def buildAndTrain(info):
    load           = info['load']
 
    # load data
-   color_image_data, gray_image_data = loadceleba.load(load=load)
-
+   image_paths = loadceleba_colorize.load(load=load)
+   color_train_data = np.asarray(image_paths['color_images_train'])
+   gray_train_data  = np.asarray(image_paths['gray_images_train'])
+   color_test_data  = np.asarray(image_paths['color_images_test'])
+   gray_test_data   = np.asarray(image_paths['gray_images_test'])
+   
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
    color_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 3), name='color_images')
    gray_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='gray_images')
 
    # images colorized by network
-   gen_images = netG(gray_images, batch_size)
-
+   #gen_images = netG(gray_images, batch_size)
+   encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, batch_size)
+   decoded_gen = netG_decoder(encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_images)
+   
    # get the output from D on the real and fake data
-   errD_real = netD(real_images, batch_size)
-   errD_fake = netD(gen_images, batch_size, reuse=True) # gotta pass reuse=True to reuse weights
+   errD_real = netD(color_images, batch_size)
+   errD_fake = netD(decoded_gen, batch_size, reuse=True) # gotta pass reuse=True to reuse weights
 
    # cost functions
    errD = tf.reduce_mean(errD_real - errD_fake)
@@ -46,7 +56,7 @@ def buildAndTrain(info):
    tf.summary.scalar('d_loss', errD)
    tf.summary.scalar('g_loss', errG)
    tf.summary.image('color_images', color_images, max_outputs=batch_size)
-   tf.summary.image('generated_images', gen_images, max_outputs=batch_size)
+   tf.summary.image('generated_images', decoded_gen, max_outputs=batch_size)
    merged_summary_op = tf.summary.merge_all()
 
    # get all trainable variables, and split by network G and network D
@@ -74,7 +84,7 @@ def buildAndTrain(info):
    sess.run(init)
 
    # write out logs for tensorboard to the checkpointSdir
-   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/'+'logs/', graph=tf.get_default_graph())
+   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/logs/', graph=tf.get_default_graph())
 
    # only keep one model
    saver = tf.train.Saver(max_to_keep=1)
@@ -93,7 +103,8 @@ def buildAndTrain(info):
    ########################################### training portion
 
    step = sess.run(global_step)
-   num_images = len(gray_image_data)
+   num_train_images = len(gray_train_data)
+   num_test_images = len(gray_test_data)
 
    while True:
 
@@ -104,31 +115,50 @@ def buildAndTrain(info):
 
       # train the discriminator for 5 or 25 runs
       for critic_itr in range(n_critic):
-         #batch_real_images = random.sample(image_data, batch_size)
-         #batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-
+         
          # have to load images from disk
-         idx = np.random.choice(np.arange(num_images), batch_size, replace=False)
+         idx = np.random.choice(np.arange(num_train_images), batch_size, replace=False)
 
          # get color images
-         batch_color_images = np.empty((num_images, 256, 256, 3), dtype=np.float32)
-         batch_gray_image   = np.empty((num_images, 256, 256, 1), dtype=np.float32)
+         batch_color_images = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
+         batch_gray_images  = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
+         i = 0
+         for cim, gim in zip(color_train_data[idx], gray_train_data[idx]):
+            # read in color image
+            cimg = misc.imread(cim)
+            cimg = color.rgb2lab(cimg)
 
-         for cim, gim in zip(color_image_data[idx], gray_image_data[idx]):
-            batch_color_images[i, ...] = tanh_scale(cv2.imread(cim).astype('float32'))
-            batch_gray_images[i, ...]  = tanh_scale(cv2.imread(gim).astype('float32'))
+            # read in gray image
+            gimg = misc.imread(gim)
+            gimg = np.expand_dims(gimg, 2)
+            
+            # now convert to float and put in tanh range
+            cimg = normalizeImage(np.float32(cimg))
+            gimg = normalizeImage(np.float32(gimg))
+
+            batch_color_images[i, ...] = cimg
+            batch_gray_images[i, ...]  = gimg
+
+            i += 1
+
          sess.run(D_train_op, feed_dict={color_images:batch_color_images, gray_images:batch_gray_images})
          sess.run(clip_discriminator_var_op)
 
-      idx = np.random.choice(np.arange(num_images), batch_size, replace=False)
-      batch_gray_image = np.empty((num_images, 256, 256, 1), dtype=np.float32)
-      for gim in gray_image_data[idx]:
-         batch_gray_images[i, ...] = tanh_scale(cv2.imread(gim).astype('float32'))
+      idx = np.random.choice(np.arange(num_train_images), batch_size, replace=False)
+      batch_gray_image = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
+      i = 0
+      for gim in gray_train_data[idx]:
+         gimg = misc.imread(gim)
+         gimg = np.expand_dims(gimg, 2)
+         gimg = normalizeImage(np.float32(gimg))
+         batch_gray_images[i, ...] = gimg
+         i += 1
       sess.run(G_train_op, feed_dict={gray_images:batch_gray_images})
 
       # now get all losses and summary *without* performing a training step - for tensorboard
       D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op],
-                                          feed_dict={real_images:batch_real_images, z:batch_z})
+                                          feed_dict={color_images:batch_color_images,
+                                          gray_images:batch_gray_images})
 
       summary_writer.add_summary(summary, step)
 
@@ -136,28 +166,33 @@ def buildAndTrain(info):
 
       step += 1
 
-      if step%500 == 0:
+      if step%1000 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
          
-         batch_z  = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
-         gen_imgs = sess.run([gen_images], feed_dict={z:batch_z})
+         # evaluate on some test data
+         print 'Evaluating...'
+         idx = np.random.choice(np.arange(num_test_images), batch_size, replace=False)
+        
+         batch_color_images = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
+         batch_gray_images  = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
 
-         num = 0
-         for img in gen_imgs[0]:
-            img = np.asarray(img)
-            #img = (img+1.)/2. # these two lines properly scale from [-1, 1] to [0, 255]
-            #img *= 255.0/img.max()
-            img = tanh_descale(img)
-            cv2.imwrite('images/'+dataset+'/'+str(step)+'_'+str(num)+'.png', img)
-            num += 1
-            if num == 20:
-               break
-         print 'Done saving'
+         i = 0
+         for cim, gim in zip(color_test_data[idx], gray_test_data[idx]):
+            cimg = misc.imread(cim)
+            cimg = color.rgb2lab(cimg)
+         
+            gimg = misc.imread(gim)
+            gimg = np.expand_dims(gimg, 2)
+         
+            cimg = normalizeImage(np.float32(cimg))
+            gimg = normalizeImage(np.float32(gimg))
+            
+            batch_gray_images[i, ...]  = gimg
+            batch_color_images[i, ...] = cimg
+            i += 1
 
+         gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:batch_gray_images}))
 
-
-
-
-
-
+         saveImage(gen_images, str(step), 'celeba')
+         saveImage(gen_images, str(step), 'celeba')
