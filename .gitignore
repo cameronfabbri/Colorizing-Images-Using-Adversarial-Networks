@@ -17,3 +17,5 @@ model/
 checkpoint*
 checkpoints*
 checkpoint/
+*.png
+*.jpg
