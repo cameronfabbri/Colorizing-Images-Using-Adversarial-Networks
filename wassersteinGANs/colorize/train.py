@@ -71,10 +71,12 @@ def buildAndTrain(info):
       var in d_vars]
 
    # optimize G
-   G_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errG, var_list=g_vars, global_step=global_step)
+   #G_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errG, var_list=g_vars, global_step=global_step)
+   G_train_op = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(errG, var_list=g_vars, global_step=global_step)
 
    # optimize D
-   D_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errD, var_list=d_vars, global_step=global_step)
+   #D_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errD, var_list=d_vars, global_step=global_step)
+   D_train_op = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(errD, var_list=d_vars, global_step=global_step)
 
    # change to use a fraction of memory
    #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
@@ -126,7 +128,7 @@ def buildAndTrain(info):
          for cim, gim in zip(color_train_data[idx], gray_train_data[idx]):
             # read in color image
             cimg = misc.imread(cim)
-            cimg = color.rgb2lab(cimg)
+            #cimg = color.rgb2lab(cimg)
 
             # read in gray image
             gimg = misc.imread(gim)
@@ -166,7 +168,8 @@ def buildAndTrain(info):
 
       step += 1
 
-      if step%1000 == 0:
+      #if step%1000 == 0:
+      if step%500 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
          
@@ -193,6 +196,5 @@ def buildAndTrain(info):
             i += 1
 
          gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:batch_gray_images}))
-
          saveImage(gen_images, str(step), 'celeba')
          saveImage(gen_images, str(step), 'celeba')
