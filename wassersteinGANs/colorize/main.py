@@ -2,8 +2,9 @@ import sys
 import ntpath
 from train import buildAndTrain
 import os
+import tensorflow as tf
 
-if __name__ == '__main__':
+def main(argv=None):
 
    # this loads a config file like: import config_name
    try:
@@ -17,6 +18,8 @@ if __name__ == '__main__':
       exit()
 
    # set up params from config
+   tfrecords_train_file = config.tfrecords_train_file
+   tfrecords_test_file = config.tfrecords_test_file
    checkpoint_dir = config.checkpoint_dir
    learning_rate  = config.learning_rate
    batch_size     = config.batch_size
@@ -36,6 +39,8 @@ if __name__ == '__main__':
    except: pass
    
    info = dict()
+   info['tfrecords_train_file'] = tfrecords_train_file
+   info['tfrecords_test_file'] = tfrecords_test_file
    info['checkpoint_dir'] = checkpoint_dir
    info['learning_rate']  = learning_rate
    info['batch_size']     = batch_size
@@ -55,3 +60,5 @@ if __name__ == '__main__':
    # build the graph - placeholders, loss functions, etc, then call train.
    buildAndTrain(info)
 
+if __name__ == '__main__':
+   tf.app.run()

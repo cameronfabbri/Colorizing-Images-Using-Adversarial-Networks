@@ -6,7 +6,10 @@ import ntpath
 import sys
 import cv2
 import os
+import time
 
+from scipy import misc
+from skimage import color
 # for lab colorspace
 from scipy import misc
 from skimage import color
@@ -16,51 +19,52 @@ sys.path.insert(0, '../../ops/')
 import loadceleba_colorize
 from data_ops import normalizeImage, saveImage
 
-def read_data(filename_queue):
+def read_data(filename_queue, batch_size):
    reader = tf.TFRecordReader()
+   
    _, serialized_example = reader.read(filename_queue)
    
    features = tf.parse_single_example(serialized_example,
       features={
-         'color_image': tf.FixedLenFeature([], tf.float32),
-         'color_image': tf.FixedLenFeature([], tf.float32)
+         'color_image': tf.FixedLenFeature([], tf.string),
+         'gray_image':  tf.FixedLenFeature([], tf.string)
       })
 
    color_image = tf.decode_raw(features['color_image'], tf.float32)
    gray_image = tf.decode_raw(features['gray_image'], tf.float32)
 
-   color_image_shape = tf.pack([256, 256, 3])
-   gray_image_shape  = tf.pack([256, 256, 1])
+   color_image_shape = tf.stack([256, 256, 3])
+   gray_image_shape  = tf.stack([256, 256, 1])
 
    color_image = tf.reshape(color_image, color_image_shape)
    gray_image  = tf.reshape(gray_image, gray_image_shape)
+   
+   color_images, gray_images = tf.train.shuffle_batch(
+      [color_image, gray_image],
+      batch_size = batch_size,
+      num_threads=12,
+      capacity=10000+8*batch_size,
+      min_after_dequeue=10000)
 
-   return color_image, gray_image
+   return color_images, gray_images
 
 '''
    Builds the graph and sets up params, then starts training
 '''
 def buildAndTrain(info):
 
-   checkpoint_dir = info['checkpoint_dir']
-   batch_size     = info['batch_size']
-   dataset        = info['dataset']
-   load           = info['load']
+   tfrecords_train_file = info['tfrecords_train_file']
+   tfrecords_test_file  = info['tfrecords_test_file']
+   checkpoint_dir       = info['checkpoint_dir']
+   batch_size           = info['batch_size']
+   dataset              = info['dataset']
+   load                 = info['load']
 
-   # load data
-   #image_paths = loadceleba_colorize.load(load=load)
-   #color_train_data = np.asarray(image_paths['color_images_train'])
-   #gray_train_data  = np.asarray(image_paths['gray_images_train'])
-   #color_test_data  = np.asarray(image_paths['color_images_test'])
-   #gray_test_data   = np.asarray(image_paths['gray_images_test'])
-   
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
-   #color_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 3), name='color_images')
-   #gray_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='gray_images')
 
-   filename_queue = tf.train.string_input_producer([tfrecords_filename], num_epochs=100)
-   color_images, gray_images = read_data(filename_queue)
+   filename_queue = tf.train.string_input_producer([tfrecords_train_file], num_epochs=500)
+   color_images, gray_images = read_data(filename_queue, batch_size)
 
    # images colorized by network
    #gen_images = netG(gray_images, batch_size)
@@ -95,22 +99,21 @@ def buildAndTrain(info):
 
    # optimize G
    G_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-   #G_train_op = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(errG, var_list=g_vars, global_step=global_step)
 
    # optimize D
    D_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errD, var_list=d_vars, global_step=global_step, colocate_gradients_with_ops=True)
-   #D_train_op = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(errD, var_list=d_vars, global_step=global_step)
 
    # change to use a fraction of memory
    #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
-   init      = tf.global_variables_initializer()
+   #init      = tf.global_variables_initializer()
+   init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
    #sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
    sess = tf.Session()
    sess.run(init)
 
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-
+   
    # write out logs for tensorboard to the checkpointSdir
    summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/logs/', graph=tf.get_default_graph())
 
@@ -131,110 +134,56 @@ def buildAndTrain(info):
    ########################################### training portion
 
    step = sess.run(global_step)
-   num_train_images = len(gray_train_data)
-   num_test_images = len(gray_test_data)
+   #num_train_images = len(gray_train_data)
+   #num_test_images = len(gray_test_data)
 
    try:
       while not coord.should_stop():
+         s = time.time()
          # get the discriminator properly trained at the start
          if step < 25 or step % 500 == 0:
             n_critic = 100
          else: n_critic = 5
 
-         # train the discriminator for 5 or 25 runs
+         # train the discriminator for 5 or 100 runs
          for critic_itr in range(n_critic):
             
-            '''
-            # have to load images from disk
-            idx = np.random.choice(np.arange(num_train_images), batch_size, replace=False)
-
-            # get color images
-            batch_color_images = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
-            batch_gray_images  = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
-            i = 0
-            for cim, gim in zip(color_train_data[idx], gray_train_data[idx]):
-               # read in color image
-               cimg = misc.imread(cim)
-               #cimg = color.rgb2lab(cimg)
-
-               # read in gray image
-               gimg = misc.imread(gim)
-               gimg = np.expand_dims(gimg, 2)
-               
-               # now convert to float and put in tanh range
-               cimg = normalizeImage(np.float32(cimg))
-               gimg = normalizeImage(np.float32(gimg))
-
-               batch_color_images[i, ...] = cimg
-               batch_gray_images[i, ...]  = gimg
-
-               i += 1
-            '''
-
             sess.run([D_train_op, color_images, gray_images])
-            #sess.run(D_train_op, feed_dict={color_images:batch_color_images, gray_images:batch_gray_images})
-            #sess.run(clip_discriminator_var_op)
+            sess.run(clip_discriminator_var_op)
 
-         '''
-         idx = np.random.choice(np.arange(num_train_images), batch_size, replace=False)
-         batch_gray_image = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
-         i = 0
-         for gim in gray_train_data[idx]:
-            gimg = misc.imread(gim)
-            gimg = np.expand_dims(gimg, 2)
-            gimg = normalizeImage(np.float32(gimg))
-            batch_gray_images[i, ...] = gimg
-            i += 1
-         '''
-         sess.run(G_train_op, feed_dict={gray_images:batch_gray_images})
+         sess.run([G_train_op, gray_images])
 
          # now get all losses and summary *without* performing a training step - for tensorboard
-         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op],
-                                             feed_dict={color_images:batch_color_images,
-                                             gray_images:batch_gray_images})
+         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+         #D_loss, G_loss = sess.run([errD, errG])
 
          summary_writer.add_summary(summary, step)
 
-         print 'step:',step,'D loss:',D_loss,'G_loss:',G_loss
+         print 'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+
+         # THIS WORKS TO RECOVER IMAGE
+         #col_img = np.asarray(sess.run(color_images))[0]
+         #col_img = (col_img+1)*127.5
+         #col_img = color.lab2rgb(np.float64(col_img))
+         #misc.imsave('test_im.jpg', col_img)
 
          step += 1
 
-         #if step%1000 == 0:
-         if step%500 == 0:
+         if step%1000 == 0:
             print 'Saving model...'
             saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
             
             # evaluate on some test data
             print 'Evaluating...'
-            idx = np.random.choice(np.arange(num_test_images), batch_size, replace=False)
            
-            batch_color_images = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
-            batch_gray_images  = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
-
-            i = 0
-            for cim, gim in zip(color_test_data[idx], gray_test_data[idx]):
-               cimg = misc.imread(cim)
-               cimg = color.rgb2lab(cimg)
-            
-               gimg = misc.imread(gim)
-               gimg = np.expand_dims(gimg, 2)
-            
-               cimg = normalizeImage(np.float32(cimg))
-               gimg = normalizeImage(np.float32(gimg))
-               
-               batch_gray_images[i, ...]  = gimg
-               batch_color_images[i, ...] = cimg
-               i += 1
-
-            gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:batch_gray_images}))
+            gen_images = sess.run(decoded_gen)
             saveImage(gen_images, str(step), 'celeba')
             saveImage(gen_images, str(step), 'celeba')
 
 
-      except tf.errors.OutOfRangeError
-         print 'Done training'
-      finally:
-         coord.request.stop()
-
+   except tf.errors.OutOfRangeError:
+      print 'Done training'
+   finally:
+      coord.request_stop()
    coord.join(threads)
    sess.close()
