@@ -18,8 +18,8 @@ def main(argv=None):
       exit()
 
    # set up params from config
-   tfrecords_train_file = config.tfrecords_train_file
-   tfrecords_test_file = config.tfrecords_test_file
+   #tfrecords_train_file = config.tfrecords_train_file
+   #tfrecords_test_file = config.tfrecords_test_file
    checkpoint_dir = config.checkpoint_dir
    learning_rate  = config.learning_rate
    batch_size     = config.batch_size
@@ -39,8 +39,8 @@ def main(argv=None):
    except: pass
    
    info = dict()
-   info['tfrecords_train_file'] = tfrecords_train_file
-   info['tfrecords_test_file'] = tfrecords_test_file
+   #info['tfrecords_train_file'] = tfrecords_train_file
+   #info['tfrecords_test_file'] = tfrecords_test_file
    info['checkpoint_dir'] = checkpoint_dir
    info['learning_rate']  = learning_rate
    info['batch_size']     = batch_size

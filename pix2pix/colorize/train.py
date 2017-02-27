@@ -19,6 +19,7 @@ sys.path.insert(0, '../../ops/')
 import loadceleba_colorize
 from data_ops import normalizeImage, saveImage
 
+'''
 def read_data(filename_queue, batch_size):
    reader = tf.TFRecordReader()
    
@@ -47,14 +48,13 @@ def read_data(filename_queue, batch_size):
       min_after_dequeue=10000)
 
    return color_images, gray_images
+'''
 
 '''
    Builds the graph and sets up params, then starts training
 '''
 def buildAndTrain(info):
 
-   tfrecords_train_file = info['tfrecords_train_file']
-   tfrecords_test_file  = info['tfrecords_test_file']
    checkpoint_dir       = info['checkpoint_dir']
    batch_size           = info['batch_size']
    dataset              = info['dataset']
@@ -63,11 +63,13 @@ def buildAndTrain(info):
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
 
-   filename_queue = tf.train.string_input_producer([tfrecords_train_file], num_epochs=500)
-   color_images, gray_images = read_data(filename_queue, batch_size)
+   color_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 3), name='color_images')
+   color_images = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), color_images)
+   
+   gray_images  = tf.map_fn(lambda img: tf.image.rgb_to_grayscale(img), color_images)
+   gray_images  = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), gray_images)
 
    # images colorized by network
-   #gen_images = netG(gray_images, batch_size)
    encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, batch_size)
    decoded_gen = netG_decoder(encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_images)
    
@@ -103,16 +105,12 @@ def buildAndTrain(info):
    # optimize D
    D_train_op = tf.train.RMSPropOptimizer(learning_rate=0.00005).minimize(errD, var_list=d_vars, global_step=global_step, colocate_gradients_with_ops=True)
 
-   # change to use a fraction of memory
-   #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
-   #init      = tf.global_variables_initializer()
    init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-   #sess      = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
    sess = tf.Session()
    sess.run(init)
 
-   coord = tf.train.Coordinator()
-   threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+   #coord = tf.train.Coordinator()
+   #threads = tf.train.start_queue_runners(sess=sess, coord=coord)
    
    # write out logs for tensorboard to the checkpointSdir
    summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/logs/', graph=tf.get_default_graph())
@@ -136,7 +134,8 @@ def buildAndTrain(info):
    step = sess.run(global_step)
    #num_train_images = len(gray_train_data)
    #num_test_images = len(gray_test_data)
-
+   print 'here'
+   exit()
    try:
       while not coord.should_stop():
          s = time.time()
@@ -147,7 +146,11 @@ def buildAndTrain(info):
 
          # train the discriminator for 5 or 100 runs
          for critic_itr in range(n_critic):
-            
+
+            # need to read in a batch of images here
+            feed_dict = getBatch(batch_size, dataset)
+
+
             sess.run([D_train_op, color_images, gray_images])
             sess.run(clip_discriminator_var_op)
 

@@ -120,7 +120,8 @@ def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_im
    Discriminator network
 '''
 def netD(input_images, batch_size, reuse=False):
- 
+
+
    print 'DISCRIMINATOR' 
    sc = tf.get_variable_scope()
    with tf.variable_scope(sc, reuse=reuse):
