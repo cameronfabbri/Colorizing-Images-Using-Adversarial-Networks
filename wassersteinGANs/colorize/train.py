@@ -43,7 +43,7 @@ def read_data(filename_queue, batch_size):
       [color_image, gray_image],
       batch_size = batch_size,
       num_threads=12,
-      capacity=10000+8*batch_size,
+      capacity=10000+12*batch_size,
       min_after_dequeue=10000)
 
    return color_images, gray_images
@@ -155,8 +155,6 @@ def buildAndTrain(info):
 
          # now get all losses and summary *without* performing a training step - for tensorboard
          D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
-         #D_loss, G_loss = sess.run([errD, errG])
-
          summary_writer.add_summary(summary, step)
 
          print 'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
@@ -169,16 +167,27 @@ def buildAndTrain(info):
 
          step += 1
 
-         if step%1000 == 0:
+         if step%1 == 0:
             print 'Saving model...'
             saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
             
             # evaluate on some test data
             print 'Evaluating...'
            
-            gen_images = sess.run(decoded_gen)
-            saveImage(gen_images, str(step), 'celeba')
-            saveImage(gen_images, str(step), 'celeba')
+            gen_images = np.asarray(sess.run(decoded_gen))
+            i = 0
+            for img in gen_images:
+               img = (img+1)*127.5
+               img = color.lab2rgb(np.float64(img))
+               misc.imsave('images/'+dataset+'/'+str(step)+'_'+str(i)+'.jpg', img)
+               i += 1
+               if i == 10: break
+
+            exit()
+            
+
+            #saveImage(gen_images, str(step), 'celeba')
+            #saveImage(gen_images, str(step), 'celeba')
 
 
    except tf.errors.OutOfRangeError:
