@@ -8,6 +8,52 @@ from skimage import color
 import tensorflow as tf
 import numpy as np
 import math
+import time
+import random
+
+
+def getBatch(batch_size, data, dataset, labels):
+
+   if dataset == 'imagenet': label_size = 1000
+
+   color_image_batch = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
+   gray_image_batch  = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
+   label_batch       = np.empty((batch_size, label_size), dtype=np.float32)
+
+   s = time.time()
+   for i in range(batch_size):
+
+      image_path = data[i][0]
+      label = np.zeros(label_size)
+     
+      label[int(data[i][1])] = 1
+
+      # read in image
+      color_img = misc.imread(image_path)
+ 
+      # convert rgb image to lab
+      try:
+         color_img = color.rgb2lab(color_img)
+      except:
+         print image_path
+         exit()
+
+      gray_img  = color.rgb2gray(color_img)
+      color_img = misc.imresize(color_img, (256, 256))
+      gray_img  = misc.imresize(gray_img, (256, 256))
+      gray_img  = np.expand_dims(gray_img, 2)
+
+      # scale to [-1, 1] range
+      color_img = color_img/127.5 - 1.
+      gray_img  = gray_img/127.5 - 1.
+
+      color_image_batch[i, ...] = color_img
+      gray_image_batch[i, ...]  = gray_img
+
+      label_batch[i, ...] = label
+
+   print time.time()-s
+   return color_image_batch, gray_image_batch, label_batch
 
 def unnormalizeImage(img, n='tanh'):
    if n == 'tanh':
