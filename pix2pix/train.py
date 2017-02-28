@@ -28,7 +28,7 @@ def buildAndTrain(info):
    checkpoint_dir       = info['checkpoint_dir']
    batch_size           = info['batch_size']
    dataset              = info['dataset']
-   labels               = info['labels']
+   use_labels           = info['use_labels']
 
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
@@ -39,18 +39,18 @@ def buildAndTrain(info):
    gray_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='gray_images')
    gray_images  = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), gray_images)
 
-   if dataset == 'imagenet' and labels is True:
+   if dataset == 'imagenet' and use_labels is True:
       label_size = 1000
 
    labels_p = tf.placeholder(tf.float32, shape=(batch_size, label_size), name='labels')
 
    # images colorized by network
-   encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, batch_size)
+   encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, labels_p, batch_size, use_labels)
    decoded_gen = netG_decoder(encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_images)
    
    # get the output from D on the real and fake data
-   errD_real = netD(color_images, batch_size)
-   errD_fake = netD(decoded_gen, batch_size, reuse=True) # gotta pass reuse=True to reuse weights
+   errD_real = netD(color_images, labels_p, batch_size, use_labels)
+   errD_fake = netD(decoded_gen, labels_p, batch_size, use_labels, reuse=True) # gotta pass reuse=True to reuse weights
 
    # cost functions
    errD = tf.reduce_mean(errD_real - errD_fake)
@@ -106,9 +106,9 @@ def buildAndTrain(info):
    # get data for dataset we're using
    # train_data contains [image_paths, labels]
    print 'Loading train data...'
-   train_data = load_data.load(dataset, labels, 'train')
+   train_data = load_data.load(dataset, use_labels, 'train')
    print 'Loading test data...'
-   test_data  = load_data.load(dataset, labels, 'test')
+   test_data  = load_data.load(dataset, use_labels, 'test')
    
    random.shuffle(train_data)
    random.shuffle(test_data)
@@ -120,33 +120,39 @@ def buildAndTrain(info):
    print num_train, 'training images'
    print num_test, 'test images'
 
+
    while True:
+      epoch_num = step/(num_train/batch_size)
       s = time.time()
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 100
+         n_critic = 10
       else: n_critic = 5
 
       # train the discriminator for 5 or 100 runs
       for critic_itr in range(n_critic):
 
          # need to read in a batch of images here
-         batch_c_imgs, batch_g_imgs, batch_labels = data_ops.getBatch(batch_size, train_data, dataset, labels)
-         print 'got batch'
-         exit()
-         sess.run([D_train_op, color_images, gray_images], 
-            feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs, labels:batch_labels})
-
+         if use_labels:
+            batch_c_imgs, batch_g_imgs, batch_labels = data_ops.getBatch(batch_size, train_data, dataset, use_labels)
+            sess.run([D_train_op, color_images, gray_images], feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs, labels_p:batch_labels})
+         else:
+            batch_c_imgs, batch_g_imgs = data_ops.getBatch(batch_size, train_data, dataset, use_labels)
+            sess.run([D_train_op, color_images, gray_images], feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs})
+         
          sess.run(clip_discriminator_var_op)
-
-      sess.run([G_train_op, gray_images])
+      
+      if use_labels:
+         sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs,labels_p:batch_labels})
+      else:
+         sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs})
 
       # now get all losses and summary *without* performing a training step - for tensorboard
-      D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+      D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs,labels_p:batch_labels})
       summary_writer.add_summary(summary, step)
 
-      print 'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
-
+      print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+      
       # THIS WORKS TO RECOVER IMAGE
       #col_img = np.asarray(sess.run(color_images))[0]
       #col_img = (col_img+1)*127.5
@@ -155,26 +161,29 @@ def buildAndTrain(info):
 
       step += 1
 
-      if step%1 == 0:
+      if step%500 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
+         print 'Model saved\n' 
          
-         # evaluate on some test data
          print 'Evaluating...'
-        
-         gen_images = np.asarray(sess.run(decoded_gen))
-         i = 0
-         for img in gen_images:
-            img = (img+1)*127.5
-            img = color.lab2rgb(np.float64(img))
-            misc.imsave('images/'+dataset+'/'+str(step)+'_'+str(i)+'.jpg', img)
-            i += 1
-            if i == 10: break
+         # get test images from test split
+         test_c_imgs, test_g_imgs, test_labels = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
 
-         exit()
+         gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:test_g_imgs}))
+
+         j = 0
          
+         for gimg, rimg in zip(gen_images, test_c_imgs):
+            gimg = (gimg+1.0)*127.5
+            rimg = (rimg+1.0)*127.5
 
-         #saveImage(gen_images, str(step), 'celeba')
-         #saveImage(gen_images, str(step), 'celeba')
+            gimg = color.lab2rgb(np.float64(gimg))
+            rimg = color.lab2rgb(np.float64(rimg))
 
-
+            rimg = misc.imresize(rimg, (256,256))
+            misc.imsave('images/'+dataset+'_'+str(use_labels)+'/'+str(step)+'_'+str(j)+'_gen.png', gimg)
+            misc.imsave('images/'+dataset+'_'+str(use_labels)+'/'+str(step)+'_'+str(j)+'_real.png', rimg)
+            j += 1
+            if j == 10: break
+         exit()

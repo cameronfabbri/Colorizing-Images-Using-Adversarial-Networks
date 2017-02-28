@@ -14,32 +14,34 @@ import random
 
 def getBatch(batch_size, data, dataset, labels):
 
-   if dataset == 'imagenet': label_size = 1000
+
+   if labels and dataset == 'imagenet': label_size = 1000
+   if labels and dataset == 'lsun':     label_size = 7
 
    color_image_batch = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
    gray_image_batch  = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
-   label_batch       = np.empty((batch_size, label_size), dtype=np.float32)
 
-   s = time.time()
-   for i in range(batch_size):
+   if labels:
+      label_batch = np.empty((batch_size, label_size), dtype=np.float32)
 
-      image_path = data[i][0]
+   random_imgs = random.sample(data, batch_size)
+   for i, image_path in enumerate(random_imgs):
+      
+      
       label = np.zeros(label_size)
-     
-      label[int(data[i][1])] = 1
+      label[int(image_path[1])] = 1
+      
+      image_path = image_path[0]
 
       # read in image
       color_img = misc.imread(image_path)
+      color_img = misc.imresize(color_img, (256, 256))
  
       # convert rgb image to lab
-      try:
-         color_img = color.rgb2lab(color_img)
-      except:
-         print image_path
-         exit()
+      try: color_img = color.rgb2lab(color_img)
+      except: continue # this happens if an original image is already gray
 
       gray_img  = color.rgb2gray(color_img)
-      color_img = misc.imresize(color_img, (256, 256))
       gray_img  = misc.imresize(gray_img, (256, 256))
       gray_img  = np.expand_dims(gray_img, 2)
 
@@ -50,10 +52,12 @@ def getBatch(batch_size, data, dataset, labels):
       color_image_batch[i, ...] = color_img
       gray_image_batch[i, ...]  = gray_img
 
-      label_batch[i, ...] = label
+      if labels:
+         label_batch[i, ...] = label
 
-   print time.time()-s
-   return color_image_batch, gray_image_batch, label_batch
+   if labels: return color_image_batch, gray_image_batch, label_batch
+   
+   return color_image_batch, gray_image_batch
 
 def unnormalizeImage(img, n='tanh'):
    if n == 'tanh':

@@ -6,13 +6,15 @@ sys.path.insert(0, '../ops/')
 from tf_ops import lrelu
 
 # should also pass in labels if we have em
-def netG_encoder(gray_images, batch_size):
+def netG_encoder(gray_images, labels_p, batch_size, use_labels):
 
    print 'GENERATOR'
    print 'images:',gray_images 
    ####### encoder ########
    # no batch norm on first layer
-   
+   if use_labels:
+      y = slim.fully_connected(labels_p, 8*8*32, activation_fn=None, scope='g_y')
+      y = tf.reshape(y,[batch_size, 8, 8, 32])
    #with tf.device('/gpu:0'):
    if 1:
       conv1 = slim.convolution(gray_images, 64, 4, stride=2, activation_fn=tf.identity, scope='g_e_conv1')
@@ -32,6 +34,8 @@ def netG_encoder(gray_images, batch_size):
       print 'conv4:',conv4
 
       conv5 = slim.convolution(conv4, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_e_conv5')
+
+      if use_labels: conv5 = tf.concat([conv5, y], 3)
       conv5 = lrelu(conv5)
       print 'conv5:',conv5
 
@@ -122,7 +126,7 @@ def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_im
 '''
    Discriminator network
 '''
-def netD(input_images, batch_size, reuse=False):
+def netD(input_images, labels_p, batch_size, use_labels, reuse=False):
 
 
    print 'DISCRIMINATOR' 
@@ -142,7 +146,13 @@ def netD(input_images, batch_size, reuse=False):
          conv3 = lrelu(conv3)
          print 'conv3:',conv3
 
+         
          conv4 = slim.convolution(conv3, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
+         
+         if use_labels:
+            y = slim.fully_connected(labels_p, 16*16*32, activation_fn=None, scope='d_y')
+            y = tf.reshape(y,[batch_size, 16, 16, 32])
+            conv4 = tf.concat([conv4, y], 3)
          conv4 = lrelu(conv4)
          print 'conv4:',conv4
 

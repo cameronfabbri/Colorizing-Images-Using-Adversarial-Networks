@@ -22,17 +22,17 @@ def main(argv=None):
    learning_rate  = config.learning_rate
    batch_size     = config.batch_size
    dataset        = config.dataset
-   labels         = config.labels
+   use_labels     = config.use_labels
 
    if checkpoint_dir[-1] is not '/': checkpoint_dir+='/'
 
    try: os.mkdir(checkpoint_dir)
    except: pass
-   try: os.mkdir(checkpoint_dir+dataset+'_'+str(labels))
+   try: os.mkdir(checkpoint_dir+dataset+'_'+str(use_labels))
    except: pass
    try: os.mkdir('images/')
    except: pass
-   try: os.mkdir('images/'+dataset+'_'+str(labels))
+   try: os.mkdir('images/'+dataset+'_'+str(use_labels))
    except: pass
    
    info = dict()
@@ -40,14 +40,14 @@ def main(argv=None):
    info['learning_rate']  = learning_rate
    info['batch_size']     = batch_size
    info['dataset']        = dataset
-   info['labels']         = labels
+   info['use_labels']     = use_labels
 
    print
    print 'checkpoint_dir:',checkpoint_dir
    print 'learning_rate: ',learning_rate
    print 'batch_size:    ',batch_size
    print 'dataset:       ',dataset
-   print 'labels:        ',labels
+   print 'use_labels:    ',use_labels
    print
    
    # build the graph - placeholders, loss functions, etc, then call train.
