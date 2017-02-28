@@ -35,6 +35,8 @@ def main(argv=None):
    try: os.mkdir('images/'+dataset+'_'+str(use_labels))
    except: pass
    
+   checkpoint_dir = checkpoint_dir+dataset+'_'+str(use_labels)+'/'
+
    info = dict()
    info['checkpoint_dir'] = checkpoint_dir
    info['learning_rate']  = learning_rate
@@ -49,7 +51,7 @@ def main(argv=None):
    print 'dataset:       ',dataset
    print 'use_labels:    ',use_labels
    print
-   
+   exit() 
    # build the graph - placeholders, loss functions, etc, then call train.
    buildAndTrain(info)
 

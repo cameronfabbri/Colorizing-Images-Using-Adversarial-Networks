@@ -85,11 +85,11 @@ def buildAndTrain(info):
    sess.run(init)
 
    # write out logs for tensorboard to the checkpointSdir
-   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/logs/', graph=tf.get_default_graph())
+   summary_writer = tf.summary.FileWriter(checkpoint_dir+'logs/', graph=tf.get_default_graph())
 
    # only keep one model
    saver = tf.train.Saver(max_to_keep=1)
-   ckpt = tf.train.get_checkpoint_state(checkpoint_dir+dataset+'/')
+   ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
 
    # restore previous model if there is one
    if ckpt and ckpt.model_checkpoint_path:
@@ -157,7 +157,7 @@ def buildAndTrain(info):
 
       if step%500 == 0:
          print 'Saving model...'
-         saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
+         saver.save(sess, checkpoint_dir+'checkpoint-'+str(step), global_step=global_step)
          print 'Model saved\n' 
          
          print 'Evaluating...'
