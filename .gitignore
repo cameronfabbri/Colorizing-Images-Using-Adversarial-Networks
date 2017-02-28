@@ -19,3 +19,6 @@ checkpoints*
 checkpoint/
 *.png
 *.jpg
+*.JPEG
+*.swo
+*.sw*
