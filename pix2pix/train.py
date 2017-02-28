@@ -180,4 +180,3 @@ def buildAndTrain(info):
             misc.imsave('images/'+dataset+'_'+str(use_labels)+'/'+str(step)+'_'+str(j)+'_real.png', rimg)
             j += 1
             if j == 10: break
-         exit()

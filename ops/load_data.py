@@ -19,7 +19,8 @@ import numpy as np
    Imagenet data. Using the test split as testing when using labels because the test set
    does not have labels.
 '''
-def loadImagenet(data_dir='/mnt/data2/images/imagenet/ILSVRC2016/CLS_LOC_dataset/Data/CLS-LOC/',
+#def loadImagenet(data_dir='/mnt/data2/images/imagenet/ILSVRC2016/CLS_LOC_dataset/Data/CLS-LOC/',
+def loadImagenet(data_dir='/home/fabbric/data/images/imagenet/ILSVRC/original/Data/CLS-LOC/',
                   use_labels=True,
                   split = 'train'):
 
@@ -27,7 +28,8 @@ def loadImagenet(data_dir='/mnt/data2/images/imagenet/ILSVRC2016/CLS_LOC_dataset
    test_dir  = data_dir + 'val/'
 
    # labels for testidation
-   test_anno = '/mnt/data2/images/imagenet/ILSVRC2016/CLS_LOC_dataset/Annotations/CLS-LOC/val/'
+   #test_anno = '/mnt/data2/images/imagenet/ILSVRC2016/CLS_LOC_dataset/Annotations/CLS-LOC/val/'
+   test_anno = '/home/fabbric/data/images/imagenet/ILSVRC/original/Annotations/CLS-LOC/val/'
 
    # dictionary containing label to one hot vector location
 

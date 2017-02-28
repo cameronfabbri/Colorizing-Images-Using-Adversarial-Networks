@@ -51,7 +51,6 @@ def main(argv=None):
    print 'dataset:       ',dataset
    print 'use_labels:    ',use_labels
    print
-   exit() 
    # build the graph - placeholders, loss functions, etc, then call train.
    buildAndTrain(info)
 
