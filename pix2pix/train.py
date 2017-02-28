@@ -164,7 +164,7 @@ def buildAndTrain(info):
          # get test images from test split
          test_c_imgs, test_g_imgs, test_labels = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
 
-         gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:test_g_imgs}))
+         gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:test_g_imgs, labels_p:test_labels}))
 
          j = 0
          
