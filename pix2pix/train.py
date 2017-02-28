@@ -126,7 +126,7 @@ def buildAndTrain(info):
       s = time.time()
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 10
+         n_critic = 100
       else: n_critic = 5
 
       # train the discriminator for 5 or 100 runs
@@ -153,12 +153,6 @@ def buildAndTrain(info):
 
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       
-      # THIS WORKS TO RECOVER IMAGE
-      #col_img = np.asarray(sess.run(color_images))[0]
-      #col_img = (col_img+1)*127.5
-      #col_img = color.lab2rgb(np.float64(col_img))
-      #misc.imsave('test_im.jpg', col_img)
-
       step += 1
 
       if step%500 == 0:
