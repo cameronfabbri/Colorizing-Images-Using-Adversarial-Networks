@@ -14,7 +14,6 @@ import random
 
 def getBatch(batch_size, data, dataset, labels):
 
-
    if labels and dataset == 'imagenet': label_size = 1000
    if labels and dataset == 'lsun':     label_size = 7
 
@@ -26,24 +25,29 @@ def getBatch(batch_size, data, dataset, labels):
 
    random_imgs = random.sample(data, batch_size)
    for i, image_path in enumerate(random_imgs):
+   
+      if labels:
+         label = np.zeros(label_size)
+         label[int(image_path[1])] = 1
       
-      
-      label = np.zeros(label_size)
-      label[int(image_path[1])] = 1
-      
-      image_path = image_path[0]
+         image_path = image_path[0]
 
       # read in image
       color_img = misc.imread(image_path)
       color_img = misc.imresize(color_img, (256, 256))
- 
+
+      # TODO Do NOT convert to GRAYSCALE --> the first channel in LAB color is gray!!
+
       # convert rgb image to lab
       try: color_img = color.rgb2lab(color_img)
       except: continue # this happens if an original image is already gray
 
-      gray_img  = color.rgb2gray(color_img)
-      gray_img  = misc.imresize(gray_img, (256, 256))
-      gray_img  = np.expand_dims(gray_img, 2)
+      #gray_img  = color.rgb2gray(color_img)
+      #print gray_img == color_img[0]
+
+      gray_img = color_img[0]
+      gray_img = misc.imresize(gray_img, (256, 256))
+      gray_img = np.expand_dims(gray_img, 2)
 
       # scale to [-1, 1] range
       color_img = color_img/127.5 - 1.

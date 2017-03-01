@@ -14,6 +14,7 @@ import xmltodict
 import cPickle as pickle
 from tqdm import tqdm
 import numpy as np
+import random
 
 '''
    Imagenet data. Using the test split as testing when using labels because the test set
@@ -83,9 +84,51 @@ def loadImagenet(data_dir='/home/fabbric/data/images/imagenet/ILSVRC/original/Da
 
    return image_list
 
+def loadCeleba(data_dir='/home/fabbric/data/images/celeba/original/', split='train'):
+
+   pkl_train_file = data_dir+'celeba_train.pkl'
+   pkl_test_file  = data_dir+'celeba_test.pkl'
+
+   if split == 'train' and os.path.isfile(pkl_train_file):
+      print 'Pickle file found'
+      image_paths = pickle.load(open(pkl_train_file, 'rb'))
+      return image_paths
+   elif split == 'test' and os.path.isfile(pkl_test_file):
+      print 'Pickle file found'
+      image_paths = pickle.load(open(pkl_test_file, 'rb'))
+      return image_paths
+   else:
+      print 'Getting paths!'
+      pattern   = '*.jpg'
+      image_list = []
+      for d, s, fList in os.walk(data_dir):
+         for filename in fList:
+            if fnmatch.fnmatch(filename, pattern):
+               image_list.append(os.path.join(d,filename))
+
+      # shuffle images and save out pickle files for train and test
+      random.shuffle(image_list)
+      train_list = image_list[:195000]
+      test_list  = image_list[195000:]
+      
+      pf   = open(pkl_train_file, 'wb')
+      data = pickle.dumps(train_list)
+      pf.write(data)
+      pf.close()
+      
+      pf   = open(pkl_test_file, 'wb')
+      data = pickle.dumps(test_list)
+      pf.write(data)
+      pf.close()
+
+      if split == 'train': return train_list
+      elif split == 'test': return test_list
+
+
+
 def load(dataset, use_labels, split):
    if dataset == 'imagenet': return loadImagenet(use_labels=use_labels, split=split)
-   elif dataset == 'celeba': return loadCeleba(use_labels=use_labels)
+   elif dataset == 'celeba': return loadCeleba(split=split)
    elif dataset == 'lsun'  : return loadLsun(use_labels=use_labels)
    elif dataset == 'sun'   : return loadSun(use_labels=use_labels)
 

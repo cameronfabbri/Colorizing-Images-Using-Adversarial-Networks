@@ -41,6 +41,7 @@ def buildAndTrain(info):
 
    if dataset == 'imagenet' and use_labels is True:
       label_size = 1000
+   elif dataset == 'celeba': label_size=0
 
    labels_p = tf.placeholder(tf.float32, shape=(batch_size, label_size), name='labels')
 
@@ -106,9 +107,9 @@ def buildAndTrain(info):
    # get data for dataset we're using
    # train_data contains [image_paths, labels]
    print 'Loading train data...'
-   train_data = load_data.load(dataset, use_labels, 'train')
+   train_data = load_data.load(dataset, use_labels, split='train')
    print 'Loading test data...'
-   test_data  = load_data.load(dataset, use_labels, 'test')
+   test_data  = load_data.load(dataset, use_labels, split='test')
    
    random.shuffle(train_data)
    random.shuffle(test_data)
@@ -148,7 +149,11 @@ def buildAndTrain(info):
          sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs})
 
       # now get all losses and summary *without* performing a training step - for tensorboard
-      D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs,labels_p:batch_labels})
+      if use_labels:
+         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs,labels_p:batch_labels})
+      else:
+         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs})
+      
       summary_writer.add_summary(summary, step)
 
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
@@ -162,9 +167,13 @@ def buildAndTrain(info):
          
          print 'Evaluating...'
          # get test images from test split
-         test_c_imgs, test_g_imgs, test_labels = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
+         if use_labels:
+            test_c_imgs, test_g_imgs, test_labels = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
+            gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:test_g_imgs, labels_p:test_labels}))
+         else:
+            test_c_imgs, test_g_imgs = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
+            gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:test_g_imgs}))
 
-         gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:test_g_imgs, labels_p:test_labels}))
 
          j = 0
          
