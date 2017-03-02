@@ -7,6 +7,8 @@ import sys
 import cv2
 import os
 
+sys.path.insert(0, '../ops/')
+
 import loadceleba
 
 '''
@@ -17,12 +19,12 @@ def buildAndTrain(info):
    checkpoint_dir = info['checkpoint_dir']
    batch_size     = info['batch_size']
    dataset        = info['dataset']
+   data_dir       = info['data_dir']
    use_pt         = info['use_pt']
    load           = info['load']
-   gray           = info['load']
 
    # load data
-   image_data = loadceleba.load(load=load)
+   image_data = loadceleba.load(load=load, data_dir=data_dir)
 
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
@@ -39,10 +41,7 @@ def buildAndTrain(info):
    margin = 20
 
    # cost functions
-   #errD = tf.reduce_mean(D_loss_real + tf.maximum(margin-D_loss_fake, 0))
-   errD = margin-D_loss_fake + D_loss_real
-   #errD = tf.reduce_mean(margin - D_loss_fake + D_loss_real)
-   #errG = tf.reduce_mean(D_loss_fake)
+   errD = D_loss_real + margin-D_loss_fake
    errG = D_loss_fake
 
    # tensorboard summaries
@@ -96,21 +95,18 @@ def buildAndTrain(info):
       batch_real_images = random.sample(image_data, batch_size)
       batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
 
-      #_, __, Derr, Gerr, summary = sess.run([D_train_op, G_train_op, errD, errG, merged_summary_op],
-      #   feed_dict={real_images:batch_real_images, z:batch_z})
-
       sess.run(D_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
       sess.run(G_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
       sess.run(G_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
 
-      Gerr, Derr = sess.run([errG, errD], feed_dict={real_images:batch_real_images, z:batch_z})
+      Gerr, Derr, summary = sess.run([errG, errD, merged_summary_op], feed_dict={real_images:batch_real_images, z:batch_z})
 
-      #summary_writer.add_summary(summary, step)
+      summary_writer.add_summary(summary, step)
 
       print 'step:',step,'D loss:',Derr,'G_loss:',Gerr
       step += 1
 
-      if step%1000 == 0:
+      if step%500 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
          saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
@@ -125,7 +121,7 @@ def buildAndTrain(info):
             img *= 255.0/img.max()
             cv2.imwrite('images/'+dataset+'_'+str(use_pt)+'_'+str(step)+'_'+str(num)+'.png', img)
             num += 1
-            if num == 10:
+            if num == 5:
                break
          print 'Done saving'
 

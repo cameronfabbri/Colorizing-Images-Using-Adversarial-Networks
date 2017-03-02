@@ -2,7 +2,6 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import sys
 
-sys.path.insert(0, 'ops/')
 
 '''
    Leaky RELU
@@ -11,8 +10,8 @@ sys.path.insert(0, 'ops/')
 def lrelu(x, leak=0.2, name='lrelu'):
    return tf.maximum(leak*x, x)
 
-def mse(pred, real):
-   return tf.reduce_mean(tf.sqrt(2*tf.nn.l2_loss(pred-real)))
+def mse(pred, real, batch_size):
+   return tf.sqrt(2*tf.nn.l2_loss(pred-real))/batch_size
 
 def netG(z, batch_size):
 
@@ -52,7 +51,7 @@ def netG(z, batch_size):
 def netD(input_images, batch_size, reuse=False):
    encoded = encoder(input_images, batch_size, reuse=reuse)
    decoded = decoder(encoded, batch_size, reuse=reuse)
-   return mse(decoded, input_images), encoded, decoded
+   return mse(decoded, input_images, batch_size), encoded, decoded
 
 
 '''
@@ -75,31 +74,21 @@ def encoder(input_images, batch_size, reuse=False):
       conv3 = lrelu(conv3)
       print 'conv3:',conv3
 
-      conv4 = slim.convolution2d_transpose(conv3, 128, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
-      conv4 = lrelu(conv4)
-      
       tf.add_to_collection('vars', conv1)
       tf.add_to_collection('vars', conv2)
       tf.add_to_collection('vars', conv3)
-      tf.add_to_collection('vars', conv4)
 
-      conv4 = tf.reshape(conv4, [batch_size, -1])
-
-      fc1 = slim.fully_connected(conv4, 8192, normalizer_fn=slim.batch_norm, activation_fn=tf.identity)
-      fc1 = lrelu(fc1)
-      print fc1
-      return fc1
-
+      return conv3
 
 def decoder(encoded, batch_size, reuse=False):
    sc = tf.get_variable_scope()
    with tf.variable_scope(sc, reuse=reuse):
+      
+      conv4 = slim.convolution2d_transpose(encoded, 128, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
+      conv4 = lrelu(conv4)
+      print 'conv4:',conv4
 
-      # encoded should be [batch_size, 8, 8, 32*4]
-
-      encoded = tf.reshape(encoded, [-1, 8, 8, 32*4])
-
-      conv5 = slim.convolution2d_transpose(encoded, 64, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv5')
+      conv5 = slim.convolution2d_transpose(conv4, 64, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv5')
       conv5 = lrelu(conv5)
       print 'conv5:',conv5
 
@@ -108,7 +97,7 @@ def decoder(encoded, batch_size, reuse=False):
       print 'conv6:',conv6
       
       print 'END D\n'
-
+      tf.add_to_collection('vars', conv4)
       tf.add_to_collection('vars', conv5)
       tf.add_to_collection('vars', conv6)
 
