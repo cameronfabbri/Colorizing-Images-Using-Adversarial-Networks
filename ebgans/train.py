@@ -103,7 +103,7 @@ def buildAndTrain(info):
       
       step += 1
 
-      if step%5 == 0:
+      if step%1000 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
          saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
@@ -116,15 +116,10 @@ def buildAndTrain(info):
             img = np.asarray(img)
             img = (img+1.)/2. # these two lines properly scale from [-1, 1] to [0, 255]
             img *= 255.0/img.max()
-            cv2.imwrite('images/'+dataset+'_'+str(use_pt)+'_'+str(num)+'.png', img)
+            cv2.imwrite('images/'+dataset+'_'+str(use_pt)+'_'+str(step)+'_'+str(num)+'.png', img)
             num += 1
-            if num == 20:
+            if num == 10:
                break
          print 'Done saving'
-
-
-
-
-
 
 

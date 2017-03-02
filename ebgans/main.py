@@ -20,7 +20,6 @@ if __name__ == '__main__':
    checkpoint_dir = config.checkpoint_dir
    learning_rate  = config.learning_rate
    batch_size     = config.batch_size
-   num_critic     = config.num_critic
    dataset        = config.dataset
    load           = config.load
    use_pt         = config.use_pt
@@ -43,15 +42,15 @@ if __name__ == '__main__':
    info['checkpoint_dir'] = checkpoint_dir
    info['learning_rate']  = learning_rate
    info['batch_size']     = batch_size
-   info['num_critic']     = num_critic
    info['dataset']        = dataset
+   info['use_pt']         = use_pt
    info['load']           = load
 
    print
    print 'checkpoint_dir:',checkpoint_dir
    print 'learning_rate: ',learning_rate
    print 'batch_size:    ',batch_size
-   print 'num_critic:    ',num_critic
+   print 'use_pt:        ',use_pt
    print 'dataset:       ',dataset
    print 'load:          ',load
    print
