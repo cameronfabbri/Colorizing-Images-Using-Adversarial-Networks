@@ -23,6 +23,7 @@ def main(argv=None):
    batch_size     = config.batch_size
    dataset        = config.dataset
    use_labels     = config.use_labels
+   data_dir       = config.data_dir
 
    if checkpoint_dir[-1] is not '/': checkpoint_dir+='/'
 
@@ -43,6 +44,7 @@ def main(argv=None):
    info['batch_size']     = batch_size
    info['dataset']        = dataset
    info['use_labels']     = use_labels
+   info['data_dir']       = data_dir
 
    print
    print 'checkpoint_dir:',checkpoint_dir
@@ -50,6 +52,7 @@ def main(argv=None):
    print 'batch_size:    ',batch_size
    print 'dataset:       ',dataset
    print 'use_labels:    ',use_labels
+   print 'data_dir:      ',data_dir
    print
    # build the graph - placeholders, loss functions, etc, then call train.
    buildAndTrain(info)

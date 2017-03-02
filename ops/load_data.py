@@ -20,16 +20,14 @@ import random
    Imagenet data. Using the test split as testing when using labels because the test set
    does not have labels.
 '''
-#def loadImagenet(data_dir='/mnt/data2/images/imagenet/ILSVRC2016/CLS_LOC_dataset/Data/CLS-LOC/',
 def loadImagenet(data_dir='/home/fabbric/data/images/imagenet/ILSVRC/original/Data/CLS-LOC/',
-                  use_labels=True,
-                  split = 'train'):
+                 use_labels=True,
+                 split = 'train'):
 
    train_dir = data_dir + 'train/'
    test_dir  = data_dir + 'val/'
 
    # labels for testidation
-   #test_anno = '/mnt/data2/images/imagenet/ILSVRC2016/CLS_LOC_dataset/Annotations/CLS-LOC/val/'
    test_anno = '/home/fabbric/data/images/imagenet/ILSVRC/original/Annotations/CLS-LOC/val/'
 
    # dictionary containing label to one hot vector location
@@ -84,7 +82,9 @@ def loadImagenet(data_dir='/home/fabbric/data/images/imagenet/ILSVRC/original/Da
 
    return image_list
 
-def loadCeleba(data_dir='/home/fabbric/data/images/celeba/original/', split='train'):
+def loadCeleba(data_dir='/home/fabbric/data/images/celeba/images/',
+               use_labels=False,
+               split='train'):
 
    pkl_train_file = data_dir+'celeba_train.pkl'
    pkl_test_file  = data_dir+'celeba_test.pkl'
@@ -126,11 +126,11 @@ def loadCeleba(data_dir='/home/fabbric/data/images/celeba/original/', split='tra
 
 
 
-def load(dataset, use_labels, split):
-   if dataset == 'imagenet': return loadImagenet(use_labels=use_labels, split=split)
-   elif dataset == 'celeba': return loadCeleba(split=split)
-   elif dataset == 'lsun'  : return loadLsun(use_labels=use_labels)
-   elif dataset == 'sun'   : return loadSun(use_labels=use_labels)
+def load(dataset, data_dir, use_labels, split):
+   if dataset == 'imagenet': return loadImagenet(data_dir=data_dir, use_labels=use_labels, split=split)
+   elif dataset == 'celeba': return loadCeleba  (data_dir=data_dir, use_labels=use_labels, split=split)
+   elif dataset == 'lsun'  : return loadLsun    (data_dir=data_dir, use_labels=use_labels, split=split)
+   elif dataset == 'sun'   : return loadSun     (data_dir=data_dir, use_labels=use_labels, split=split)
 
 if __name__ == '__main__':
 

@@ -27,8 +27,9 @@ def buildAndTrain(info):
 
    checkpoint_dir       = info['checkpoint_dir']
    batch_size           = info['batch_size']
-   dataset              = info['dataset']
    use_labels           = info['use_labels']
+   data_dir             = info['data_dir']
+   dataset              = info['dataset']
 
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
@@ -39,9 +40,9 @@ def buildAndTrain(info):
    gray_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='gray_images')
    gray_images  = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), gray_images)
 
-   label_size = 0
-   if dataset == 'imagenet' and use_labels is True:
-      label_size = 1000
+   # label size will always be 1000 (max of our datasets) because say we have a dataset with 10 labels
+   # then it'll just use 10 and be really padded which is fine
+   label_size = 1000
 
    labels_p = tf.placeholder(tf.float32, shape=(batch_size, label_size), name='labels')
 
@@ -88,35 +89,33 @@ def buildAndTrain(info):
    sess.run(init)
 
    # write out logs for tensorboard to the checkpointSdir
-   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/logs/', graph=tf.get_default_graph())
-
+   summary_writer = tf.summary.FileWriter(checkpoint_dir+'/logs/', graph=tf.get_default_graph())
 
    tf.add_to_collection('vars', G_train_op)
    tf.add_to_collection('vars', D_train_op)
 
-   #meta_graph_def = tf.train.export_meta_graph(filename='my-model-1.meta')
-
    # only keep one model
-   #ckpt = tf.train.get_checkpoint_state(checkpoint_dir+dataset+'/')
+   ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
 
    # restore previous model if there is one
-   #if ckpt and ckpt.model_checkpoint_path:
-   #   print "Restoring previous model..."
-   #   try:
-   #      saver.restore(sess, ckpt.model_checkpoint_path)
-   #      print "Model restored"
-   #   except:
-   #      print "Could not restore model"
-   #      pass
+   if ckpt and ckpt.model_checkpoint_path:
+      print "Restoring previous model..."
+      try:
+         saver.restore(sess, ckpt.model_checkpoint_path)
+         print "Model restored"
+      except:
+         print "Could not restore model"
+         pass
+   
    
    ########################################### training portion
 
    # get data for dataset we're using
    # train_data contains [image_paths, labels]
    print 'Loading train data...'
-   train_data = load_data.load(dataset, use_labels, 'train')
+   train_data = load_data.load(dataset, data_dir, use_labels, 'train')
    print 'Loading test data...'
-   test_data  = load_data.load(dataset, use_labels, 'test')
+   test_data  = load_data.load(dataset, data_dir, use_labels, 'test')
    
    random.shuffle(train_data)
    random.shuffle(test_data)
@@ -134,7 +133,7 @@ def buildAndTrain(info):
       s = time.time()
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 10
+         n_critic = 100
       else: n_critic = 5
 
       # train the discriminator for 5 or 100 runs
@@ -156,30 +155,25 @@ def buildAndTrain(info):
          sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs})
 
       # now get all losses and summary *without* performing a training step - for tensorboard
-      D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs,labels_p:batch_labels})
-      summary_writer.add_summary(summary, step)
-
-      print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+      if use_labels: D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs,labels_p:batch_labels})
+      else:
+         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs})
       
-      # THIS WORKS TO RECOVER IMAGE
-      #col_img = np.asarray(sess.run(color_images))[0]
-      #col_img = (col_img+1)*127.5
-      #col_img = color.lab2rgb(np.float64(col_img))
-      #misc.imsave('test_im.jpg', col_img)
-
+      
+      summary_writer.add_summary(summary, step)
+      print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
 
-      if step%1 == 0:
+      if step%500 == 0:
          print 'Saving model...'
-         #saver.save(sess, checkpoint_dir+dataset+'/checkpoint-'+str(step), global_step=global_step)
-         saver.save(sess, 'my-model-1')
-         saver.export_meta_graph('my-model-1.meta')
-         exit()
+         saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
+         saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
          print 'Model saved\n' 
          
          print 'Evaluating...'
          # get test images from test split
-         test_c_imgs, test_g_imgs, test_labels = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
+         if use_labels: test_c_imgs, test_g_imgs, test_labels = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
+         else: test_c_imgs, test_g_imgs = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
 
          gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:test_g_imgs}))
 
@@ -188,9 +182,10 @@ def buildAndTrain(info):
          for gimg, rimg in zip(gen_images, test_c_imgs):
             gimg = (gimg+1.0)*127.5
             gimg = color.lab2rgb(np.float64(gimg))
-            rimg = misc.imresize(rimg, (256,256))
+            if rimg.shape[0] is not 256: rimg = misc.imresize(rimg, (256,256))
+            rimg = (rimg+1.0)*127.5
+            rimg = color.lab2rgb(np.float64(rimg))
             misc.imsave('images/'+dataset+'_'+str(use_labels)+'/'+str(step)+'_'+str(j)+'_gen.png', gimg)
             misc.imsave('images/'+dataset+'_'+str(use_labels)+'/'+str(step)+'_'+str(j)+'_real.png', rimg)
             j += 1
             if j == 10: break
-         exit()
