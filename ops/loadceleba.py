@@ -13,6 +13,9 @@ import cPickle as pickle
 '''
 def centerCrop(img, size=64):
    height, width, c = img.shape
+   if height is not 96 or width is not 96:
+      img = cv2.imresize(img, (96, 96))
+   height, width, c = img.shape
    center = (height/2, width/2)
    size   = size/2
    return img[center[0]-size:center[0]+size,center[1]-size:center[1]+size, :]
@@ -70,13 +73,12 @@ def load(
    for image in tqdm(image_paths['images']):
 
       img = centerCrop(cv2.imread(image).astype('float32'), size=64)
-      if normalize == 'tanh': img = img/127.5 - 1. # normalize between -1 and 1
-      if normalize == 'norm': img = img/255.0      # normalize between 0 and 1
+      img = img/127.5 - 1. # normalize between -1 and 1
 
       image_data[i, ...] = img
       
       i += 1
-      #if i == 1000: break
+      if i == 1000: break
    
    return image_data
 
