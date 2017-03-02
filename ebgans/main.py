@@ -23,18 +23,22 @@ if __name__ == '__main__':
    num_critic     = config.num_critic
    dataset        = config.dataset
    load           = config.load
+   use_pt         = config.use_pt
+
    if checkpoint_dir[-1] is not '/': checkpoint_dir+='/'
 
    # TODO fix this. os.mkdirs is giving me trouble so just a temp fix
    try: os.mkdir(checkpoint_dir)
    except: pass
-   try: os.mkdir(checkpoint_dir+dataset)
+   try: os.mkdir(checkpoint_dir+dataset+'_'+str(use_pt))
    except: pass
    try: os.mkdir('images/')
    except: pass
-   try: os.mkdir('images/'+dataset)
+   try: os.mkdir('images/'+dataset+'_'+str(use_pt))
    except: pass
-   
+
+   checkpoint_dir = checkpoint_dir+dataset+'_'+str(use_pt)+'/'
+
    info = dict()
    info['checkpoint_dir'] = checkpoint_dir
    info['learning_rate']  = learning_rate

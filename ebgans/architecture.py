@@ -3,7 +3,13 @@ import tensorflow.contrib.slim as slim
 import sys
 
 sys.path.insert(0, 'ops/')
-from tf_ops import lrelu
+
+'''
+   Leaky RELU
+   https://arxiv.org/pdf/1502.01852.pdf
+'''
+def lrelu(x, leak=0.2, name='lrelu'):
+   return tf.maximum(leak*x, x)
 
 def mse(pred, real):
    return tf.reduce_mean(tf.sqrt(2*tf.nn.l2_loss(pred-real)))

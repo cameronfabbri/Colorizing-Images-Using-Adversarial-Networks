@@ -17,6 +17,7 @@ def buildAndTrain(info):
    checkpoint_dir = info['checkpoint_dir']
    batch_size     = info['batch_size']
    dataset        = info['dataset']
+   use_pt         = info['use_pt']
    load           = info['load']
    gray           = info['load']
 
@@ -67,22 +68,22 @@ def buildAndTrain(info):
    sess.run(init)
 
    # write out logs for tensorboard to the checkpointSdir
-   summary_writer = tf.summary.FileWriter(checkpoint_dir+dataset+'/'+'logs/', graph=tf.get_default_graph())
+   summary_writer = tf.summary.FileWriter(checkpoint_dir+'/'+'logs/', graph=tf.get_default_graph())
 
-   # only keep one model
-   #ckpt = tf.train.get_checkpoint_state(checkpoint_dir+dataset+'/')
+   ckpt = tf.train.get_checkpoint_state(checkpoint_dir+'/')
 
    tf.add_to_collection('G_train_op', G_train_op)
    tf.add_to_collection('D_train_op', D_train_op)
+
    # restore previous model if there is one
-   #if ckpt and ckpt.model_checkpoint_path:
-   #   print "Restoring previous model..."
-   #   try:
-   #      saver.restore(sess, ckpt.model_checkpoint_path)
-   #      print "Model restored"
-   #   except:
-   #      print "Could not restore model"
-   #      pass
+   if ckpt and ckpt.model_checkpoint_path:
+      print "Restoring previous model..."
+      try:
+         saver.restore(sess, ckpt.model_checkpoint_path)
+         print "Model restored"
+      except:
+         print "Could not restore model"
+         pass
    
    ########################################### training portion
 
@@ -96,11 +97,7 @@ def buildAndTrain(info):
       _, __, Derr, Gerr, summary = sess.run([D_train_op, G_train_op, errD, errG, merged_summary_op],
          feed_dict={real_images:batch_real_images, z:batch_z})
 
-      # now get all losses and summary *without* performing a training step - for tensorboard
-      #D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op],
-      #                                    feed_dict={real_images:batch_real_images, z:batch_z})
-
-      #summary_writer.add_summary(summary, step)
+      summary_writer.add_summary(summary, step)
 
       print 'step:',step,'D loss:',Derr,'G_loss:',Gerr
       
@@ -119,7 +116,7 @@ def buildAndTrain(info):
             img = np.asarray(img)
             img = (img+1.)/2. # these two lines properly scale from [-1, 1] to [0, 255]
             img *= 255.0/img.max()
-            cv2.imwrite('images/'+dataset+'/'+str(step)+'_'+str(num)+'.png', img)
+            cv2.imwrite('images/'+dataset+'_'+str(use_pt)+'_'+str(num)+'.png', img)
             num += 1
             if num == 20:
                break
