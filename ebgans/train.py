@@ -39,9 +39,11 @@ def buildAndTrain(info):
    margin = 20
 
    # cost functions
-   errD = tf.reduce_mean(D_loss_real + tf.maximum(margin-D_loss_fake, 0))
+   #errD = tf.reduce_mean(D_loss_real + tf.maximum(margin-D_loss_fake, 0))
+   errD = margin-D_loss_fake + D_loss_real
    #errD = tf.reduce_mean(margin - D_loss_fake + D_loss_real)
-   errG = tf.reduce_mean(D_loss_fake)
+   #errG = tf.reduce_mean(D_loss_fake)
+   errG = D_loss_fake
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
@@ -56,10 +58,10 @@ def buildAndTrain(info):
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
    # optimize G
-   G_train_op = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(errG, var_list=g_vars, global_step=global_step)
+   G_train_op = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(errG, var_list=g_vars, global_step=global_step)
 
    # optimize D
-   D_train_op = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(errD, var_list=d_vars, global_step=global_step)
+   D_train_op = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(errD, var_list=d_vars, global_step=global_step)
 
    saver = tf.train.Saver(max_to_keep=1)
    init  = tf.global_variables_initializer()
@@ -70,7 +72,7 @@ def buildAndTrain(info):
    # write out logs for tensorboard to the checkpointSdir
    summary_writer = tf.summary.FileWriter(checkpoint_dir+'/'+'logs/', graph=tf.get_default_graph())
 
-   ckpt = tf.train.get_checkpoint_state(checkpoint_dir+'/')
+   ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
 
    tf.add_to_collection('G_train_op', G_train_op)
    tf.add_to_collection('D_train_op', D_train_op)
@@ -94,13 +96,18 @@ def buildAndTrain(info):
       batch_real_images = random.sample(image_data, batch_size)
       batch_z = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype(np.float32)
 
-      _, __, Derr, Gerr, summary = sess.run([D_train_op, G_train_op, errD, errG, merged_summary_op],
-         feed_dict={real_images:batch_real_images, z:batch_z})
+      #_, __, Derr, Gerr, summary = sess.run([D_train_op, G_train_op, errD, errG, merged_summary_op],
+      #   feed_dict={real_images:batch_real_images, z:batch_z})
 
-      summary_writer.add_summary(summary, step)
+      sess.run(D_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
+      sess.run(G_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
+      sess.run(G_train_op, feed_dict={real_images:batch_real_images, z:batch_z})
+
+      Gerr, Derr = sess.run([errG, errD], feed_dict={real_images:batch_real_images, z:batch_z})
+
+      #summary_writer.add_summary(summary, step)
 
       print 'step:',step,'D loss:',Derr,'G_loss:',Gerr
-      
       step += 1
 
       if step%1000 == 0:
