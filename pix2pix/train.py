@@ -20,6 +20,7 @@ sys.path.insert(0, '../ops/')
 import data_ops
 import load_data
 
+
 '''
    Builds the graph and sets up params, then starts training
 '''
@@ -27,32 +28,43 @@ def buildAndTrain(info):
 
    checkpoint_dir       = info['checkpoint_dir']
    batch_size           = info['batch_size']
-   use_labels           = info['use_labels']
+   #use_labels           = info['use_labels']
    data_dir             = info['data_dir']
    dataset              = info['dataset']
 
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
 
-   color_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 3), name='color_images')
-   color_images = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), color_images)
+
+   #color_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 3), name='color_images')
+   #color_images = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), color_images)
    
-   gray_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='gray_images')
-   gray_images  = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), gray_images)
+   #gray_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='gray_images')
+   #gray_images  = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), gray_images)
 
    # label size will always be 1000 (max of our datasets) because say we have a dataset with 10 labels
    # then it'll just use 10 and be really padded which is fine
-   label_size = 1000
+   #label_size = 1000
 
-   labels_p = tf.placeholder(tf.float32, shape=(batch_size, label_size), name='labels')
+   #labels_p = tf.placeholder(tf.float32, shape=(batch_size, label_size), name='labels')
 
    # images colorized by network
-   encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, labels_p, batch_size, use_labels)
+   #encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, labels_p, batch_size, use_labels)
+   
+   Data = data_ops.load_data(data_dir)
+   targets = data_ops.augment(Data.targets, data.inputs)
+   inputs = deprocess(Data.inputs)
+
+   encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, batch_size)
    decoded_gen = netG_decoder(encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_images)
    
+   outputs = data_ops.augment(decoded_gen)
+   
    # get the output from D on the real and fake data
-   errD_real = netD(color_images, labels_p, batch_size, use_labels)
-   errD_fake = netD(decoded_gen, labels_p, batch_size, use_labels, reuse=True) # gotta pass reuse=True to reuse weights
+   #errD_real = netD(color_images, labels_p, batch_size, use_labels)
+   errD_real = netD(color_images, batch_size)
+   #errD_fake = netD(decoded_gen, labels_p, batch_size, use_labels, reuse=True) # gotta pass reuse=True to reuse weights
+   errD_fake = netD(decoded_gen, batch_size, reuse=True) # gotta pass reuse=True to reuse weights
 
    # cost functions
    errD = tf.reduce_mean(errD_real - errD_fake)
@@ -112,10 +124,10 @@ def buildAndTrain(info):
 
    # get data for dataset we're using
    # train_data contains [image_paths, labels]
-   print 'Loading train data...'
-   train_data = load_data.load(dataset, data_dir, use_labels, 'train')
-   print 'Loading test data...'
-   test_data  = load_data.load(dataset, data_dir, use_labels, 'test')
+   #print 'Loading train data...'
+   #train_data = load_data.load(dataset, data_dir, use_labels, 'train')
+   #print 'Loading test data...'
+   #test_data  = load_data.load(dataset, data_dir, use_labels, 'test')
    
    random.shuffle(train_data)
    random.shuffle(test_data)
@@ -140,24 +152,24 @@ def buildAndTrain(info):
       for critic_itr in range(n_critic):
 
          # need to read in a batch of images here
-         if use_labels:
-            batch_c_imgs, batch_g_imgs, batch_labels = data_ops.getBatch(batch_size, train_data, dataset, use_labels)
-            sess.run([D_train_op, color_images, gray_images], feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs, labels_p:batch_labels})
-         else:
-            batch_c_imgs, batch_g_imgs = data_ops.getBatch(batch_size, train_data, dataset, use_labels)
-            sess.run([D_train_op, color_images, gray_images], feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs})
+         #if use_labels:
+         #   batch_c_imgs, batch_g_imgs, batch_labels = data_ops.getBatch(batch_size, train_data, dataset, use_labels)
+         #   sess.run([D_train_op, color_images, gray_images], feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs, labels_p:batch_labels})
+         #else:
+         #   batch_c_imgs, batch_g_imgs = data_ops.getBatch(batch_size, train_data, dataset, use_labels)
+         #   sess.run([D_train_op, color_images, gray_images], feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs})
          
          sess.run(clip_discriminator_var_op)
       
-      if use_labels:
-         sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs,labels_p:batch_labels})
-      else:
-         sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs})
+      #if use_labels:
+      #   sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs,labels_p:batch_labels})
+      #else:
+      #   sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs})
 
       # now get all losses and summary *without* performing a training step - for tensorboard
-      if use_labels: D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs,labels_p:batch_labels})
-      else:
-         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs})
+      #if use_labels: D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs,labels_p:batch_labels})
+      #else:
+      #   D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs})
       
       
       summary_writer.add_summary(summary, step)

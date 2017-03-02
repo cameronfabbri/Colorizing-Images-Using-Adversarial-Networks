@@ -13,8 +13,8 @@ def netG_encoder(gray_images, labels_p, batch_size, use_labels):
    ####### encoder ########
    # no batch norm on first layer
 
-   with tf.device('/gpu:0'):
-   #if 1:
+   #with tf.device('/gpu:0'):
+   if 1:
       conv1 = slim.convolution(gray_images, 64, 4, stride=2, activation_fn=tf.identity, scope='g_e_conv1')
       conv1 = lrelu(conv1)
       print 'conv1:',conv1
@@ -66,8 +66,8 @@ def netG_encoder(gray_images, labels_p, batch_size, use_labels):
 '''
 def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_images):
 
-   with tf.device('/gpu:1'):
-   #if 1:
+   #with tf.device('/gpu:1'):
+   if 1:
       ###### decoder ######
       dconv1 = slim.convolution2d_transpose(conv8, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv1')
       dconv1 = tf.nn.relu(dconv1)
@@ -92,8 +92,8 @@ def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_im
       dconv4 = tf.nn.relu(dconv4)
       print 'dconv4:',dconv4
 
-   with tf.device('/gpu:2'):
-   #if 1:
+   #with tf.device('/gpu:2'):
+   if 1:
       dconv5 = slim.convolution2d_transpose(dconv4, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv5')
       dconv5 = tf.concat([conv3, dconv5], 3)
       dconv5 = tf.nn.relu(dconv5)
@@ -147,8 +147,8 @@ def netD(input_images, labels_p, batch_size, use_labels, reuse=False):
    print 'DISCRIMINATOR' 
    sc = tf.get_variable_scope()
    with tf.variable_scope(sc, reuse=reuse):
-      with tf.device('/gpu:3'):
-      #if 1:
+      #with tf.device('/gpu:3'):
+      if 1:
          print 'input images:',input_images
          conv1 = slim.convolution(input_images, 64, 5, stride=2, activation_fn=tf.identity, scope='d_conv1')
          conv1 = lrelu(conv1)
