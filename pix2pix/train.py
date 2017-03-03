@@ -33,16 +33,13 @@ def buildAndTrain(checkpoint_dir):
    z           = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
    test_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='test_images')
 
-   #data = data_ops.load_data(data_dir, dataset)
-  
-   #input_images  = data.inputs  # gray (L) images
-   #target_images = data_ops.augment(data.targets, input_images) # color (a b) images
-   #num_train     = data.count
+   train_images_paths, test_images_paths = data_ops.load_data(data_dir, dataset)
+   filename_queue = tf.train.string_input_producer(train_images_paths)
+   
+   # [a b] 'color' images that we want to predict given L
+   target_images  = data_ops.read_input_queue(filename_queue)
 
-   train_images_list = data_ops.load_data(data_dir, dataset)
-   filename_queue    = tf.train.string_input_producer(train_images_list)
-   real_images       = data_ops.read_input_queue(filename_queue)
-
+   
 
    conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(input_images)
    decoded = data_ops.augment(netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, input_images), input_images)

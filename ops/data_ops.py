@@ -151,6 +151,9 @@ def lab_to_rgb(lab):
 
 
 def getPaths(data_dir, ext='jpg'):
+   print 'getting paths!'
+   print data_dir
+   exit()
    pattern   = '*.'+ext
    image_list = []
    for d, s, fList in os.walk(data_dir):
@@ -187,7 +190,10 @@ def read_input_queue(filename_queue):
                                         num_threads=num_preprocess_threads,
                                         capacity=min_queue_examples + 8 * config.batch_size,
                                         min_after_dequeue=min_queue_examples)
-   input_image = input_image/127.5 - 1.
+
+   input_image = rgb_to_lab(input_image/127.5 - 1.)
+   print input_image
+   exit()
    return input_image
 
 
@@ -200,7 +206,7 @@ def load_data(data_dir, dataset):
       train_paths = getPaths(data_dir+'train/', ext='JPEG')
       test_paths  = getPaths(data_dir+'test/', ext='JPEG')
 
-   return read_input_queue(train_paths)
+   return train_paths, test_paths
 
 
 def load_data2(data_dir, dataset):
