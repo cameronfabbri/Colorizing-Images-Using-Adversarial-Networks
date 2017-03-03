@@ -2,15 +2,21 @@
 
 Operations used for data management
 
+MASSIVE help from https://github.com/affinelayer/pix2pix-tensorflow/blob/master/pix2pix.py
+
 '''
 from scipy import misc
 from skimage import color
+import collections
 import tensorflow as tf
 import numpy as np
 import math
 import time
 import random
 import glob
+import os
+import fnmatch
+import config
 
 def preprocess(image):
    with tf.name_scope('preprocess'):
@@ -23,11 +29,11 @@ def deprocess(image):
       return (image+1)/2
 
 def preprocess_lab(lab):
-    with tf.name_scope('preprocess_lab'):
-        L_chan, a_chan, b_chan = tf.unstack(lab, axis=2)
-        # L_chan: black and white with input range [0, 100]
-        # a_chan/b_chan: color channels with input range ~[-110, 110], not exact
-        # [0, 100] => [-1, 1],  ~[-110, 110] => [-1, 1]
+   with tf.name_scope('preprocess_lab'):
+      L_chan, a_chan, b_chan = tf.unstack(lab, axis=2)
+       # L_chan: black and white with input range [0, 100]
+       # a_chan/b_chan: color channels with input range ~[-110, 110], not exact
+       # [0, 100] => [-1, 1],  ~[-110, 110] => [-1, 1]
    return [L_chan / 50 - 1, a_chan / 110, b_chan / 110]
 
 def deprocess_lab(L_chan, a_chan, b_chan):
@@ -42,6 +48,21 @@ def augment(image, brightness):
    lab = deprocess_lab(L_chan, a_chan, b_chan)
    rgb = lab_to_rgb(lab)
    return rgb
+
+
+def check_image(image):
+   assertion = tf.assert_equal(tf.shape(image)[-1], 3, message="image must have 3 color channels")
+   with tf.control_dependencies([assertion]):
+      image = tf.identity(image)
+
+   if image.get_shape().ndims not in (3, 4):
+      raise ValueError("image must be either 3 or 4 dimensions")
+
+   # make the last dimension 3 so that you can unstack the colors
+   shape = list(image.get_shape())
+   shape[-1] = 3
+   image.set_shape(shape)
+   return image
 
 def rgb_to_lab(srgb):
    with tf.name_scope('rgb_to_lab'):
@@ -129,28 +150,81 @@ def lab_to_rgb(lab):
       return tf.reshape(srgb_pixels, tf.shape(lab))
 
 
-def load_data(data_dir):
+def getPaths(data_dir, ext='jpg'):
+   pattern   = '*.'+ext
+   image_list = []
+   for d, s, fList in os.walk(data_dir):
+      for filename in fList:
+         if fnmatch.fnmatch(filename, pattern):
+            image_list.append(os.path.join(d,filename))
+   return image_list
 
-   input_paths = glob.glob(os.path.join(data_dir, '*.jpg')
-   decode = tf.image.decode_jpg
+
+def _read_input(filename_queue):
+   class DataRecord(object):
+      pass
+   reader             = tf.WholeFileReader()
+   key, value         = reader.read(filename_queue)
+   record             = DataRecord()
+   decoded_image      = tf.image.decode_jpeg(value, channels=3)
+   decoded_image_4d   = tf.expand_dims(decoded_image, 0)
+   resized_image      = tf.image.resize_bilinear(decoded_image_4d, [96, 96])
+   record.input_image = tf.squeeze(resized_image, squeeze_dims=[0])
+   cropped_image      = tf.cast(tf.image.central_crop(decoded_image, 0.6), tf.float32)
+   decoded_image_4d   = tf.expand_dims(cropped_image, 0)
+   resized_image      = tf.image.resize_bilinear(decoded_image_4d, [64, 64])
+   record.input_image = tf.squeeze(resized_image, squeeze_dims=[0])
+   return record
+
+
+def read_input_queue(filename_queue):
+   read_input = _read_input(filename_queue)
+   num_preprocess_threads = 8
+   min_queue_examples = int(0.1 * 100)
+   print("Shuffling")
+   input_image = tf.train.shuffle_batch([read_input.input_image],
+                                        batch_size=config.batch_size,
+                                        num_threads=num_preprocess_threads,
+                                        capacity=min_queue_examples + 8 * config.batch_size,
+                                        min_after_dequeue=min_queue_examples)
+   input_image = input_image/127.5 - 1.
+   return input_image
+
+
+
+def load_data(data_dir, dataset):
+   if dataset == 'celeba':
+      train_paths = getPaths(data_dir+'train/')
+      test_paths  = getPaths(data_dir+'test/')
+   elif dataset == 'imagent':
+      train_paths = getPaths(data_dir+'train/', ext='JPEG')
+      test_paths  = getPaths(data_dir+'test/', ext='JPEG')
+
+   return read_input_queue(train_paths)
+
+
+def load_data2(data_dir, dataset):
+
+   if dataset == 'celeba':
+      train_paths = getPaths(data_dir+'train/')
+      test_paths  = getPaths(data_dir+'test/')
+   elif dataset == 'imagent':
+      train_paths = getPaths(data_dir+'train/', ext='JPEG')
+      test_paths  = getPaths(data_dir+'test/', ext='JPEG')
+
+   decode = tf.image.decode_jpeg
    
-   if len(input_paths) == 0:
-      input_paths = glob.glob(os.path.join(data_dir, '*.png')
-      decode = tf.image.decode_png
-
-   if len(input_paths) == 0: raise Exception('directory',data_dir,'contains no images')
-
-   def get_name(path): return os.path.splitext(os.path.basename(path))[0]
-
-   with tf.name_scope("load_images"):
-      path_queue = tf.train.string_input_producer(input_paths, shuffle=a.mode == "train")
+   #def get_name(path): return os.path.splitext(os.path.basename(path))[0]
+   
+   with tf.name_scope('load_images'):
+      path_queue = tf.train.string_input_producer(train_paths)
 
       reader = tf.WholeFileReader()
       paths, contents = reader.read(path_queue)
       raw_input_ = decode(contents)
       raw_input_ = tf.image.convert_image_dtype(raw_input_, dtype=tf.float32)
 
-      assertion = tf.assert_equal(tf.shape(raw_input_)[2], 3, message="image does not have 3 channels")
+      assertion = tf.assert_equal(tf.shape(raw_input_)[2], 3, message='image does not have 3 channels')
 
       with tf.control_dependencies([assertion]): raw_input_ = tf.identity(raw_input_)
 
@@ -168,9 +242,8 @@ def load_data(data_dir):
       def transform(image):
          r = image
          r = tf.image.random_flip_left_right(r, seed=seed)
-
-      r = tf.image.resize_images(r, [256, 256], method=tf.image.ResizeMethod.AREA)
-
+         r = tf.image.resize_images(r, [256, 256], method=tf.image.ResizeMethod.AREA)
+         return r
 
       with tf.name_scope('input_images'):
          input_images = transform(inputs)
@@ -182,38 +255,17 @@ def load_data(data_dir):
                                                 paths,
                                                 input_images,
                                                 target_images],
-                                                batch_size=batch_size)
+                                                batch_size=config.batch_size)
 
+      Data = collections.namedtuple('Data', 'paths, inputs, targets, count')
       return Data(
          paths=paths_batch,
          inputs=inputs_batch,
          targets=targets_batch,
-         count=len(inputs_batch)
+         count=len(train_paths)
       )
 
-
 '''
-def unnormalizeImage(img):
-   return (img+1)*127.5
-
-def normalizeImage(img):
-   return img/127.5 - 1. # normalize between -1 and 1
-
-
-# unnormalize
-# convert to uint8
-# save
-
-def saveImage(img, step, dataset, n='tanh'):
-   i = 0
-   for image in img:
-      image = unnormalizeImage(image)
-      image = np.float64(image)
-      image = color.lab2rgb(np.uint8(image))
-      misc.imsave('images/'+dataset+'/'+step+'_'+str(i)+'.jpg', image)
-      i += 1
-'''
-
 def getBatch(batch_size, data, dataset, use_labels):
 
    label_size = 1000
@@ -263,22 +315,4 @@ def getBatch(batch_size, data, dataset, use_labels):
    if use_labels: return color_image_batch, gray_image_batch, label_batch
    
    return color_image_batch, gray_image_batch
-
-'''
-# read image
-image = misc.imread('Image.jpg')
-
-# convert to lab
-image = color.rgb2lab(image)
-# scale to [-1, 1]
-image = normalizeImage(np.float32(image))
-
-# scale back away from [-1, 1]
-image = unnormalizeImage(image)
-
-# lab2rgb takes in float64, will NOT work with float32
-image = np.float64(image)
-image = color.lab2rgb(image)
-
-misc.imsave('conv.jpg', image)
 '''

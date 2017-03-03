@@ -14,67 +14,54 @@ from skimage import color
 from scipy import misc
 from skimage import color
 
-sys.path.insert(0, 'config/')
 sys.path.insert(0, '../ops/')
 
 import data_ops
-import load_data
-
+import config
 
 '''
    Builds the graph and sets up params, then starts training
 '''
-def buildAndTrain(info):
+def buildAndTrain(checkpoint_dir):
 
-   checkpoint_dir       = info['checkpoint_dir']
-   batch_size           = info['batch_size']
-   #use_labels           = info['use_labels']
-   data_dir             = info['data_dir']
-   dataset              = info['dataset']
+   batch_size     = config.batch_size
+   data_dir       = config.data_dir
+   dataset        = config.dataset
 
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
+   z           = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
+   test_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='test_images')
+
+   #data = data_ops.load_data(data_dir, dataset)
+  
+   #input_images  = data.inputs  # gray (L) images
+   #target_images = data_ops.augment(data.targets, input_images) # color (a b) images
+   #num_train     = data.count
+
+   train_images_list = data_ops.load_data(data_dir, dataset)
+   filename_queue    = tf.train.string_input_producer(train_images_list)
+   real_images       = data_ops.read_input_queue(filename_queue)
 
 
-   #color_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 3), name='color_images')
-   #color_images = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), color_images)
-   
-   #gray_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='gray_images')
-   #gray_images  = tf.map_fn(lambda img: tf.image.random_flip_left_right(img), gray_images)
+   conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(input_images)
+   decoded = data_ops.augment(netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, input_images), input_images)
 
-   # label size will always be 1000 (max of our datasets) because say we have a dataset with 10 labels
-   # then it'll just use 10 and be really padded which is fine
-   #label_size = 1000
-
-   #labels_p = tf.placeholder(tf.float32, shape=(batch_size, label_size), name='labels')
-
-   # images colorized by network
-   #encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, labels_p, batch_size, use_labels)
-   
-   Data = data_ops.load_data(data_dir)
-   targets = data_ops.augment(Data.targets, data.inputs)
-   inputs = deprocess(Data.inputs)
-
-   encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(gray_images, batch_size)
-   decoded_gen = netG_decoder(encoded_gen, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_images)
-   
-   outputs = data_ops.augment(decoded_gen)
-   
    # get the output from D on the real and fake data
-   #errD_real = netD(color_images, labels_p, batch_size, use_labels)
-   errD_real = netD(color_images, batch_size)
-   #errD_fake = netD(decoded_gen, labels_p, batch_size, use_labels, reuse=True) # gotta pass reuse=True to reuse weights
-   errD_fake = netD(decoded_gen, batch_size, reuse=True) # gotta pass reuse=True to reuse weights
+   errD_real = netD(target_images)
+   errD_fake = netD(decoded, reuse=True) # gotta pass reuse=True to reuse weights
 
+   l1_weight = 100.0
    # cost functions
+   genL1 = tf.reduce_mean(tf.abs(target_images-decoded))
    errD = tf.reduce_mean(errD_real - errD_fake)
-   errG = tf.reduce_mean(errD_fake)
+   errG = tf.reduce_mean(errD_fake) + genL1*l1_weight
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
    tf.summary.scalar('g_loss', errG)
-   tf.summary.image('color_images', color_images, max_outputs=batch_size)
-   tf.summary.image('generated_images', decoded_gen, max_outputs=batch_size)
+   tf.summary.image('input_images', input_images, max_outputs=batch_size)
+   tf.summary.image('generated_images', decoded, max_outputs=batch_size)
    merged_summary_op = tf.summary.merge_all()
 
    # get all trainable variables, and split by network G and network D
@@ -83,8 +70,8 @@ def buildAndTrain(info):
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
    # clip weights in D
-   #clip_values = [-0.01, 0.01]
-   clip_values = [-0.005, 0.005]
+   clip_values = [-0.01, 0.01]
+   #clip_values = [-0.005, 0.005]
    clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for
       var in d_vars]
 
@@ -121,83 +108,63 @@ def buildAndTrain(info):
    
    
    ########################################### training portion
-
-   # get data for dataset we're using
-   # train_data contains [image_paths, labels]
-   #print 'Loading train data...'
-   #train_data = load_data.load(dataset, data_dir, use_labels, 'train')
-   #print 'Loading test data...'
-   #test_data  = load_data.load(dataset, data_dir, use_labels, 'test')
-   
-   random.shuffle(train_data)
-   random.shuffle(test_data)
-
    step = sess.run(global_step)
-   num_train = len(train_data)
-   num_test  = len(test_data)
-
-   print num_train, 'training images'
-   print num_test, 'test images'
-
-
    while True:
       epoch_num = step/(num_train/batch_size)
       s = time.time()
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 100
+         n_critic = 1
       else: n_critic = 5
 
       # train the discriminator for 5 or 100 runs
-      for critic_itr in range(n_critic):
+      #for critic_itr in range(n_critic):
+      print 'running d'
+      #sess.run(D_train_op)
+      print 'clipping values'
+      #sess.run(clip_discriminator_var_op)
+      
+      print 'running g'
+      #sess.run(G_train_op)
 
-         # need to read in a batch of images here
-         #if use_labels:
-         #   batch_c_imgs, batch_g_imgs, batch_labels = data_ops.getBatch(batch_size, train_data, dataset, use_labels)
-         #   sess.run([D_train_op, color_images, gray_images], feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs, labels_p:batch_labels})
-         #else:
-         #   batch_c_imgs, batch_g_imgs = data_ops.getBatch(batch_size, train_data, dataset, use_labels)
-         #   sess.run([D_train_op, color_images, gray_images], feed_dict={color_images:batch_c_imgs, gray_images:batch_g_imgs})
-         
-         sess.run(clip_discriminator_var_op)
-      
-      #if use_labels:
-      #   sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs,labels_p:batch_labels})
-      #else:
-      #   sess.run([G_train_op, gray_images], feed_dict={gray_images:batch_g_imgs})
+      D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
-      # now get all losses and summary *without* performing a training step - for tensorboard
-      #if use_labels: D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs,labels_p:batch_labels})
-      #else:
-      #   D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={color_images:batch_c_imgs,gray_images:batch_g_imgs})
-      
-      
       summary_writer.add_summary(summary, step)
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
 
-      if step%500 == 0:
+      if step%1 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
          saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
          print 'Model saved\n' 
          
          print 'Evaluating...'
-         # get test images from test split
-         if use_labels: test_c_imgs, test_g_imgs, test_labels = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
-         else: test_c_imgs, test_g_imgs = data_ops.getBatch(batch_size, test_data, dataset, use_labels)
+         shuffle(test_images)
+         for t in test_images:
+            print t
+            exit()
 
-         gen_images = np.asarray(sess.run(decoded_gen, feed_dict={gray_images:test_g_imgs}))
 
-         j = 0
-         
-         for gimg, rimg in zip(gen_images, test_c_imgs):
-            gimg = (gimg+1.0)*127.5
-            gimg = color.lab2rgb(np.float64(gimg))
-            if rimg.shape[0] is not 256: rimg = misc.imresize(rimg, (256,256))
-            rimg = (rimg+1.0)*127.5
-            rimg = color.lab2rgb(np.float64(rimg))
-            misc.imsave('images/'+dataset+'_'+str(use_labels)+'/'+str(step)+'_'+str(j)+'_gen.png', gimg)
-            misc.imsave('images/'+dataset+'_'+str(use_labels)+'/'+str(step)+'_'+str(j)+'_real.png', rimg)
-            j += 1
-            if j == 10: break
+if __name__ == '__main__':
+
+   checkpoint_dir = config.checkpoint_dir
+   learning_rate  = config.learning_rate
+   batch_size     = config.batch_size
+   data_dir       = config.data_dir
+   dataset        = config.dataset
+   if checkpoint_dir[-1] is not '/': checkpoint_dir+='/'
+   try: os.mkdir(checkpoint_dir)
+   except: pass
+   try: os.mkdir(checkpoint_dir+dataset)
+   except: pass
+   try: os.mkdir('images/')
+   except: pass
+   try: os.mkdir('images/'+dataset)
+   except: pass
+   
+   checkpoint_dir = checkpoint_dir+dataset
+   
+   buildAndTrain(checkpoint_dir)
+
+

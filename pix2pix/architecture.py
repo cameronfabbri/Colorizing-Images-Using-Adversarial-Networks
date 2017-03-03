@@ -1,20 +1,28 @@
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import sys
+import config
 
-sys.path.insert(0, '../ops/')
-from tf_ops import lrelu
+batch_size = config.batch_size
+
+'''
+   Leaky RELU
+   https://arxiv.org/pdf/1502.01852.pdf
+'''
+def lrelu(x, leak=0.2, name='lrelu'):
+   return tf.maximum(leak*x, x)
 
 # should also pass in labels if we have em
-def netG_encoder(gray_images, labels_p, batch_size, use_labels):
+def netG_encoder(gray_images):
 
    print 'GENERATOR'
    print 'images:',gray_images 
+   
    ####### encoder ########
    # no batch norm on first layer
 
-   #with tf.device('/gpu:0'):
-   if 1:
+   with tf.device('/gpu:0'):
+   #if 1:
       conv1 = slim.convolution(gray_images, 64, 4, stride=2, activation_fn=tf.identity, scope='g_e_conv1')
       conv1 = lrelu(conv1)
       print 'conv1:',conv1
@@ -66,8 +74,8 @@ def netG_encoder(gray_images, labels_p, batch_size, use_labels):
 '''
 def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_images):
 
-   #with tf.device('/gpu:1'):
-   if 1:
+   with tf.device('/gpu:1'):
+   #if 1:
       ###### decoder ######
       dconv1 = slim.convolution2d_transpose(conv8, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv1')
       dconv1 = tf.nn.relu(dconv1)
@@ -92,8 +100,8 @@ def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_im
       dconv4 = tf.nn.relu(dconv4)
       print 'dconv4:',dconv4
 
-   #with tf.device('/gpu:2'):
-   if 1:
+   with tf.device('/gpu:2'):
+   #if 1:
       dconv5 = slim.convolution2d_transpose(dconv4, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv5')
       dconv5 = tf.concat([conv3, dconv5], 3)
       dconv5 = tf.nn.relu(dconv5)
@@ -116,7 +124,7 @@ def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_im
       # return 2 channels instead of 3 because of a b colorspace
       conv9 = slim.convolution(dconv8, 2, 4, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_conv9')
       # have to concat the input gray image to the last conv9 because it's LAB colorspace
-      conv9 = tf.concat([gray_images, conv9], 3)
+      #conv9 = tf.concat([gray_images, conv9], 3)
       conv9 = tf.nn.tanh(conv9)
       
       print 'conv9:', conv9
@@ -141,14 +149,13 @@ def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_im
 '''
    Discriminator network
 '''
-def netD(input_images, labels_p, batch_size, use_labels, reuse=False):
-
+def netD(input_images, reuse=False):
 
    print 'DISCRIMINATOR' 
    sc = tf.get_variable_scope()
    with tf.variable_scope(sc, reuse=reuse):
-      #with tf.device('/gpu:3'):
-      if 1:
+      with tf.device('/gpu:3'):
+      #if 1:
          print 'input images:',input_images
          conv1 = slim.convolution(input_images, 64, 5, stride=2, activation_fn=tf.identity, scope='d_conv1')
          conv1 = lrelu(conv1)
