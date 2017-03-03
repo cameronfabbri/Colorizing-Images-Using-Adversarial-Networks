@@ -30,11 +30,11 @@ def deprocess(image):
 
 def preprocess_lab(lab):
    with tf.name_scope('preprocess_lab'):
-      L_chan = lab[:,:,:,0]
-      L_chan = tf.expand_dims(L_chan, 3)
-      a_chan = lab[:,:,:,1]
-      b_chan = lab[:,:,:,2]
-      #L_chan, a_chan, b_chan = tf.unstack(lab, axis=2)
+      #L_chan = lab[:,:,:,0]
+      #L_chan = tf.expand_dims(L_chan, 3)
+      #a_chan = lab[:,:,:,1]
+      #b_chan = lab[:,:,:,2]
+      L_chan, a_chan, b_chan = tf.unstack(lab, axis=2)
       # L_chan: black and white with input range [0, 100]
       # a_chan/b_chan: color channels with input range ~[-110, 110], not exact
       # [0, 100] => [-1, 1],  ~[-110, 110] => [-1, 1]
@@ -200,7 +200,7 @@ def read_input_queue(filename_queue):
    return L_image, ab_image
 
 
-def load_data(data_dir, dataset):
+def load_data2(data_dir, dataset):
    if dataset == 'celeba':
       train_paths = getPaths(data_dir+'train/')
       test_paths  = getPaths(data_dir+'test/')
@@ -211,7 +211,7 @@ def load_data(data_dir, dataset):
    return train_paths, test_paths
 
 
-def load_data2(data_dir, dataset):
+def load_data(data_dir, dataset):
 
    if dataset == 'celeba':
       train_paths = getPaths(data_dir+'train/')

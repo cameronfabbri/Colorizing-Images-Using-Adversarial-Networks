@@ -33,19 +33,26 @@ def buildAndTrain(checkpoint_dir):
    z           = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
    test_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='test_images')
 
-   train_images_paths, test_images_paths = data_ops.load_data(data_dir, dataset)
-   num_train = len(train_images_paths)
-   filename_queue = tf.train.string_input_producer(train_images_paths)
+   #train_images_paths, test_images_paths = data_ops.load_data(data_dir, dataset)
+   Data = data_ops.load_data(data_dir, dataset)
+   num_train = Data.count
+   L_image = Data.inputs
+   ab_image = Data.targets
+   
+   #filename_queue = tf.train.string_input_producer(train_images_paths)
    
    # L_image is the gray image (lightness channel)
    # ab_image is the ab color values
-   L_image, ab_image  = data_ops.read_input_queue(filename_queue)
+   #L_image, ab_image  = data_ops.read_input_queue(filename_queue)
 
    # send L to encoder
    encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(L_image)
 
    # send encoded part to decoder - as well as other layers for skip connections
    decoded = netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
+
+   tencoded, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = netG_encoder(test_images)
+   tdecoded = netG_decoder(tencoded, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
 
    '''
       So I don't get confused:
@@ -121,7 +128,13 @@ def buildAndTrain(checkpoint_dir):
    
    ########################################### training portion
    step = sess.run(global_step)
+   coord = tf.train.Coordinator()
+   threads = tf.train.start_queue_runners(sess, coord=coord)
+
    while True:
+      print sess.run(L_image)
+      exit()
+      print sess.run(ab_image)
       epoch_num = step/(num_train/batch_size)
       s = time.time()
       # get the discriminator properly trained at the start
@@ -130,13 +143,10 @@ def buildAndTrain(checkpoint_dir):
       else: n_critic = 5
 
       # train the discriminator for 5 or 100 runs
-      #for critic_itr in range(n_critic):
-      print 'running d'
-      sess.run(D_train_op)
-      print 'clipping values'
-      sess.run(clip_discriminator_var_op)
+      for critic_itr in range(n_critic):
+         sess.run(D_train_op)
+         sess.run(clip_discriminator_var_op)
       
-      print 'running g'
       sess.run(G_train_op)
 
       D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
@@ -144,18 +154,49 @@ def buildAndTrain(checkpoint_dir):
       summary_writer.add_summary(summary, step)
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
+      
+      if step%1000 == 0:
 
-      if step%1 == 0:
          print 'Saving model...'
-         saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
-         saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
+         #saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
+         #saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
          print 'Model saved\n' 
          
          print 'Evaluating...'
-         shuffle(test_images)
-         for t in test_images:
-            print t
+         random.shuffle(test_images_paths)
+         batch_test_img = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
+         batch_test_color = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
+         i = 0
+         for t in test_images_paths:
+            img = misc.imread(t)
+            height, width, channels = img.shape
+            if height is not 256 or width is not 256:
+               img = misc.imresize(img, (256, 256))
+               height, width, channels = img.shape
+            try:
+               batch_test_color[i, ...] = img
+               lab_img = color.rgb2lab(img)
+               L_img = lab_img[:,:,0]
+               L_img = np.expand_dims(L_img, 2)
+               batch_test_img[i, ...] = L_img
+               i += 1
+            except:
+               continue
+            if i == batch_size: break
+
+         test_colored = sess.run(tdecoded, feed_dict={test_images:batch_test_img})
+
+         for cim, rim in zip(test_colored, batch_test_color):
+            # convert from lab to rgb
+            L = batch_test_img[i]
+            cim = (cim+1.)*127.5
+            cim = color.lab2rgb(np.float64(cim))
+            misc.imsave(str(step)+'_'+'real.png', rim)
+            misc.imsave(str(step)+'_'+'gen.png', rim)
             exit()
+            
+         
+         exit()
 
 
 if __name__ == '__main__':
