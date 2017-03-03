@@ -30,30 +30,23 @@ def buildAndTrain(checkpoint_dir):
 
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
-   z           = tf.placeholder(tf.float32, shape=(batch_size, 100), name='z')
    test_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='test_images')
-
-   #train_images_paths, test_images_paths = data_ops.load_data(data_dir, dataset)
-   Data = data_ops.load_data(data_dir, dataset)
+   Data = data_ops.load_data(data_dir)#, dataset)
    num_train = Data.count
-   L_image = Data.inputs
-   ab_image = Data.targets
-   
-   #filename_queue = tf.train.string_input_producer(train_images_paths)
-   
-   # L_image is the gray image (lightness channel)
-   # ab_image is the ab color values
-   #L_image, ab_image  = data_ops.read_input_queue(filename_queue)
+   L_image   = Data.inputs
+   ab_image  = Data.targets
 
-   # send L to encoder
+   sess = tf.Session()
+   coord = tf.train.Coordinator()
+   threads = tf.train.start_queue_runners(sess, coord=coord)
+   print L_image
+   print sess.run(L_image)
+   exit()
    encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(L_image)
 
    # send encoded part to decoder - as well as other layers for skip connections
    decoded = netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
-
-   tencoded, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = netG_encoder(test_images)
-   tdecoded = netG_decoder(tencoded, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
-
+   
    '''
       So I don't get confused:
       The GRAY image is sent to the encoder, gets encoded, THEN gets decoded but
@@ -61,20 +54,23 @@ def buildAndTrain(checkpoint_dir):
    '''
 
    # find L1 loss of decoded and original -> this loss is combined with D loss
-   l1_loss = tf.reduce_mean(tf.abs(ab_image-decoded))
+   l1_loss = tf.reduce_mean(tf.abs(targets - outputs))
 
    # send the real ab image to the critic
+   #errD_real = netD(targets)
    errD_real = netD(ab_image)
 
    # now send the decoded image to the critic (our fake/generated ab image)
-   errD_fake = netD(decoded, reuse=True) # gotta pass reuse=True to reuse weights
+   #errD_fake = netD(outputs, reuse=True) # gotta pass reuse=True to reuse weights
+   errD_fake = netD(L_image, reuse=True) # gotta pass reuse=True to reuse weights
 
    # weight of how much the l1 loss takes into account 
    l1_weight = 1.0
    # total error for the critic
    errD = tf.reduce_mean(errD_real - errD_fake)
    # error for the generator, including the L1 loss
-   errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
+   #errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
+   errG = errD_fake
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
