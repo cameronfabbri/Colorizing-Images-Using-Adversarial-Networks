@@ -34,31 +34,46 @@ def buildAndTrain(checkpoint_dir):
    test_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='test_images')
 
    train_images_paths, test_images_paths = data_ops.load_data(data_dir, dataset)
+   num_train = len(train_images_paths)
    filename_queue = tf.train.string_input_producer(train_images_paths)
    
-   # [a b] 'color' images that we want to predict given L
-   target_images  = data_ops.read_input_queue(filename_queue)
+   # L_image is the gray image (lightness channel)
+   # ab_image is the ab color values
+   L_image, ab_image  = data_ops.read_input_queue(filename_queue)
 
-   
+   # send L to encoder
+   encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(L_image)
 
-   conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(input_images)
-   decoded = data_ops.augment(netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, input_images), input_images)
+   # send encoded part to decoder - as well as other layers for skip connections
+   decoded = netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
 
-   # get the output from D on the real and fake data
-   errD_real = netD(target_images)
+   '''
+      So I don't get confused:
+      The GRAY image is sent to the encoder, gets encoded, THEN gets decoded but
+      with an EXTRA channel. This is then compared to the ACTUAL ab image via L1.
+   '''
+
+   # find L1 loss of decoded and original -> this loss is combined with D loss
+   l1_loss = tf.reduce_mean(tf.abs(ab_image-decoded))
+
+   # send the real ab image to the critic
+   errD_real = netD(ab_image)
+
+   # now send the decoded image to the critic (our fake/generated ab image)
    errD_fake = netD(decoded, reuse=True) # gotta pass reuse=True to reuse weights
 
-   l1_weight = 100.0
-   # cost functions
-   genL1 = tf.reduce_mean(tf.abs(target_images-decoded))
+   # weight of how much the l1 loss takes into account 
+   l1_weight = 1.0
+   # total error for the critic
    errD = tf.reduce_mean(errD_real - errD_fake)
-   errG = tf.reduce_mean(errD_fake) + genL1*l1_weight
+   # error for the generator, including the L1 loss
+   errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
    tf.summary.scalar('g_loss', errG)
-   tf.summary.image('input_images', input_images, max_outputs=batch_size)
-   tf.summary.image('generated_images', decoded, max_outputs=batch_size)
+   #tf.summary.image('input_images', input_images, max_outputs=batch_size)
+   #tf.summary.image('generated_images', decoded, max_outputs=batch_size)
    merged_summary_op = tf.summary.merge_all()
 
    # get all trainable variables, and split by network G and network D
@@ -117,12 +132,12 @@ def buildAndTrain(checkpoint_dir):
       # train the discriminator for 5 or 100 runs
       #for critic_itr in range(n_critic):
       print 'running d'
-      #sess.run(D_train_op)
+      sess.run(D_train_op)
       print 'clipping values'
-      #sess.run(clip_discriminator_var_op)
+      sess.run(clip_discriminator_var_op)
       
       print 'running g'
-      #sess.run(G_train_op)
+      sess.run(G_train_op)
 
       D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 

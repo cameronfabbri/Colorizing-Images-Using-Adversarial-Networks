@@ -13,17 +13,17 @@ def lrelu(x, leak=0.2, name='lrelu'):
    return tf.maximum(leak*x, x)
 
 # should also pass in labels if we have em
-def netG_encoder(gray_images):
+def netG_encoder(L_image):
 
    print 'GENERATOR'
-   print 'images:',gray_images 
+   print 'images:',L_image 
    
    ####### encoder ########
    # no batch norm on first layer
 
    with tf.device('/gpu:0'):
    #if 1:
-      conv1 = slim.convolution(gray_images, 64, 4, stride=2, activation_fn=tf.identity, scope='g_e_conv1')
+      conv1 = slim.convolution(L_image, 64, 4, stride=2, activation_fn=tf.identity, scope='g_e_conv1')
       conv1 = lrelu(conv1)
       print 'conv1:',conv1
       
@@ -72,7 +72,7 @@ def netG_encoder(gray_images):
 '''
    Decoder portion of the generator
 '''
-def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_images):
+def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1):
 
    with tf.device('/gpu:1'):
    #if 1:
@@ -123,8 +123,7 @@ def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1, gray_im
       
       # return 2 channels instead of 3 because of a b colorspace
       conv9 = slim.convolution(dconv8, 2, 4, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_conv9')
-      # have to concat the input gray image to the last conv9 because it's LAB colorspace
-      #conv9 = tf.concat([gray_images, conv9], 3)
+      
       conv9 = tf.nn.tanh(conv9)
       
       print 'conv9:', conv9

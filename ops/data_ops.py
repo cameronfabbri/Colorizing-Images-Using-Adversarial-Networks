@@ -30,10 +30,14 @@ def deprocess(image):
 
 def preprocess_lab(lab):
    with tf.name_scope('preprocess_lab'):
-      L_chan, a_chan, b_chan = tf.unstack(lab, axis=2)
-       # L_chan: black and white with input range [0, 100]
-       # a_chan/b_chan: color channels with input range ~[-110, 110], not exact
-       # [0, 100] => [-1, 1],  ~[-110, 110] => [-1, 1]
+      L_chan = lab[:,:,:,0]
+      L_chan = tf.expand_dims(L_chan, 3)
+      a_chan = lab[:,:,:,1]
+      b_chan = lab[:,:,:,2]
+      #L_chan, a_chan, b_chan = tf.unstack(lab, axis=2)
+      # L_chan: black and white with input range [0, 100]
+      # a_chan/b_chan: color channels with input range ~[-110, 110], not exact
+      # [0, 100] => [-1, 1],  ~[-110, 110] => [-1, 1]
    return [L_chan / 50 - 1, a_chan / 110, b_chan / 110]
 
 def deprocess_lab(L_chan, a_chan, b_chan):
@@ -151,9 +155,6 @@ def lab_to_rgb(lab):
 
 
 def getPaths(data_dir, ext='jpg'):
-   print 'getting paths!'
-   print data_dir
-   exit()
    pattern   = '*.'+ext
    image_list = []
    for d, s, fList in os.walk(data_dir):
@@ -171,11 +172,7 @@ def _read_input(filename_queue):
    record             = DataRecord()
    decoded_image      = tf.image.decode_jpeg(value, channels=3)
    decoded_image_4d   = tf.expand_dims(decoded_image, 0)
-   resized_image      = tf.image.resize_bilinear(decoded_image_4d, [96, 96])
-   record.input_image = tf.squeeze(resized_image, squeeze_dims=[0])
-   cropped_image      = tf.cast(tf.image.central_crop(decoded_image, 0.6), tf.float32)
-   decoded_image_4d   = tf.expand_dims(cropped_image, 0)
-   resized_image      = tf.image.resize_bilinear(decoded_image_4d, [64, 64])
+   resized_image      = tf.image.resize_bilinear(decoded_image_4d, [256, 256])
    record.input_image = tf.squeeze(resized_image, squeeze_dims=[0])
    return record
 
@@ -192,10 +189,15 @@ def read_input_queue(filename_queue):
                                         min_after_dequeue=min_queue_examples)
 
    input_image = rgb_to_lab(input_image/127.5 - 1.)
-   print input_image
-   exit()
-   return input_image
+   input_image = preprocess_lab(input_image)
+   L_image, a_chan, b_chan = input_image
 
+   a_chan = tf.expand_dims(a_chan, 3)
+   b_chan = tf.expand_dims(b_chan, 3)
+
+   ab_image = tf.concat([a_chan, b_chan], 3)
+   
+   return L_image, ab_image
 
 
 def load_data(data_dir, dataset):
@@ -219,8 +221,6 @@ def load_data2(data_dir, dataset):
       test_paths  = getPaths(data_dir+'test/', ext='JPEG')
 
    decode = tf.image.decode_jpeg
-   
-   #def get_name(path): return os.path.splitext(os.path.basename(path))[0]
    
    with tf.name_scope('load_images'):
       path_queue = tf.train.string_input_producer(train_paths)
