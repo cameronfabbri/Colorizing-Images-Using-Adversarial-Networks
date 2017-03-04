@@ -10,23 +10,15 @@ import numpy as np
 data_dir = config.data_dir
 dataset = config.dataset
 
-#Data      = data_ops.load_data(data_dir, dataset)
-#num_train = Data.count
-#L_image   = Data.inputs
-#ab_image  = Data.targets
+examples = data_ops.load_examples('/home/fabbric/data/images/celeba/original/')
+img = examples.inputs
 
-#L_image = data_ops.deprocess(L_image)
-#targets = data_ops.augment(ab_image, L_image)
-Data = data_ops.load_data(data_dir, dataset)
-#Data = data_ops.load_data('/mnt/data2/images/imagenet/ILSVRC2016/CLS_LOC_dataset/Data/CLS-LOC/', 'imagenet')
-img = Data.inputs
-t = Data.targets
-print t
+t = examples.targets
 sess = tf.Session()
 coord = tf.train.Coordinator()
 threads = tf.train.start_queue_runners(sess, coord=coord)
 
-print sess.run(t)
+print sess.run(examples.inputs)
 exit()
 
 import scipy.misc as misc
