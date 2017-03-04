@@ -30,23 +30,36 @@ def buildAndTrain(checkpoint_dir):
 
    # placeholders for data going into the network
    global_step = tf.Variable(0, name='global_step', trainable=False)
-   test_images = tf.placeholder(tf.float32, shape=(batch_size, 256, 256, 1), name='test_images')
-   Data = data_ops.load_data(data_dir)#, dataset)
-   num_train = Data.count
-   L_image   = Data.inputs
-   ab_image  = Data.targets
+   
+   test_image  = tf.placeholder(tf.float32, shape=(256, 256, 3), name='test_image')
+   test_image  = data_ops.rgb_to_lab(test_image)
 
-   sess = tf.Session()
-   coord = tf.train.Coordinator()
-   threads = tf.train.start_queue_runners(sess, coord=coord)
-   print L_image
-   print sess.run(L_image)
-   exit()
+   test_Lc, test_ac, test_bc = data_ops.preprocess_lab(test_image)
+   test_L = tf.expand_dims(test_Lc, axis=2)
+   test_ab = tf.stack([test_ac, test_bc], axis=2)
+
+   test_L = tf.expand_dims(test_L, axis=0)
+   test_ab = tf.expand_dims(test_ab, axis=0)
+
+
+   train_paths, test_paths, trainData = data_ops.loadTrainData(data_dir, dataset)
+   
+   num_train = trainData.count
+   # The gray 'lightness' channel in range [-1, 1]
+   L_image   = trainData.inputs
+   # The color channels in [-1, 1] range
+   ab_image  = trainData.targets
+
    encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(L_image)
 
    # send encoded part to decoder - as well as other layers for skip connections
    decoded = netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
+
+   enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = netG_encoder(test_L)
+   dec_test_images = netG_decoder(enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
    
+   prediction = data_ops.lab_to_rgb(data_ops.augment(dec_test_images, test_L))
+
    '''
       So I don't get confused:
       The GRAY image is sent to the encoder, gets encoded, THEN gets decoded but
@@ -54,23 +67,21 @@ def buildAndTrain(checkpoint_dir):
    '''
 
    # find L1 loss of decoded and original -> this loss is combined with D loss
-   l1_loss = tf.reduce_mean(tf.abs(targets - outputs))
+   l1_loss = tf.reduce_mean(tf.abs(decoded-ab_image))
 
    # send the real ab image to the critic
-   #errD_real = netD(targets)
    errD_real = netD(ab_image)
 
-   # now send the decoded image to the critic (our fake/generated ab image)
-   #errD_fake = netD(outputs, reuse=True) # gotta pass reuse=True to reuse weights
-   errD_fake = netD(L_image, reuse=True) # gotta pass reuse=True to reuse weights
+   # send the fake ab image to the critic
+   errD_fake = netD(decoded, reuse=True) # gotta pass reuse=True to reuse weights
 
    # weight of how much the l1 loss takes into account 
-   l1_weight = 1.0
+   l1_weight = 10.0
    # total error for the critic
    errD = tf.reduce_mean(errD_real - errD_fake)
    # error for the generator, including the L1 loss
    #errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
-   errG = errD_fake
+   errG = tf.reduce_mean(errD_fake)
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
@@ -128,9 +139,6 @@ def buildAndTrain(checkpoint_dir):
    threads = tf.train.start_queue_runners(sess, coord=coord)
 
    while True:
-      print sess.run(L_image)
-      exit()
-      print sess.run(ab_image)
       epoch_num = step/(num_train/batch_size)
       s = time.time()
       # get the discriminator properly trained at the start
@@ -151,7 +159,7 @@ def buildAndTrain(checkpoint_dir):
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%1000 == 0:
+      if step%1 == 0:
 
          print 'Saving model...'
          #saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
@@ -159,7 +167,20 @@ def buildAndTrain(checkpoint_dir):
          print 'Model saved\n' 
          
          print 'Evaluating...'
-         random.shuffle(test_images_paths)
+         random.shuffle(test_paths)
+         
+         img = misc.imread(test_paths[0])
+         img = misc.imresize(img, (256,256))
+         colored = sess.run(dec_test_images, feed_dict={test_image:img})
+
+         test_L_image = sess.run(test_L, feed_dict={test_image:img})
+         true_image = np.uint8(sess.run(test_image, feed_dict={test_image:img}))
+        
+         pred = np.uint8(sess.run(prediction, feed_dict={test_image:img}))[0]
+         misc.imsave('true_image.png', true_image)
+         misc.imsave('prediction.png', pred)
+
+         exit()
          batch_test_img = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
          batch_test_color = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
          i = 0
