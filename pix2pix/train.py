@@ -153,7 +153,7 @@ def buildAndTrain(checkpoint_dir):
       s = time.time()
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 1
+         n_critic = 100
       else: n_critic = 10
 
       # train the discriminator for 5 or 100 runs
@@ -169,7 +169,7 @@ def buildAndTrain(checkpoint_dir):
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%3 == 0:
+      if step%500 == 0:
 
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
@@ -177,7 +177,7 @@ def buildAndTrain(checkpoint_dir):
          print 'Model saved\n' 
          print 'Evaluating...'
          random.shuffle(test_paths)
-         test_paths = test_paths[:10]
+         test_paths = test_paths[:5]
 
          i = 0
          for t_image in test_paths:
@@ -186,7 +186,7 @@ def buildAndTrain(checkpoint_dir):
             colored = sess.run(dec_test_images, feed_dict={test_image:img})
 
             test_L_image = sess.run(test_L, feed_dict={test_image:img})
-            true_image = np.uint8(sess.run(test_image, feed_dict={test_image:img}))
+            true_image   = np.uint8(sess.run(test_image, feed_dict={test_image:img}))
            
             pred_image = sess.run(prediction, feed_dict={test_image:img})[0]
             pred_image = np.uint8(255*pred_image/pred_image.max())
