@@ -5,6 +5,10 @@ Operations used for data management
 MASSIVE help from https://github.com/affinelayer/pix2pix-tensorflow/blob/master/pix2pix.py
 
 '''
+
+from __future__ import division
+from __future__ import absolute_import
+
 from scipy import misc
 from skimage import color
 import collections
@@ -17,23 +21,26 @@ import glob
 import os
 import fnmatch
 import config
+import cPickle as pickle
 
-Data = collections.namedtuple("Examples", "paths, inputs, targets, count, steps_per_epoch")
+trainData = collections.namedtuple('trainData', 'paths, inputs, targets, count, steps_per_epoch')
+
+batch_size = config.batch_size
 
 def preprocess(image):
-    with tf.name_scope("preprocess"):
+    with tf.name_scope('preprocess'):
         # [0, 1] => [-1, 1]
         return image * 2 - 1
 
 
 def deprocess(image):
-    with tf.name_scope("deprocess"):
+    with tf.name_scope('deprocess'):
         # [-1, 1] => [0, 1]
         return (image + 1) / 2
 
 
 def preprocess_lab(lab):
-    with tf.name_scope("preprocess_lab"):
+    with tf.name_scope('preprocess_lab'):
         L_chan, a_chan, b_chan = tf.unstack(lab, axis=2)
         # L_chan: black and white with input range [0, 100]
         # a_chan/b_chan: color channels with input range ~[-110, 110], not exact
@@ -42,7 +49,7 @@ def preprocess_lab(lab):
 
 
 def deprocess_lab(L_chan, a_chan, b_chan):
-    with tf.name_scope("deprocess_lab"):
+    with tf.name_scope('deprocess_lab'):
         # this is axis=3 instead of axis=2 because we process individual images but deprocess batches
         return tf.stack([(L_chan + 1) / 2 * 100, a_chan * 110, b_chan * 110], axis=3)
 
@@ -58,12 +65,12 @@ def augment(image, brightness):
 
 
 def check_image(image):
-    assertion = tf.assert_equal(tf.shape(image)[-1], 3, message="image must have 3 color channels")
+    assertion = tf.assert_equal(tf.shape(image)[-1], 3, message='image must have 3 color channels')
     with tf.control_dependencies([assertion]):
         image = tf.identity(image)
 
     if image.get_shape().ndims not in (3, 4):
-        raise ValueError("image must be either 3 or 4 dimensions")
+        raise ValueError('image must be either 3 or 4 dimensions')
 
     # make the last dimension 3 so that you can unstack the colors
     shape = list(image.get_shape())
@@ -73,11 +80,10 @@ def check_image(image):
 
 # based on https://github.com/torch/image/blob/9f65c30167b2048ecbe8b7befdc6b2d6d12baee9/generic/image.c
 def rgb_to_lab(srgb):
-    with tf.name_scope("rgb_to_lab"):
+    with tf.name_scope('rgb_to_lab'):
         srgb = check_image(srgb)
         srgb_pixels = tf.reshape(srgb, [-1, 3])
-
-        with tf.name_scope("srgb_to_xyz"):
+        with tf.name_scope('srgb_to_xyz'):
             linear_mask = tf.cast(srgb_pixels <= 0.04045, dtype=tf.float32)
             exponential_mask = tf.cast(srgb_pixels > 0.04045, dtype=tf.float32)
             rgb_pixels = (srgb_pixels / 12.92 * linear_mask) + (((srgb_pixels + 0.055) / 1.055) ** 2.4) * exponential_mask
@@ -90,7 +96,7 @@ def rgb_to_lab(srgb):
             xyz_pixels = tf.matmul(rgb_pixels, rgb_to_xyz)
 
         # https://en.wikipedia.org/wiki/Lab_color_space#CIELAB-CIEXYZ_conversions
-        with tf.name_scope("xyz_to_cielab"):
+        with tf.name_scope('xyz_to_cielab'):
             # convert to fx = f(X/Xn), fy = f(Y/Yn), fz = f(Z/Zn)
 
             # normalize for D65 white point
@@ -114,12 +120,11 @@ def rgb_to_lab(srgb):
 
 
 def lab_to_rgb(lab):
-    with tf.name_scope("lab_to_rgb"):
+    with tf.name_scope('lab_to_rgb'):
         lab = check_image(lab)
         lab_pixels = tf.reshape(lab, [-1, 3])
-
         # https://en.wikipedia.org/wiki/Lab_color_space#CIELAB-CIEXYZ_conversions
-        with tf.name_scope("cielab_to_xyz"):
+        with tf.name_scope('cielab_to_xyz'):
             # convert to fxfyfz
             lab_to_fxfyfz = tf.constant([
                 #   fx      fy        fz
@@ -138,7 +143,7 @@ def lab_to_rgb(lab):
             # denormalize for D65 white point
             xyz_pixels = tf.multiply(xyz_pixels, [0.950456, 1.0, 1.088754])
 
-        with tf.name_scope("xyz_to_srgb"):
+        with tf.name_scope('xyz_to_srgb'):
             xyz_to_rgb = tf.constant([
                 #     r           g          b
                 [ 3.2404542, -0.9692660,  0.0556434], # x
@@ -154,103 +159,112 @@ def lab_to_rgb(lab):
 
         return tf.reshape(srgb_pixels, tf.shape(lab))
 
-
-def load_data(input_dir):
-    if input_dir is None or not os.path.exists(input_dir):
-        raise Exception("input_dir does not exist")
-
-    input_paths = glob.glob(os.path.join(input_dir, "*.jpg"))
-    decode = tf.image.decode_jpeg
-    if len(input_paths) == 0:
-        input_paths = glob.glob(os.path.join(input_dir, "*.png"))
-        decode = tf.image.decode_png
-
-    if len(input_paths) == 0:
-        raise Exception("input_dir contains no image files")
-
-    def get_name(path):
-        name, _ = os.path.splitext(os.path.basename(path))
-        return name
-
-    # if the image names are numbers, sort by the value rather than asciibetically
-    # having sorted inputs means that the outputs are sorted in test mode
-    if all(get_name(path).isdigit() for path in input_paths):
-        input_paths = sorted(input_paths, key=lambda path: int(get_name(path)))
-    else:
-        input_paths = sorted(input_paths)
-
-    with tf.name_scope("load_images"):
-        path_queue = tf.train.string_input_producer(input_paths)
-        reader = tf.WholeFileReader()
-        paths, contents = reader.read(path_queue)
-        raw_input = decode(contents)
-        raw_input = tf.image.convert_image_dtype(raw_input, dtype=tf.float32)
-
-        assertion = tf.assert_equal(tf.shape(raw_input)[2], 3, message="image does not have 3 channels")
-        with tf.control_dependencies([assertion]):
-            raw_input = tf.identity(raw_input)
-
-        raw_input.set_shape([None, None, 3])
-
-        # load color and brightness from image, no B image exists here
-        lab = rgb_to_lab(raw_input)
-        L_chan, a_chan, b_chan = preprocess_lab(lab)
-        a_images = tf.expand_dims(L_chan, axis=2)
-        b_images = tf.stack([a_chan, b_chan], axis=2)
-
-    inputs, targets = [a_images, b_images]
-
-    # synchronize seed for image operations so that we do the same operations to both
-    # input and output images
-    seed = random.randint(0, 2**31 - 1)
-    def transform(image):
-        scale_size = 286
-        CROP_SIZE = 256
-        r = image
-        r = tf.image.random_flip_left_right(r, seed=seed)
-
-        # area produces a nice downscaling, but does nearest neighbor for upscaling
-        # assume we're going to be doing downscaling here
-        r = tf.image.resize_images(r, [scale_size, scale_size], method=tf.image.ResizeMethod.AREA)
-
-        offset = tf.cast(tf.floor(tf.random_uniform([2], 0, scale_size - CROP_SIZE + 1, seed=seed)), dtype=tf.int32)
-        if scale_size > CROP_SIZE:
-            r = tf.image.crop_to_bounding_box(r, offset[0], offset[1], CROP_SIZE, CROP_SIZE)
-        elif scale_size < CROP_SIZE:
-            raise Exception("scale size cannot be less than crop size")
-        return r
-
-    with tf.name_scope("input_images"):
-        input_images = transform(inputs)
-
-    with tf.name_scope("target_images"):
-        target_images = transform(targets)
-
-    #input_images = inputs
-    #target_images = targets
-
-
-    paths_batch, inputs_batch, targets_batch = tf.train.batch([paths, input_images, target_images], batch_size=config.batch_size)
-    steps_per_epoch = int(math.ceil(len(input_paths) / config.batch_size))
-
-    return Data(
-        paths=paths_batch,
-        inputs=inputs_batch,
-        targets=targets_batch,
-        count=len(input_paths),
-        steps_per_epoch=steps_per_epoch,
-    )
-
-
-
 def getPaths(data_dir, ext='jpg'):
    pattern   = '*.'+ext
-   image_list = []
+   image_paths = []
    for d, s, fList in os.walk(data_dir):
       for filename in fList:
          if fnmatch.fnmatch(filename, pattern):
-            image_list.append(os.path.join(d,filename))
-   return image_list
+            image_paths.append(os.path.join(d,filename))
+   return image_paths
+
+
+def loadTrainData(input_dir, dataset):
+
+   if input_dir is None or not os.path.exists(input_dir):
+      raise Exception('input_dir does not exist')
+
+   # get train/test sets
+   if dataset == 'celeba':
+      
+      pkl_train_file = 'celeba_train.pkl'
+      pkl_test_file  = 'celeba_test.pkl'
+
+      if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
+         print 'Found pickle file'
+         train_paths = pickle.load(open(pkl_train_file, 'rb'))
+         test_paths  = pickle.load(open(pkl_test_file, 'rb'))
+      else:
+         image_paths = getPaths(input_dir)
+         random.shuffle(image_paths)
+
+         train_paths = image_paths[:195000]
+         test_paths  = image_paths[195000:]
+
+         pf   = open(pkl_train_file, 'wb')
+         data = pickle.dumps(train_paths)
+         pf.write(data)
+         pf.close()
+         
+         pf   = open(pkl_test_file, 'wb')
+         data = pickle.dumps(test_paths)
+         pf.write(data)
+         pf.close()
+
+   input_paths = train_paths
+   decode = tf.image.decode_jpeg
+
+   if len(input_paths) == 0:
+      raise Exception('input_dir contains no image files')
+
+   with tf.name_scope('load_images'):
+      path_queue = tf.train.string_input_producer(input_paths, shuffle='train')
+      reader = tf.WholeFileReader()
+      paths, contents = reader.read(path_queue)
+      raw_input = decode(contents)
+      raw_input = tf.image.convert_image_dtype(raw_input, dtype=tf.float32)
+
+      assertion = tf.assert_equal(tf.shape(raw_input)[2], 3, message='image does not have 3 channels')
+      with tf.control_dependencies([assertion]):
+         raw_input = tf.identity(raw_input)
+
+      raw_input.set_shape([None, None, 3])
+
+      # load color and brightness from image, no B image exists here
+      lab = rgb_to_lab(raw_input)
+      L_chan, a_chan, b_chan = preprocess_lab(lab)
+      a_images = tf.expand_dims(L_chan, axis=2)
+      b_images = tf.stack([a_chan, b_chan], axis=2)
+    
+   inputs, targets = [a_images, b_images]
+
+   # synchronize seed for image operations so that we do the same operations to both
+   # input and output images
+   flip = 1
+   scale_size = 286
+   CROP_SIZE = 256
+   seed = random.randint(0, 2**31 - 1)
+   def transform(image):
+      r = image
+      if flip:
+         r = tf.image.random_flip_left_right(r, seed=seed)
+
+      # area produces a nice downscaling, but does nearest neighbor for upscaling
+      # assume we're going to be doing downscaling here
+      r = tf.image.resize_images(r, [scale_size, scale_size], method=tf.image.ResizeMethod.AREA)
+      offset = tf.cast(tf.floor(tf.random_uniform([2], 0, scale_size - CROP_SIZE + 1, seed=seed)), dtype=tf.int32)
+      if scale_size > CROP_SIZE:
+         r = tf.image.crop_to_bounding_box(r, offset[0], offset[1], CROP_SIZE, CROP_SIZE)
+      elif scale_size < CROP_SIZE:
+         raise Exception('scale size cannot be less than crop size')
+      return r
+
+   with tf.name_scope('input_images'):
+      input_images = transform(inputs)
+
+   with tf.name_scope('target_images'):
+      target_images = transform(targets)
+
+   paths_batch, inputs_batch, targets_batch = tf.train.batch([paths, input_images, target_images], batch_size=batch_size)
+   steps_per_epoch = int(math.ceil(len(input_paths) / batch_size))
+
+   return train_paths, test_paths, trainData(
+      paths=paths_batch,
+      inputs=inputs_batch,
+      targets=targets_batch,
+      count=len(input_paths),
+      steps_per_epoch=steps_per_epoch,
+   )
 
 
 '''

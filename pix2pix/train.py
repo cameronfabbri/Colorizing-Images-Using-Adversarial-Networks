@@ -35,18 +35,19 @@ def buildAndTrain(checkpoint_dir):
    test_image  = data_ops.rgb_to_lab(test_image)
 
    test_Lc, test_ac, test_bc = data_ops.preprocess_lab(test_image)
-   test_L = tf.expand_dims(test_Lc, axis=2)
+   test_L  = tf.expand_dims(test_Lc, axis=2)
    test_ab = tf.stack([test_ac, test_bc], axis=2)
 
-   test_L = tf.expand_dims(test_L, axis=0)
+   test_L  = tf.expand_dims(test_L, axis=0)
    test_ab = tf.expand_dims(test_ab, axis=0)
-
 
    train_paths, test_paths, trainData = data_ops.loadTrainData(data_dir, dataset)
    
    num_train = trainData.count
+   
    # The gray 'lightness' channel in range [-1, 1]
    L_image   = trainData.inputs
+   
    # The color channels in [-1, 1] range
    ab_image  = trainData.targets
 
@@ -143,7 +144,7 @@ def buildAndTrain(checkpoint_dir):
       s = time.time()
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 1
+         n_critic = 100
       else: n_critic = 5
 
       # train the discriminator for 5 or 100 runs
@@ -159,61 +160,29 @@ def buildAndTrain(checkpoint_dir):
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%1 == 0:
+      if step%1000 == 0:
 
          print 'Saving model...'
-         #saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
-         #saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
+         saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
+         saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
          print 'Model saved\n' 
-         
          print 'Evaluating...'
          random.shuffle(test_paths)
-         
-         img = misc.imread(test_paths[0])
-         img = misc.imresize(img, (256,256))
-         colored = sess.run(dec_test_images, feed_dict={test_image:img})
+         test_paths = test_paths[:5]
 
-         test_L_image = sess.run(test_L, feed_dict={test_image:img})
-         true_image = np.uint8(sess.run(test_image, feed_dict={test_image:img}))
-        
-         pred = np.uint8(sess.run(prediction, feed_dict={test_image:img}))[0]
-         misc.imsave('true_image.png', true_image)
-         misc.imsave('prediction.png', pred)
-
-         exit()
-         batch_test_img = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
-         batch_test_color = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
          i = 0
-         for t in test_images_paths:
-            img = misc.imread(t)
-            height, width, channels = img.shape
-            if height is not 256 or width is not 256:
-               img = misc.imresize(img, (256, 256))
-               height, width, channels = img.shape
-            try:
-               batch_test_color[i, ...] = img
-               lab_img = color.rgb2lab(img)
-               L_img = lab_img[:,:,0]
-               L_img = np.expand_dims(L_img, 2)
-               batch_test_img[i, ...] = L_img
-               i += 1
-            except:
-               continue
-            if i == batch_size: break
+         for t_image in test_paths:
+            img = misc.imread(test_paths[0])
+            img = misc.imresize(img, (256,256))
+            colored = sess.run(dec_test_images, feed_dict={test_image:img})
 
-         test_colored = sess.run(tdecoded, feed_dict={test_images:batch_test_img})
-
-         for cim, rim in zip(test_colored, batch_test_color):
-            # convert from lab to rgb
-            L = batch_test_img[i]
-            cim = (cim+1.)*127.5
-            cim = color.lab2rgb(np.float64(cim))
-            misc.imsave(str(step)+'_'+'real.png', rim)
-            misc.imsave(str(step)+'_'+'gen.png', rim)
-            exit()
-            
-         
-         exit()
+            test_L_image = sess.run(test_L, feed_dict={test_image:img})
+            true_image = np.uint8(sess.run(test_image, feed_dict={test_image:img}))
+           
+            pred_image = sess.run(prediction, feed_dict={test_image:img})[0]
+            misc.imsave('images/'+dataset+'/'+str(step)+'_'+str(i)+'_true.png', true_image)
+            misc.imsave('images/'+dataset+'/'+str(step)+'_'+str(i)+'_pred.png', pred_image)
+            i += 1
 
 
 if __name__ == '__main__':
@@ -233,7 +202,7 @@ if __name__ == '__main__':
    try: os.mkdir('images/'+dataset)
    except: pass
    
-   checkpoint_dir = checkpoint_dir+dataset
+   checkpoint_dir = checkpoint_dir+dataset+'/'
    
    buildAndTrain(checkpoint_dir)
 
