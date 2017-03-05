@@ -3,7 +3,7 @@ import tensorflow.contrib.slim as slim
 import sys
 import config
 
-multi_gpu = False
+multi_gpu = True
 
 batch_size = config.batch_size
 
