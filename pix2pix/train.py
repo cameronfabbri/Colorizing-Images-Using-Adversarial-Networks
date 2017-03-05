@@ -172,7 +172,7 @@ def buildAndTrain(checkpoint_dir):
 
          i = 0
          for t_image in test_paths:
-            img = misc.imread(test_paths[0])
+            img = misc.imread(t_image)
             img = misc.imresize(img, (256,256))
             colored = sess.run(dec_test_images, feed_dict={test_image:img})
 
