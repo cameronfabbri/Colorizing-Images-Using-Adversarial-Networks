@@ -7,6 +7,7 @@ import sys
 import cv2
 import os
 import time
+from PIL import Image
 
 from scipy import misc
 from skimage import color
@@ -69,6 +70,7 @@ def buildAndTrain(checkpoint_dir):
 
    # now convert from LAB to RGB
    prediction = data_ops.lab_to_rgb(colored_image)
+   prediction = tf.image.convert_image_dtype(prediction, dtype=tf.uint8, saturate=True)
    ##############################################
 
    '''
@@ -151,6 +153,7 @@ def buildAndTrain(checkpoint_dir):
    while True:
       epoch_num = step/(num_train/batch_size)
       s = time.time()
+      
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
          n_critic = 100
@@ -163,13 +166,16 @@ def buildAndTrain(checkpoint_dir):
       
       sess.run(G_train_op)
 
+      print sess.run(decoded)
+      exit()
+
       D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
       summary_writer.add_summary(summary, step)
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%500 == 0:
+      if step%1 == 0:
 
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
@@ -189,7 +195,6 @@ def buildAndTrain(checkpoint_dir):
             true_image   = np.uint8(sess.run(test_image, feed_dict={test_image:img}))
            
             pred_image = sess.run(prediction, feed_dict={test_image:img})[0]
-            pred_image = np.uint8(255*pred_image/pred_image.max())
             misc.imsave('images/'+dataset+'/'+str(step)+'_'+str(i)+'_true.png', true_image)
             misc.imsave('images/'+dataset+'/'+str(step)+'_'+str(i)+'_pred.png', pred_image)
             i += 1
