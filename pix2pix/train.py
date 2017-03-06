@@ -165,16 +165,13 @@ def buildAndTrain(checkpoint_dir):
       
       sess.run(G_train_op)
 
-      print sess.run(decoded)
-      exit()
-
       D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
       summary_writer.add_summary(summary, step)
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%1 == 0:
+      if step%1000 == 0:
 
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
@@ -182,10 +179,10 @@ def buildAndTrain(checkpoint_dir):
          print 'Model saved\n' 
          print 'Evaluating...'
          random.shuffle(test_paths)
-         test_paths = test_paths[:5]
+         test_paths_ = test_paths[:5]
 
          i = 0
-         for t_image in test_paths:
+         for t_image in test_paths_:
             img = misc.imread(t_image)
             img = misc.imresize(img, (256,256))
             colored = sess.run(dec_test_images, feed_dict={test_image:img})
@@ -198,7 +195,7 @@ def buildAndTrain(checkpoint_dir):
             misc.imsave('images/'+dataset+'/'+str(step)+'_'+str(i)+'_pred.png', pred_image)
             i += 1
          print 'Done evaluating....running the critic 100 times.'
-
+         exit()
 if __name__ == '__main__':
 
    checkpoint_dir = config.checkpoint_dir
