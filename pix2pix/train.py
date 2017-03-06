@@ -98,8 +98,7 @@ def buildAndTrain(checkpoint_dir):
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
    tf.summary.scalar('g_loss', errG)
-   #tf.summary.image('input_images', input_images, max_outputs=batch_size)
-   #tf.summary.image('generated_images', decoded, max_outputs=batch_size)
+   tf.summary.scalar('encoding_loss', l1_loss)
    merged_summary_op = tf.summary.merge_all()
 
    # get all trainable variables, and split by network G and network D
