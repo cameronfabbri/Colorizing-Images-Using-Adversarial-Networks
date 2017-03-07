@@ -22,7 +22,7 @@ import os
 import fnmatch
 import cPickle as pickle
 
-trainData = collections.namedtuple('trainData', 'paths, inputs, targets, count, steps_per_epoch')
+Data = collections.namedtuple('trainData', 'paths, inputs, targets, count, steps_per_epoch')
 
 def preprocess(image):
     with tf.name_scope('preprocess'):
@@ -167,7 +167,7 @@ def getPaths(data_dir, ext='jpg'):
    return image_paths
 
 
-def loadData(data_dir, dataset, batch_size):
+def loadData(data_dir, dataset, batch_size, train=True):
 
    if data_dir is None or not os.path.exists(data_dir):
       raise Exception('data_dir does not exist')
@@ -199,14 +199,16 @@ def loadData(data_dir, dataset, batch_size):
          pf.write(data)
          pf.close()
 
-   input_paths = train_paths
+   if train: input_paths = train_paths
+   else: input_paths = test_paths
+   
    decode = tf.image.decode_jpeg
 
    if len(input_paths) == 0:
       raise Exception('data_dir contains no image files')
 
    with tf.name_scope('load_images'):
-      path_queue = tf.train.string_input_producer(input_paths, shuffle='train')
+      path_queue = tf.train.string_input_producer(input_paths, shuffle=train)
       reader = tf.WholeFileReader()
       paths, contents = reader.read(path_queue)
       raw_input = decode(contents)
@@ -247,72 +249,22 @@ def loadData(data_dir, dataset, batch_size):
          raise Exception('scale size cannot be less than crop size')
       return r
 
-   with tf.name_scope('input_images'):
-      input_images = transform(inputs)
-
-   with tf.name_scope('target_images'):
-      target_images = transform(targets)
+   if train:
+      with tf.name_scope('input_images'):
+         input_images = transform(inputs)
+      with tf.name_scope('target_images'):
+         target_images = transform(targets)
+   else:
+      input_images = tf.image.resize_images(inputs, [256, 256], method=tf.image.ResizeMethod.AREA)
+      target_images = tf.image.resize_images(targets, [256, 256], method=tf.image.ResizeMethod.AREA)
 
    paths_batch, inputs_batch, targets_batch = tf.train.batch([paths, input_images, target_images], batch_size=batch_size)
    steps_per_epoch = int(math.ceil(len(input_paths) / batch_size))
 
-   return test_paths, trainData(
+   return Data(
       paths=paths_batch,
       inputs=inputs_batch,
       targets=targets_batch,
       count=len(input_paths),
       steps_per_epoch=steps_per_epoch,
    )
-
-
-'''
-def getBatch(batch_size, data, dataset, use_labels):
-
-   label_size = 1000
-   color_image_batch = np.empty((batch_size, 256, 256, 3), dtype=np.float32)
-   gray_image_batch  = np.empty((batch_size, 256, 256, 1), dtype=np.float32)
-
-   if use_labels:
-      label_batch = np.empty((batch_size, label_size), dtype=np.float32)
-
-   random_imgs = random.sample(data, batch_size)
-   for i, image_path in enumerate(random_imgs):
-   
-      if use_labels:
-         label = np.zeros(label_size)
-         label[int(image_path[1])] = 1
-      
-         image_path = image_path[0]
-
-      # read in image
-      color_img = misc.imread(image_path)
-
-      # if it isn't 256x256 then resize it
-      height, width, channels = color_img.shape
-      if height or width is not 256:
-         color_img = misc.imresize(color_img, (256, 256))
-         height, width, channels = color_img.shape
-
-      # convert rgb image to lab
-      try: color_img = color.rgb2lab(color_img)
-      except: continue # this happens if an original image is already gray
-
-      # the gray image is just the first channel in the LAB image (lightness)
-      gray_img = color_img[0]
-      gray_img = misc.imresize(gray_img, (256, 256))
-      gray_img = np.expand_dims(gray_img, 2)
-
-      # scale to [-1, 1] range
-      color_img = normalizeImage(color_img)
-      gray_img  = normalizeImage(gray_img)
-
-      color_image_batch[i, ...] = color_img
-      gray_image_batch[i, ...]  = gray_img
-
-      if use_labels:
-         label_batch[i, ...] = label
-
-   if use_labels: return color_image_batch, gray_image_batch, label_batch
-   
-   return color_image_batch, gray_image_batch
-'''
