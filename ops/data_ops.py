@@ -20,12 +20,9 @@ import random
 import glob
 import os
 import fnmatch
-import config
 import cPickle as pickle
 
 trainData = collections.namedtuple('trainData', 'paths, inputs, targets, count, steps_per_epoch')
-
-batch_size = config.batch_size
 
 def preprocess(image):
     with tf.name_scope('preprocess'):
@@ -170,23 +167,23 @@ def getPaths(data_dir, ext='jpg'):
    return image_paths
 
 
-def loadTrainData(input_dir, dataset):
+def loadData(data_dir, dataset, batch_size):
 
-   if input_dir is None or not os.path.exists(input_dir):
-      raise Exception('input_dir does not exist')
+   if data_dir is None or not os.path.exists(data_dir):
+      raise Exception('data_dir does not exist')
 
    # get train/test sets
    if dataset == 'celeba':
       
-      pkl_train_file = 'celeba_train.pkl'
-      pkl_test_file  = 'celeba_test.pkl'
+      pkl_train_file = 'files/celeba_train.pkl'
+      pkl_test_file  = 'files/celeba_test.pkl'
 
       if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
          print 'Found pickle file'
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
          test_paths  = pickle.load(open(pkl_test_file, 'rb'))
       else:
-         image_paths = getPaths(input_dir)
+         image_paths = getPaths(data_dir)
          random.shuffle(image_paths)
 
          train_paths = image_paths[:195000]
@@ -206,7 +203,7 @@ def loadTrainData(input_dir, dataset):
    decode = tf.image.decode_jpeg
 
    if len(input_paths) == 0:
-      raise Exception('input_dir contains no image files')
+      raise Exception('data_dir contains no image files')
 
    with tf.name_scope('load_images'):
       path_queue = tf.train.string_input_producer(input_paths, shuffle='train')
@@ -259,7 +256,7 @@ def loadTrainData(input_dir, dataset):
    paths_batch, inputs_batch, targets_batch = tf.train.batch([paths, input_images, target_images], batch_size=batch_size)
    steps_per_epoch = int(math.ceil(len(input_paths) / batch_size))
 
-   return train_paths, test_paths, trainData(
+   return test_paths, trainData(
       paths=paths_batch,
       inputs=inputs_batch,
       targets=targets_batch,

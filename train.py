@@ -30,8 +30,8 @@ if __name__ == '__main__':
       exit()
 
    loss_method    = config.loss_method
-   dataset        = config.dataset
    architecture   = config.architecture
+   dataset        = config.dataset
    checkpoint_dir = 'checkpoints/'+loss_method+'_'+dataset+'_'+architecture+'/'
    learning_rate  = config.learning_rate
    batch_size     = config.batch_size
@@ -56,7 +56,20 @@ if __name__ == '__main__':
    # The color channels in [-1, 1] range
    ab_image  = trainData.targets
    
-   if loss_method == 'pix2pix':
+   # this is testing stuff
+   test_image = tf.placeholder(tf.float32, shape=(256, 256, 3), name='test_image')
+  
+   # test image in LAB color space
+   test_image = data_ops.rgb_to_lab(test_image)
+   
+   # this is the test image in LAB with range [-1, 1]
+   test_Lc, test_ac, test_bc = data_ops.preprocess_lab(test_image)
+   test_L  = tf.expand_dims(test_Lc, axis=2)
+   test_ab = tf.stack([test_ac, test_bc], axis=2)
+   test_L  = tf.expand_dims(test_L, axis=0)
+   test_ab = tf.expand_dims(test_ab, axis=0)
+   
+   if architecture == 'pix2pix':
       import pix2pix
       encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(L_image)
       decoded = netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
@@ -76,55 +89,31 @@ if __name__ == '__main__':
       # error for the generator, including the L1 loss
       errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
       tf.summary.scalar('encoding_loss', l1_loss)
+      
+   if architecture == 'colorarch':
+      import colorarch
+      # generate a colored image
+      gen_img = colorarch.netG(L_image, batch_size)
+
+      # send real image to D
+      errD_real = colorarch.netD(ab_image, batch_size)
+
+      # send generated image to D
+      errD_fake = colorarch.netD(gen_img, batch_size, reuse=True)
+   
+      #test_colored = colorarch.netG(test_L, batch_size)
   
    if loss_method == 'wasserstein':
-      if architecture == 'wasserstein':
-         import wasserstein
-         # generate a colored image
-         gen_img = wasserstein.netG(L_image, batch_size)
-
-         # send real image to D
-         errD_real = wasserstein.netD(ab_image, batch_size)
-
-         # send generated image to D
-         errD_fake = wasserstein.netD(gen_img, batch_size, reuse=True)
-
-      if architecture == 'colorarch':
-         import colorarch
-         # generate a colored image
-         gen_img = colorarch.netG(L_image, batch_size)
-
-         # send real image to D
-         errD_real = colorarch.netD(ab_image, batch_size)
-
-         # send generated image to D
-         errD_fake = colorarch.netD(gen_img, batch_size, reuse=True)
-
       errD = tf.reduce_mean(errD_real - errD_fake)
-
       errG = tf.reduce_mean(errD_fake)
 
    if loss_method == 'energy':
       print 'using ebgans'
 
-   # this is testing stuff
-   test_image = tf.placeholder(tf.float32, shape=(256, 256, 3), name='test_image')
-  
-   # test image in LAB color space
-   test_image = data_ops.rgb_to_lab(test_image)
-   
-   # this is the test image in LAB with range [-1, 1]
-   test_Lc, test_ac, test_bc = data_ops.preprocess_lab(test_image)
-   test_L  = tf.expand_dims(test_Lc, axis=2)
-   test_ab = tf.stack([test_ac, test_bc], axis=2)
-   test_L  = tf.expand_dims(test_L, axis=0)
-   test_ab = tf.expand_dims(test_ab, axis=0)
 
-   if loss_method == 'wasserstein':
-      test_colored = wasserstein.netG(test_L, batch_size)
 
-   prediction = data_ops.augment(test_colored, test_L)
-   prediction = tf.image.convert_image_dtype(prediction, dtype=tf.uint8, saturate=True)
+   #prediction = data_ops.augment(test_colored, test_L)
+   #prediction = tf.image.convert_image_dtype(prediction, dtype=tf.uint8, saturate=True)
    ##############################################
 
    # tensorboard summaries
@@ -202,12 +191,14 @@ if __name__ == '__main__':
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%500 == 0:
+      if step%100 == 0:
 
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
          saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
-         print 'Model saved\n' 
+         print 'Model saved\n'
+         
+         '''
          print 'Evaluating...'
          random.shuffle(test_paths)
          test_paths_ = test_paths[:5]
@@ -226,4 +217,4 @@ if __name__ == '__main__':
             misc.imsave(images_dir+str(step)+'_'+str(i)+'_pred.png', pred_image)
             i += 1
          print 'Done evaluating....running the critic 100 times.'
-
+         '''

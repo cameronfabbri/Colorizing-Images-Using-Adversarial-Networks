@@ -15,7 +15,7 @@ def lrelu(x, leak=0.2, name='lrelu'):
 '''
 def netG(L_image, batch_size):
 
-   if multi_gpu: gpu_num = 2
+   if multi_gpu: gpu_num = 0
    else: gpu_num = 0
    with tf.device('/gpu:'+str(gpu_num)):
       conv1 = slim.convolution(L_image, 64, 3, stride=2, activation_fn=tf.identity, scope='g_conv1')
@@ -33,11 +33,13 @@ def netG(L_image, batch_size):
       conv5 = slim.convolution(conv4, 256, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv5')
       conv5 = lrelu(conv5)
 
-      conv6 = slim.convolution(conv3, 512, 1, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv6')
+      conv6 = slim.convolution(conv5, 512, 1, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv6')
       conv6 = lrelu(conv6)
 
       # now conv6 is used for both mid-level network and global network
-      
+   if multi_gpu: gpu_num = 1
+   else: gpu_num = 0
+   with tf.device('/gpu:'+str(gpu_num)):
       # global
       glob_conv1 = slim.convolution(conv6, 512, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv1')
       glob_conv1 = lrelu(glob_conv1)
@@ -60,7 +62,10 @@ def netG(L_image, batch_size):
 
       glob_fc3 = slim.fully_connected(glob_fc2, 256, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc3')
       glob_fc3 = lrelu(glob_fc3)
-
+   
+   if multi_gpu: gpu_num = 2
+   else: gpu_num = 0
+   with tf.device('/gpu:'+str(gpu_num)):
       # mid level
       mid_conv1 = slim.convolution(conv6, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_mid_conv1')
       mid_conv1 = lrelu(mid_conv1)
@@ -70,24 +75,28 @@ def netG(L_image, batch_size):
 
       # FUSION LAYER
       # stack the last glob_fc with mid_conv2 so it's 32, 64, 64, 256
-      glob_fc3 = tf.tile(glob_fc3, [1, 64*64])
-      glob_fc3 = tf.reshape(glob_fc3, [batch_size, 64, 64, 256])
+      glob_fc3 = tf.tile(glob_fc3, [1, 32*32])
+      glob_fc3 = tf.reshape(glob_fc3, [batch_size, 32, 32, 256])
       mid_conv2 = tf.concat([mid_conv2, glob_fc3], 3)
 
       # colorization network
       col_conv1 = slim.convolution(mid_conv2, 128, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv1')
       col_conv1 = lrelu(col_conv1)
-
-      col_conv2 = slim.convolution2d_transpose(col_conv1, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv2')
+      # upsample - double the size
+      col_conv1 = tf.image.resize_nearest_neighbor(col_conv1, [64, 64])
+      
+      col_conv2 = slim.convolution(col_conv1, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv2')
       col_conv2 = lrelu(col_conv2)
       
-      col_conv3 = slim.convolution2d_transpose(col_conv2, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv3')
+      col_conv3 = slim.convolution(col_conv2, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv3')
       col_conv3 = lrelu(col_conv3)
+      # upsample - double the size
+      col_conv3 = tf.image.resize_nearest_neighbor(col_conv3, [256, 256])
 
-      col_conv4 = slim.convolution2d_transpose(col_conv3, 32, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv4')
+      col_conv4 = slim.convolution(col_conv3, 32, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv4')
       col_conv4 = lrelu(col_conv4)
       
-      col_conv5 = slim.convolution2d_transpose(col_conv4, 2, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv5')
+      col_conv5 = slim.convolution(col_conv4, 2, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv5')
       col_conv5 = tf.nn.tanh(col_conv5)
 
    print 'GENERATOR'
@@ -114,7 +123,6 @@ def netG(L_image, batch_size):
    print 'END G'
    print
    
-   exit()
    tf.add_to_collection('vars', conv1)
    tf.add_to_collection('vars', conv2)
    tf.add_to_collection('vars', conv3)
