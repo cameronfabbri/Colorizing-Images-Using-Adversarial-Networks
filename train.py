@@ -166,7 +166,7 @@ if __name__ == '__main__':
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
          n_critic = 100
-      else: n_critic = 5
+      else: n_critic = 1
 
       # train the discriminator for 5 or 100 runs
       for critic_itr in range(n_critic):
