@@ -95,7 +95,9 @@ if __name__ == '__main__':
    if loss_method == 'energy':
       print 'using ebgans'
 
-
+   if loss_method == 'least_squares':
+      errD = tf.reduce_mean((errD_real-b)**2 - (errD_fake-a)**2)
+      errG = tf.reduce_mean((errD_fake-c)**2)
 
    #prediction = data_ops.augment(test_colored, test_L)
    #prediction = tf.image.convert_image_dtype(prediction, dtype=tf.uint8, saturate=True)
