@@ -40,7 +40,7 @@ if __name__ == '__main__':
    data_dir       = config.data_dir
    images_dir     = checkpoint_dir+'images/'
 
-   Data = data_ops.loadData(data_dir, dataset, batch_size)
+   Data = data_ops.loadData(data_dir, dataset, batch_size, train=False)
    num_train = Data.count
    
    # The gray 'lightness' channel in range [-1, 1]
@@ -50,8 +50,8 @@ if __name__ == '__main__':
    ab_image  = Data.targets
    if architecture == 'pix2pix':
       import pix2pix
-      enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = netG_encoder(test_L)
-      dec_test_images = netG_decoder(enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
+      #enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = netG_encoder(test_L)
+      #dec_test_images = netG_decoder(enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
    if architecture == 'colorarch':
       import colorarch
       predict_ab = colorarch.netG(test_L, batch_size)
@@ -93,12 +93,12 @@ if __name__ == '__main__':
    i = 0
    for c in colored:
       misc.imsave(images_dir+str(step)+'_'+str(i)+'_col.png', c)
-      if i == 3: break
+      #if i == 3: break
       i += 1
    i = 0
    for t in true_:
       misc.imsave(images_dir+str(step)+'_'+str(i)+'_true.png', t)
-      if i == 3: break
+      #if i == 3: break
       i += 1
 
    exit()

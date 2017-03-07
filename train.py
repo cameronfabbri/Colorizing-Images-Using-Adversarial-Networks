@@ -159,7 +159,7 @@ if __name__ == '__main__':
       
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 1
+         n_critic = 100
       else: n_critic = 5
 
       # train the discriminator for 5 or 100 runs
@@ -175,9 +175,8 @@ if __name__ == '__main__':
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%2 == 0:
+      if step%100 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
          saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
          print 'Model saved\n'
-         exit()
