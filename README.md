@@ -4,6 +4,10 @@ Grayscale images could contain various degrees and intensities of colors, making
 problem. Therefore, we would not like to recover the ground truth colors, but rather generate plausible
 colors.
 
+### Implementation
+There will only be one train file, and will take in a configuration file defining what loss (type of GAN),
+and what architecture to use.
+
 #### Project Ideas/Goals
 * Implement the [state of the art](http://richzhang.github.io/colorization/) for colorizing grayscale photos.
 * [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
@@ -12,30 +16,20 @@ colors.
 * See if we can come up with varying colors by passing in a noise vector with the image.
 * Can we pretrain the generator? Basically do the Colorization paper with a random seed
 and the grayscale image, when it converges start training it on a GAN.
-* Use the LAB colorspace as in the state of the art paper?
-* Generate the channels (r,g,b) individually with multiple adversaries?
-* Try and create a 'real time' variation that could colorize videos as they are playing.
+* Use the LAB colorspace as in the state of the art paper
 * Could try pretraining every GAN before colorization, not even on colorization. Just train
 it normally, then you will get all sorts of things for free when starting to train on color.
 Not sure if you would have to alter z to be the same size as the input image, but we'll figure
 that out.
-=======
-* Maybe somehow parts of the image with low probabilites for what the color should be
 can have some way of altering the color.
 
 #### Things to compare
 * State of the art colorization mentioned above.
 * One or more state of the art general models (Alexnet, Inception, ResNet, etc)
-* GANs
 * Energy-Based GANs
+* Wasserstein GANs
+* DCGANs
 * Pretrained versions of the generator for the different GANs
-
-At this point I think the architecture of the generator should be the same architecture used
-in the Colorization paper.
-
-**Important Note**: What we will essentially be learning is the transform from whatever function we use to
-make the images gray to a colorized version, so we should also provide test results on "true" black and white
-photos.
 
 Need to think about how the generator will actually work. [This](http://richzhang.github.io/colorization/)
 work explains why just taking the L2 norm between true and generated images produces
@@ -43,17 +37,6 @@ less saturated and more brown/green (averaged) images. Could use their approach 
 the generator. I would also like to try generating color channels individually
 and see what that yields.
 
-#### Implementation Ideas
-Use [Tensorflow](https://www.tensorflow.org/) with Python. They have pretty good [tutorials](https://www.tensorflow.org/tutorials/)
-
-Data for us is essentially free because our "label" is the colorized image. I have 
-[image-net](http://image-net.org/) downloaded so that is a great start. It is also the dataset used in the
-baseline we have to compare to. It contains 1,281,167 training images, 100,000 test images, and 50,000
-validation images.
-
-I'm also currently downloading [Google Open Images](https://github.com/openimages/dataset) which contains
-about 9 million images. If we had that plus imagenet we'd be set.
-Downloaded the first 124044 and last 31332
 
 #### Useful links:
 
