@@ -38,10 +38,6 @@ if __name__ == '__main__':
    data_dir       = config.data_dir
    images_dir     = checkpoint_dir+'images/'
 
-   # for home pc test
-   learning_rate = 1e-4
-   batch_size = 8
-
    try: os.mkdir('checkpoints/')
    except: pass
    try: os.mkdir(checkpoint_dir)
