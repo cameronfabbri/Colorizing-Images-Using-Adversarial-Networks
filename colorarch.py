@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import sys
 
-multi_gpu = True
+multi_gpu = False
 
 '''
    Leaky RELU

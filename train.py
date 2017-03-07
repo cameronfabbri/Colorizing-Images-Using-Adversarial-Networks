@@ -38,6 +38,10 @@ if __name__ == '__main__':
    data_dir       = config.data_dir
    images_dir     = checkpoint_dir+'images/'
 
+   # for home pc test
+   learning_rate = 1e-4
+   batch_size = 8
+
    try: os.mkdir('checkpoints/')
    except: pass
    try: os.mkdir(checkpoint_dir)
@@ -90,7 +94,7 @@ if __name__ == '__main__':
   
    if loss_method == 'wasserstein':
       errD = tf.reduce_mean(errD_real - errD_fake)
-      errG = tf.reduce_mean(errD_fake)
+      errG = tf.reduce_mean(errD_fake) + tf.reduce_mean((ab_image-gen_img)**2)
 
    if loss_method == 'energy':
       print 'using ebgans'
@@ -168,7 +172,7 @@ if __name__ == '__main__':
       for critic_itr in range(n_critic):
          sess.run(D_train_op)
          sess.run(clip_discriminator_var_op)
-      
+     
       sess.run(G_train_op)
 
       D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
