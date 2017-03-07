@@ -52,6 +52,7 @@ def netG(L_image, batch_size):
       
       glob_conv4 = slim.convolution(glob_conv3, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv4')
       glob_conv4 = lrelu(glob_conv4)
+
       glob_conv4 = tf.reshape(glob_conv4, [batch_size, -1])
 
       glob_fc1 = slim.fully_connected(glob_conv4, 1024, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc1')
@@ -122,7 +123,6 @@ def netG(L_image, batch_size):
    print 'col_conv5:',col_conv5
    print 'END G'
    print
-   
    tf.add_to_collection('vars', conv1)
    tf.add_to_collection('vars', conv2)
    tf.add_to_collection('vars', conv3)
@@ -143,7 +143,7 @@ def netG(L_image, batch_size):
    tf.add_to_collection('vars', col_conv3)
    tf.add_to_collection('vars', col_conv4)
    tf.add_to_collection('vars', col_conv5)
-
+   #exit()
    return col_conv5
 
 

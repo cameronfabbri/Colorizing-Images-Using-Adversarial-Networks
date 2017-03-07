@@ -47,27 +47,14 @@ if __name__ == '__main__':
    
    global_step = tf.Variable(0, name='global_step', trainable=False)
   
-   test_paths, trainData = data_ops.loadData(data_dir, dataset, batch_size)
-   num_train = trainData.count
+   Data = data_ops.loadData(data_dir, dataset, batch_size)
+   num_train = Data.count
    
    # The gray 'lightness' channel in range [-1, 1]
-   L_image   = trainData.inputs
+   L_image   = Data.inputs
    
    # The color channels in [-1, 1] range
-   ab_image  = trainData.targets
-   
-   # this is testing stuff
-   test_image = tf.placeholder(tf.float32, shape=(256, 256, 3), name='test_image')
-  
-   # test image in LAB color space
-   test_image = data_ops.rgb_to_lab(test_image)
-   
-   # this is the test image in LAB with range [-1, 1]
-   test_Lc, test_ac, test_bc = data_ops.preprocess_lab(test_image)
-   test_L  = tf.expand_dims(test_Lc, axis=2)
-   test_ab = tf.stack([test_ac, test_bc], axis=2)
-   test_L  = tf.expand_dims(test_L, axis=0)
-   test_ab = tf.expand_dims(test_ab, axis=0)
+   ab_image  = Data.targets
    
    if architecture == 'pix2pix':
       import pix2pix
@@ -100,8 +87,6 @@ if __name__ == '__main__':
 
       # send generated image to D
       errD_fake = colorarch.netD(gen_img, batch_size, reuse=True)
-   
-      #test_colored = colorarch.netG(test_L, batch_size)
   
    if loss_method == 'wasserstein':
       errD = tf.reduce_mean(errD_real - errD_fake)
@@ -152,7 +137,6 @@ if __name__ == '__main__':
 
    # only keep one model
    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
-
    # restore previous model if there is one
    if ckpt and ckpt.model_checkpoint_path:
       print "Restoring previous model..."
@@ -175,8 +159,8 @@ if __name__ == '__main__':
       
       # get the discriminator properly trained at the start
       if step < 25 or step % 500 == 0:
-         n_critic = 100
-      else: n_critic = 10
+         n_critic = 1
+      else: n_critic = 5
 
       # train the discriminator for 5 or 100 runs
       for critic_itr in range(n_critic):
@@ -191,30 +175,9 @@ if __name__ == '__main__':
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%100 == 0:
-
+      if step%2 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
          saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
          print 'Model saved\n'
-         
-         '''
-         print 'Evaluating...'
-         random.shuffle(test_paths)
-         test_paths_ = test_paths[:5]
-
-         i = 0
-         for t_image in test_paths_:
-            img = misc.imread(t_image)
-            img = misc.imresize(img, (256,256))
-            colored = sess.run(prediction, feed_dict={test_image:img})
-
-            test_L_image = sess.run(test_L, feed_dict={test_image:img})
-            true_image   = np.uint8(sess.run(test_image, feed_dict={test_image:img}))
-           
-            pred_image = sess.run(prediction, feed_dict={test_image:img})[0]
-            misc.imsave(images_dir+str(step)+'_'+str(i)+'_true.png', true_image)
-            misc.imsave(images_dir+str(step)+'_'+str(i)+'_pred.png', pred_image)
-            i += 1
-         print 'Done evaluating....running the critic 100 times.'
-         '''
+         exit()
