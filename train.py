@@ -29,9 +29,10 @@ if __name__ == '__main__':
       print
       exit()
 
-   architecture   = config.architecture
+   loss_method    = config.loss_method
    dataset        = config.dataset
-   checkpoint_dir = 'checkpoints/'+architecture+'_'+dataset+'/'
+   architecture   = config.architecture
+   checkpoint_dir = 'checkpoints/'+loss_method+'_'+dataset+'_'+architecture+'/'
    learning_rate  = config.learning_rate
    batch_size     = config.batch_size
    data_dir       = config.data_dir
@@ -55,7 +56,7 @@ if __name__ == '__main__':
    # The color channels in [-1, 1] range
    ab_image  = trainData.targets
    
-   if architecture == 'pix2pix':
+   if loss_method == 'pix2pix':
       import pix2pix
       encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(L_image)
       decoded = netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
@@ -76,20 +77,35 @@ if __name__ == '__main__':
       errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
       tf.summary.scalar('encoding_loss', l1_loss)
   
-   if architecture == 'wasserstein':
-      import wasserstein
-      # generate a colored image
-      gen_img = wasserstein.netG(L_image, batch_size)
+   if loss_method == 'wasserstein':
+      if architecture == 'wasserstein':
+         import wasserstein
+         # generate a colored image
+         gen_img = wasserstein.netG(L_image, batch_size)
 
-      # send real image to D
-      errD_real = wasserstein.netD(ab_image, batch_size)
+         # send real image to D
+         errD_real = wasserstein.netD(ab_image, batch_size)
 
-      # send generated image to D
-      errD_fake = wasserstein.netD(gen_img, batch_size, reuse=True)
+         # send generated image to D
+         errD_fake = wasserstein.netD(gen_img, batch_size, reuse=True)
+
+      if architecture == 'colorarch':
+         import colorarch
+         # generate a colored image
+         gen_img = colorarch.netG(L_image, batch_size)
+
+         # send real image to D
+         errD_real = colorarch.netD(ab_image, batch_size)
+
+         # send generated image to D
+         errD_fake = colorarch.netD(gen_img, batch_size, reuse=True)
 
       errD = tf.reduce_mean(errD_real - errD_fake)
 
       errG = tf.reduce_mean(errD_fake)
+
+   if loss_method == 'energy':
+      print 'using ebgans'
 
    # this is testing stuff
    test_image = tf.placeholder(tf.float32, shape=(256, 256, 3), name='test_image')
@@ -104,7 +120,7 @@ if __name__ == '__main__':
    test_L  = tf.expand_dims(test_L, axis=0)
    test_ab = tf.expand_dims(test_ab, axis=0)
 
-   if architecture == 'wasserstein':
+   if loss_method == 'wasserstein':
       test_colored = wasserstein.netG(test_L, batch_size)
 
    prediction = data_ops.augment(test_colored, test_L)
@@ -210,5 +226,4 @@ if __name__ == '__main__':
             misc.imsave(images_dir+str(step)+'_'+str(i)+'_pred.png', pred_image)
             i += 1
          print 'Done evaluating....running the critic 100 times.'
-         exit()
 
