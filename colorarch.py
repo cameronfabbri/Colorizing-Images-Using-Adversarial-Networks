@@ -17,7 +17,8 @@ def netG(L_image, batch_size):
 
    if multi_gpu: gpu_num = 0
    else: gpu_num = 0
-   with tf.device('/gpu:'+str(gpu_num)):
+   #with tf.device('/gpu:'+str(gpu_num)):
+   if 1:
       conv1 = slim.convolution(L_image, 64, 3, stride=2, activation_fn=tf.identity, scope='g_conv1')
       conv1 = lrelu(conv1)
 
@@ -39,7 +40,8 @@ def netG(L_image, batch_size):
       # now conv6 is used for both mid-level network and global network
    if multi_gpu: gpu_num = 1
    else: gpu_num = 0
-   with tf.device('/gpu:'+str(gpu_num)):
+   #with tf.device('/gpu:'+str(gpu_num)):
+   if 1:
       # global
       glob_conv1 = slim.convolution(conv6, 512, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv1')
       glob_conv1 = lrelu(glob_conv1)
@@ -66,7 +68,8 @@ def netG(L_image, batch_size):
    
    if multi_gpu: gpu_num = 2
    else: gpu_num = 0
-   with tf.device('/gpu:'+str(gpu_num)):
+   #with tf.device('/gpu:'+str(gpu_num)):
+   if 1:
       # mid level
       mid_conv1 = slim.convolution(conv6, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_mid_conv1')
       mid_conv1 = lrelu(mid_conv1)
@@ -152,7 +155,8 @@ def netG(L_image, batch_size):
 '''
 def netD(input_images, batch_size, reuse=False):
    sc = tf.get_variable_scope()
-   with tf.variable_scope(sc, reuse=reuse):
+   #with tf.variable_scope(sc, reuse=reuse):
+   if 1:
       if multi_gpu: gpu_num = 3
       else: gpu_num = 0
       with tf.device('/gpu:'+str(gpu_num)):

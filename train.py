@@ -37,6 +37,10 @@ if __name__ == '__main__':
    batch_size     = config.batch_size
    data_dir       = config.data_dir
    images_dir     = checkpoint_dir+'images/'
+   pretrain       = config.pretrain
+   pretrain_epochs = config.pretrain_epochs
+
+   batch_size = 8
 
    try: os.mkdir('checkpoints/')
    except: pass
@@ -91,7 +95,6 @@ if __name__ == '__main__':
    if loss_method == 'wasserstein':
       errD = tf.reduce_mean(errD_real - errD_fake)
       errG = tf.reduce_mean(errD_fake) + tf.reduce_mean((ab_image-gen_img)**2)
-
    if loss_method == 'energy':
       print 'using ebgans'
 
@@ -99,19 +102,22 @@ if __name__ == '__main__':
       errD = tf.reduce_mean((errD_real-b)**2 - (errD_fake-a)**2)
       errG = tf.reduce_mean((errD_fake-c)**2)
 
-   #prediction = data_ops.augment(test_colored, test_L)
-   #prediction = tf.image.convert_image_dtype(prediction, dtype=tf.uint8, saturate=True)
-   ##############################################
-
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
    tf.summary.scalar('g_loss', errG)
-   merged_summary_op = tf.summary.merge_all()
 
    # get all trainable variables, and split by network G and network D
    t_vars = tf.trainable_variables()
    d_vars = [var for var in t_vars if 'd_' in var.name]
    g_vars = [var for var in t_vars if 'g_' in var.name]
+
+   # MSE loss for pretraining
+   if pretrain:
+      print 'Pretraining generator...'
+      mse_loss = tf.reduce_mean((ab_image-gen_img)**2)
+      mse_train_op = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      tf.add_to_collection('vars', mse_train_op)
+      tf.summary.scalar('mse_loss', mse_loss)
 
    # clip weights in D
    clip_values = [-0.005, 0.005]
@@ -153,30 +159,44 @@ if __name__ == '__main__':
    step = sess.run(global_step)
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess, coord=coord)
+   merged_summary_op = tf.summary.merge_all()
 
    while True:
+      # if pretrain, don't run G or D until number of epochs is met
       epoch_num = step/(num_train/batch_size)
-      s = time.time()
       
-      # get the discriminator properly trained at the start
+      if pretrain:
+         while epoch_num < pretrain_epochs:
+            epoch_num = step/(num_train/batch_size)
+            s = time.time()
+            sess.run(mse_train_op)
+            mse, summary = sess.run([mse_loss, merged_summary_op])
+            step += 1
+            summary_writer.add_summary(summary, step)
+            print 'step:',step,'mse:',mse,'time:',time.time()-s
+            if step % 500 == 0:
+               saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
+               saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
+         pretrain = False
+         print 'Done pretraining....training D and G now' 
+
+      s = time.time()
       if step < 25 or step % 500 == 0:
          n_critic = 100
       else: n_critic = 1
 
-      # train the discriminator for 5 or 100 runs
       for critic_itr in range(n_critic):
          sess.run(D_train_op)
          sess.run(clip_discriminator_var_op)
      
       sess.run(G_train_op)
-
       D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
       summary_writer.add_summary(summary, step)
       print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
       step += 1
       
-      if step%100 == 0:
+      if step%500 == 0:
          print 'Saving model...'
          saver.save(sess, checkpoint_dir+'checkpoint-'+str(step))
          saver.export_meta_graph(checkpoint_dir+'checkpoint-'+str(step)+'.meta')
