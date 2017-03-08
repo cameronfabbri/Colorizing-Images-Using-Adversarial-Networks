@@ -189,7 +189,7 @@ if __name__ == '__main__':
    saver = tf.train.Saver(max_to_keep=1)
    
    init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-   sess = tf.Session()
+   sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
    sess.run(init)
 
    # write out logs for tensorboard to the checkpointSdir

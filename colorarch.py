@@ -65,10 +65,6 @@ def netG(L_image, batch_size, num_gpu):
          glob_fc3 = slim.fully_connected(glob_fc2, 256, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc3')
          glob_fc3 = lrelu(glob_fc3)
       
-      if multi_gpu: gpu_num = 2
-      else: gpu_num = 0
-      #with tf.device('/gpu:'+str(gpu_num)):
-      if 1:
          # mid level
          mid_conv1 = slim.convolution(conv6, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_mid_conv1')
          mid_conv1 = lrelu(mid_conv1)
@@ -145,7 +141,6 @@ def netG(L_image, batch_size, num_gpu):
    tf.add_to_collection('vars', col_conv3)
    tf.add_to_collection('vars', col_conv4)
    tf.add_to_collection('vars', col_conv5)
-   #exit()
    return col_conv5
 
 
@@ -154,11 +149,16 @@ def netG(L_image, batch_size, num_gpu):
 '''
 def netD(input_images, batch_size, reuse=False):
    sc = tf.get_variable_scope()
-   #with tf.variable_scope(sc, reuse=reuse):
-   if 1:
-      if multi_gpu: gpu_num = 3
-      else: gpu_num = 0
-      with tf.device('/gpu:'+str(gpu_num)):
+   with tf.variable_scope(sc, reuse=reuse):
+   
+   if num_gpu == 0: gpus = ['/cpu:0']
+   elif num_gpu == 1: gpus = ['/gpu:0']
+   elif num_gpu == 2: gpus = ['/gpu:0', '/gpu:1']
+   elif num_gpu == 3: gpus = ['/gpu:0', '/gpu:1', '/gpu:2']
+   elif num_gpu == 4: gpus = ['/gpu:0', '/gpu:1', '/gpu:2', '/gpu:3']
+   
+   for d in gpus:
+      with tf.device(d):
          conv1 = slim.convolution(input_images, 64, 5, stride=2, activation_fn=tf.identity, scope='d_conv1')
          conv1 = lrelu(conv1)
 
@@ -173,19 +173,19 @@ def netD(input_images, batch_size, reuse=False):
 
          conv5 = slim.convolution(conv4, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv5')
       
-      print 'DISCRIMINATOR' 
-      print 'input images:',input_images
-      print 'conv1:',conv1
-      print 'conv2:',conv2
-      print 'conv3:',conv3
-      print 'conv4:',conv4
-      print 'conv5:',conv5
-      print 'END D\n'
-      
-      tf.add_to_collection('vars', conv1)
-      tf.add_to_collection('vars', conv2)
-      tf.add_to_collection('vars', conv3)
-      tf.add_to_collection('vars', conv4)
-      tf.add_to_collection('vars', conv5)
-      
-      return conv5
+   print 'DISCRIMINATOR' 
+   print 'input images:',input_images
+   print 'conv1:',conv1
+   print 'conv2:',conv2
+   print 'conv3:',conv3
+   print 'conv4:',conv4
+   print 'conv5:',conv5
+   print 'END D\n'
+   
+   tf.add_to_collection('vars', conv1)
+   tf.add_to_collection('vars', conv2)
+   tf.add_to_collection('vars', conv3)
+   tf.add_to_collection('vars', conv4)
+   tf.add_to_collection('vars', conv5)
+   
+   return conv5
