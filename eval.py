@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import cPickle as pickle
 import random
 import ntpath
 import sys
@@ -17,30 +18,43 @@ import data_ops
 
 if __name__ == '__main__':
    
+   if len(sys.argv) < 2:
+      print 'You must provide an info.pkl file'
+      exit()
+
    global_step = tf.Variable(0, name='global_step', trainable=False)
 
-   if len(sys.argv) < 2:
-      print 'You must provide a config file'
-      exit()
+   pkl_file = open(sys.argv[1], 'rb')
+   a = pickle.load(pkl_file)
 
-   try:
-      config_file = ntpath.basename(sys.argv[1]).split('.py')[0]
-      config = __import__(config_file)
-   except:
-      print 'config',sys.argv[1],'not found'
-      print
-      exit()
+   PRETRAIN_EPOCHS = a['PRETRAIN_EPOCHS']
+   GAN_EPOCHS      = a['GAN_EPOCHS']
+   ARCHITECTURE    = a['ARCHITECTURE']
+   DATASET         = a['DATASET']
+   DATA_DIR        = a['DATA_DIR']
+   PRETRAIN_LR     = a['PRETRAIN_LR']
+   GAN_LR          = a['GAN_LR']
+   NUM_GPU         = a['NUM_GPU']
+   LOSS_METHOD     = a['LOSS_METHOD']
+   NUM_CRITIC      = a['NUM_CRITIC']
+   BATCH_SIZE      = a['BATCH_SIZE']
+   
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'/'
+   IMAGES_DIR = EXPERIMENT_DIR+'images/'
+   
+   print
+   print 'PRETRAIN_EPOCHS: ',PRETRAIN_EPOCHS
+   print 'GAN_EPOCHS:      ',GAN_EPOCHS
+   print 'ARCHITECTURE:    ',ARCHITECTURE
+   print 'LOSS_METHOD:     ',LOSS_METHOD
+   print 'PRETRAIN_LR:     ',PRETRAIN_LR
+   print 'DATASET:         ',DATASET
+   print 'GAN_LR:          ',GAN_LR
+   print 'NUM_GPU:         ',NUM_GPU
+   print
+   DATA_DIR = '/mnt/data2/images/celeba/images/'
 
-   loss_method    = config.loss_method
-   architecture   = config.architecture
-   dataset        = config.dataset
-   checkpoint_dir = 'checkpoints/'+loss_method+'_'+dataset+'_'+architecture+'/'
-   learning_rate  = config.learning_rate
-   batch_size     = config.batch_size
-   data_dir       = config.data_dir
-   images_dir     = checkpoint_dir+'images/'
-
-   Data = data_ops.loadData(data_dir, dataset, batch_size, train=False)
+   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, train=False)
    num_train = Data.count
    
    # The gray 'lightness' channel in range [-1, 1]
@@ -48,13 +62,13 @@ if __name__ == '__main__':
    
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
-   if architecture == 'pix2pix':
+   if ARCHITECTURE == 'pix2pix':
       import pix2pix
       #enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = netG_encoder(test_L)
       #dec_test_images = netG_decoder(enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
-   if architecture == 'colorarch':
+   if ARCHITECTURE == 'colorarch':
       import colorarch
-      predict_ab = colorarch.netG(test_L, batch_size)
+      predict_ab = colorarch.netG(test_L, BATCH_SIZE, 0)
   
    # reconstruct prediction image from test_L and predict_ab
    prediction = data_ops.augment(predict_ab, test_L)
@@ -69,7 +83,7 @@ if __name__ == '__main__':
    init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
    sess = tf.Session()
    sess.run(init)
-   ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+   ckpt = tf.train.get_checkpoint_state(EXPERIMENT_DIR)
    if ckpt and ckpt.model_checkpoint_path:
       print "Restoring previous model..."
       try:
@@ -92,12 +106,12 @@ if __name__ == '__main__':
    # save out both
    i = 0
    for c in colored:
-      misc.imsave(images_dir+str(step)+'_'+str(i)+'_col.png', c)
+      misc.imsave(IMAGES_DIR+str(step)+'_'+str(i)+'_col.png', c)
       if i == 10: break
       i += 1
    i = 0
    #for t in true_:
-   #   misc.imsave(images_dir+str(step)+'_'+str(i)+'_true.png', t)
+   #   misc.imsave(IMAGES_DIR+str(step)+'_'+str(i)+'_true.png', t)
    #   #if i == 3: break
    #   i += 1
 

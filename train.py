@@ -62,13 +62,16 @@ if __name__ == '__main__':
    exp_info['PRETRAIN_LR']     = PRETRAIN_LR
    exp_info['GAN_EPOCHS']      = GAN_EPOCHS
    exp_info['DATASET']         = DATASET
+   exp_info['DATA_DIR']        = DATA_DIR
    exp_info['GAN_LR']          = GAN_LR
    exp_info['NUM_GPU']         = NUM_GPU
+   exp_info['NUM_CRITIC']      = NUM_CRITIC
+   exp_info['BATCH_SIZE']      = BATCH_SIZE
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
    exp_pkl.close()
-
+   
    print
    print 'PRETRAIN_EPOCHS: ',PRETRAIN_EPOCHS
    print 'GAN_EPOCHS:      ',GAN_EPOCHS
