@@ -79,8 +79,10 @@ if __name__ == '__main__':
    print 'LOSS_METHOD:     ',LOSS_METHOD
    print 'PRETRAIN_LR:     ',PRETRAIN_LR
    print 'DATASET:         ',DATASET
+   print 'DATA_DIR:        ',DATA_DIR
    print 'GAN_LR:          ',GAN_LR
    print 'NUM_GPU:         ',NUM_GPU
+   print 'NUM_CRITIC:      ',NUM_CRITIC
    print
 
    # global step that is saved with a model to keep track of how many steps/epochs
