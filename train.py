@@ -15,29 +15,6 @@ import data_ops
 
 if __name__ == '__main__':
 
-   '''
-   if len(sys.argv) < 2:
-      print 'You must provide a config file'
-      exit()
-
-   try:
-      config_file = ntpath.basename(sys.argv[1]).split('.py')[0]
-      config = __import__(config_file)
-   except:
-      print 'config',sys.argv[1],'not found'
-      print
-      exit()
-
-   LOSS_METHOD     = config.LOSS_METHOD
-   ARCHITECTURE    = config.ARCHITECTURE
-   DATASET         = config.DATASET
-   CHECKPOINT_DIR  = 'checkpoints/'+LOSS_METHOD+'_'+DATASET+'_'+ARCHITECTURE+'/'
-   BATCH_SIZE      = config.BATCH_SIZE
-   DATA_DIR        = config.DATA_DIR
-   IMAGES_DIR      = CHECKPOINT_DIR+'images/'
-   PRETRAIN_EPOCHS = config.PRETRAIN_EPOCHS
-   '''
-
    parser = argparse.ArgumentParser()
    parser.add_argument('--PRETRAIN_EPOCHS',required=True,type=int,help='Number of epochs to pretrain')
    parser.add_argument('--GAN_EPOCHS',     required=True,type=int,help='Number of epochs for GAN')
