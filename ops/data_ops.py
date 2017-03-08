@@ -174,10 +174,8 @@ def loadData(data_dir, dataset, batch_size, train=True):
 
    # get train/test sets
    if dataset == 'celeba':
-      
       pkl_train_file = 'files/celeba_train.pkl'
       pkl_test_file  = 'files/celeba_test.pkl'
-
       if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
          print 'Found pickle file'
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
@@ -198,6 +196,8 @@ def loadData(data_dir, dataset, batch_size, train=True):
          data = pickle.dumps(test_paths)
          pf.write(data)
          pf.close()
+   if dataset == 'imagenet':
+      print 'Using imagenet'
 
    if train: input_paths = train_paths
    else: input_paths = test_paths
@@ -208,7 +208,7 @@ def loadData(data_dir, dataset, batch_size, train=True):
       raise Exception('data_dir contains no image files')
 
    with tf.name_scope('load_images'):
-      path_queue = tf.train.string_input_producer(input_paths, shuffle=train)
+      path_queue = tf.train.string_input_producer(input_paths, shuffle=True)
       reader = tf.WholeFileReader()
       paths, contents = reader.read(path_queue)
       raw_input = decode(contents)
