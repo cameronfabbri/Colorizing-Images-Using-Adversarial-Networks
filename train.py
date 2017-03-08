@@ -59,6 +59,7 @@ if __name__ == '__main__':
    GAN_LR          = a.GAN_LR
    NUM_GPU         = a.NUM_GPU
    LOSS_METHOD     = a.LOSS_METHOD
+   NUM_CRITIC      = a.NUM_CRITIC
 
    EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
