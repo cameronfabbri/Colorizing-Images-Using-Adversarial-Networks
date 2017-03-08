@@ -1,0 +1,1 @@
+python train.py --PRETRAIN_EPOCHS=10 --GAN_EPOCHS=1 --ARCHITECTURE=colorarch --DATASET=celeba --DATA_DIR=/mnt/data2/images/celeba/images/ --PRETRAIN_LR=1e-4 --BATCH_SIZE=32 --GAN_LR=2e-5 --NUM_GPU=4 --NUM_CRITIC=10 --LOSS_METHOD=wasserstein
