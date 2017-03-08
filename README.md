@@ -8,6 +8,9 @@ colors.
 There will only be one train file, and will take in a configuration file defining what loss (type of GAN),
 and what architecture to use.
 
+### To-Do
+Be able to load up a pretrained model when starting.
+
 #### Project Ideas/Goals
 * Implement the [state of the art](http://richzhang.github.io/colorization/) for colorizing grayscale photos.
 * [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
