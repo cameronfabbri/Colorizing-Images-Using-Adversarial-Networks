@@ -2,7 +2,6 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import sys
 
-multi_gpu = False
 
 '''
    Leaky RELU
@@ -13,95 +12,95 @@ def lrelu(x, leak=0.2, name='lrelu'):
 
 '''
 '''
-def netG(L_image, batch_size):
+def netG(L_image, batch_size, num_gpu):
 
-   if multi_gpu: gpu_num = 0
-   else: gpu_num = 0
-   #with tf.device('/gpu:'+str(gpu_num)):
-   if 1:
-      conv1 = slim.convolution(L_image, 64, 3, stride=2, activation_fn=tf.identity, scope='g_conv1')
-      conv1 = lrelu(conv1)
+   if num_gpu == 0: gpus = ['/cpu:0']
+   elif num_gpu == 1: gpus = ['/gpu:0']
+   elif num_gpu == 2: gpus = ['/gpu:0', '/gpu:1']
+   elif num_gpu == 3: gpus = ['/gpu:0', '/gpu:1', '/gpu:2']
+   elif num_gpu == 4: gpus = ['/gpu:0', '/gpu:1', '/gpu:2', '/gpu:3']
 
-      conv2 = slim.convolution(conv1, 128, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv2')
-      conv2 = lrelu(conv2)
+   for d in gpus:
+      with tf.device(d):
+         conv1 = slim.convolution(L_image, 64, 3, stride=2, activation_fn=tf.identity, scope='g_conv1')
+         conv1 = lrelu(conv1)
 
-      conv3 = slim.convolution(conv2, 128, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv3')
-      conv3 = lrelu(conv3)
+         conv2 = slim.convolution(conv1, 128, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv2')
+         conv2 = lrelu(conv2)
 
-      conv4 = slim.convolution(conv3, 256, 1, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv4')
-      conv4 = lrelu(conv4)
+         conv3 = slim.convolution(conv2, 128, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv3')
+         conv3 = lrelu(conv3)
+
+         conv4 = slim.convolution(conv3, 256, 1, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv4')
+         conv4 = lrelu(conv4)
+         
+         conv5 = slim.convolution(conv4, 256, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv5')
+         conv5 = lrelu(conv5)
+
+         conv6 = slim.convolution(conv5, 512, 1, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv6')
+         conv6 = lrelu(conv6)
+
+         # now conv6 is used for both mid-level network and global network
+         # global
+         glob_conv1 = slim.convolution(conv6, 512, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv1')
+         glob_conv1 = lrelu(glob_conv1)
+         
+         glob_conv2 = slim.convolution(glob_conv1, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv2')
+         glob_conv2 = lrelu(glob_conv2)
+         
+         glob_conv3 = slim.convolution(glob_conv2, 512, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv3')
+         glob_conv3 = lrelu(glob_conv3)
+         
+         glob_conv4 = slim.convolution(glob_conv3, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv4')
+         glob_conv4 = lrelu(glob_conv4)
+
+         glob_conv4 = tf.reshape(glob_conv4, [batch_size, -1])
+
+         glob_fc1 = slim.fully_connected(glob_conv4, 1024, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc1')
+         glob_fc1 = lrelu(glob_fc1)
+
+         glob_fc2 = slim.fully_connected(glob_fc1, 512, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc2')
+         glob_fc2 = lrelu(glob_fc2)
+
+         glob_fc3 = slim.fully_connected(glob_fc2, 256, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc3')
+         glob_fc3 = lrelu(glob_fc3)
       
-      conv5 = slim.convolution(conv4, 256, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv5')
-      conv5 = lrelu(conv5)
+      if multi_gpu: gpu_num = 2
+      else: gpu_num = 0
+      #with tf.device('/gpu:'+str(gpu_num)):
+      if 1:
+         # mid level
+         mid_conv1 = slim.convolution(conv6, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_mid_conv1')
+         mid_conv1 = lrelu(mid_conv1)
 
-      conv6 = slim.convolution(conv5, 512, 1, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv6')
-      conv6 = lrelu(conv6)
+         mid_conv2 = slim.convolution(mid_conv1, 256, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_mid_conv2')
+         mid_conv2 = lrelu(mid_conv2)
 
-      # now conv6 is used for both mid-level network and global network
-   if multi_gpu: gpu_num = 1
-   else: gpu_num = 0
-   #with tf.device('/gpu:'+str(gpu_num)):
-   if 1:
-      # global
-      glob_conv1 = slim.convolution(conv6, 512, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv1')
-      glob_conv1 = lrelu(glob_conv1)
-      
-      glob_conv2 = slim.convolution(glob_conv1, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv2')
-      glob_conv2 = lrelu(glob_conv2)
-      
-      glob_conv3 = slim.convolution(glob_conv2, 512, 3, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv3')
-      glob_conv3 = lrelu(glob_conv3)
-      
-      glob_conv4 = slim.convolution(glob_conv3, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_conv4')
-      glob_conv4 = lrelu(glob_conv4)
+         # FUSION LAYER
+         # stack the last glob_fc with mid_conv2 so it's 32, 64, 64, 256
+         glob_fc3 = tf.tile(glob_fc3, [1, 32*32])
+         glob_fc3 = tf.reshape(glob_fc3, [batch_size, 32, 32, 256])
+         mid_conv2 = tf.concat([mid_conv2, glob_fc3], 3)
 
-      glob_conv4 = tf.reshape(glob_conv4, [batch_size, -1])
+         # colorization network
+         col_conv1 = slim.convolution(mid_conv2, 128, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv1')
+         col_conv1 = lrelu(col_conv1)
+         # upsample - double the size
+         col_conv1 = tf.image.resize_nearest_neighbor(col_conv1, [64, 64])
+         
+         col_conv2 = slim.convolution(col_conv1, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv2')
+         col_conv2 = lrelu(col_conv2)
+         
+         col_conv3 = slim.convolution(col_conv2, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv3')
+         col_conv3 = lrelu(col_conv3)
+         # upsample - double the size
+         col_conv3 = tf.image.resize_nearest_neighbor(col_conv3, [256, 256])
 
-      glob_fc1 = slim.fully_connected(glob_conv4, 1024, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc1')
-      glob_fc1 = lrelu(glob_fc1)
-
-      glob_fc2 = slim.fully_connected(glob_fc1, 512, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc2')
-      glob_fc2 = lrelu(glob_fc2)
-
-      glob_fc3 = slim.fully_connected(glob_fc2, 256, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_glob_fc3')
-      glob_fc3 = lrelu(glob_fc3)
-   
-   if multi_gpu: gpu_num = 2
-   else: gpu_num = 0
-   #with tf.device('/gpu:'+str(gpu_num)):
-   if 1:
-      # mid level
-      mid_conv1 = slim.convolution(conv6, 512, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_mid_conv1')
-      mid_conv1 = lrelu(mid_conv1)
-
-      mid_conv2 = slim.convolution(mid_conv1, 256, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_mid_conv2')
-      mid_conv2 = lrelu(mid_conv2)
-
-      # FUSION LAYER
-      # stack the last glob_fc with mid_conv2 so it's 32, 64, 64, 256
-      glob_fc3 = tf.tile(glob_fc3, [1, 32*32])
-      glob_fc3 = tf.reshape(glob_fc3, [batch_size, 32, 32, 256])
-      mid_conv2 = tf.concat([mid_conv2, glob_fc3], 3)
-
-      # colorization network
-      col_conv1 = slim.convolution(mid_conv2, 128, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv1')
-      col_conv1 = lrelu(col_conv1)
-      # upsample - double the size
-      col_conv1 = tf.image.resize_nearest_neighbor(col_conv1, [64, 64])
-      
-      col_conv2 = slim.convolution(col_conv1, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv2')
-      col_conv2 = lrelu(col_conv2)
-      
-      col_conv3 = slim.convolution(col_conv2, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv3')
-      col_conv3 = lrelu(col_conv3)
-      # upsample - double the size
-      col_conv3 = tf.image.resize_nearest_neighbor(col_conv3, [256, 256])
-
-      col_conv4 = slim.convolution(col_conv3, 32, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv4')
-      col_conv4 = lrelu(col_conv4)
-      
-      col_conv5 = slim.convolution(col_conv4, 2, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv5')
-      col_conv5 = tf.nn.tanh(col_conv5)
+         col_conv4 = slim.convolution(col_conv3, 32, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv4')
+         col_conv4 = lrelu(col_conv4)
+         
+         col_conv5 = slim.convolution(col_conv4, 2, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv5')
+         col_conv5 = tf.nn.tanh(col_conv5)
 
    print 'GENERATOR'
    print 'conv1:',conv1

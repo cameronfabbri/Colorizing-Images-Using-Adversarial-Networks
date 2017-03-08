@@ -1,3 +1,4 @@
+import cPickle as pickle
 import tensorflow as tf
 from scipy import misc
 import numpy as np
@@ -44,7 +45,8 @@ if __name__ == '__main__':
    parser.add_argument('--DATASET',        required=True,help='The dataset to use')
    parser.add_argument('--PRETRAIN_LR',    required=True,help='Learning rate for the pretrained network')
    parser.add_argument('--GAN_LR',         required=False,default=2e-5,help='Learning rate for the GAN')
-   parser.add_argument('--MULTI_GPU',      required=False,default=True,help='Use multiple GPUs or not')
+   parser.add_argument('--NUM_GPU',        required=False,default=1,help='Use multiple GPUs or not')
+   parser.add_argument('--NUM_CRITIC',     required=False,default=10,help='Number of critic updates')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
       choices=['wasserstein','least_squares','energy'])
    a = parser.parse_args()
@@ -55,23 +57,53 @@ if __name__ == '__main__':
    DATASET         = a.DATASET
    PRETRAIN_LR     = a.PRETRAIN_LR
    GAN_LR          = a.GAN_LR
-   MULTI_GPU       = a.MULTI_GPU
+   NUM_GPU         = a.NUM_GPU
    LOSS_METHOD     = a.LOSS_METHOD
 
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)
-   print EXPERIMENT_DIR
-   exit()
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'/'
+   IMAGES_DIR = EXPERIMENT_DIR+'images/'
 
+   # write all this info to a pickle file in the experiments directory
+   exp_info = dict()
+   exp_info['PRETRAIN_EPOCHS'] = PRETRAIN_EPOCHS
+   exp_info['ARCHITECTURE']    = ARCHITECTURE
+   exp_info['LOSS_METHOD']     = LOSS_METHOD
+   exp_info['PRETRAIN_LR']     = PRETRAIN_LR
+   exp_info['GAN_EPOCHS']      = GAN_EPOCHS
+   exp_info['DATASET']         = DATASET
+   exp_info['GAN_LR']          = GAN_LR
+   exp_info['NUM_GPU']         = NUM_GPU
+   exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
+   data = pickle.dumps(exp_info)
+   exp_pkl.write(data)
+   exp_pkl.close()
+
+   print
+   print 'Creating',EXPERIMENT_DIR
    try: os.mkdir('checkpoints/')
    except: pass
-   try: os.mkdir(CHECKPOINT_DIR)
+   try: os.mkdir(EXPERIMENT_DIR)
    except: pass
    try: os.mkdir(IMAGES_DIR)
    except: pass
-   
+
+   print
+   print 'PRETRAIN_EPOCHS: ',PRETRAIN_EPOCHS
+   print 'GAN_EPOCHS:      ',GAN_EPOCHS
+   print 'ARCHITECTURE:    ',ARCHITECTURE
+   print 'LOSS_METHOD:     ',LOSS_METHOD
+   print 'PRETRAIN_LR:     ',PRETRAIN_LR
+   print 'DATASET:         ',DATASET
+   print 'GAN_LR:          ',GAN_LR
+   print 'NUM_GPU:         ',NUM_GPU
+   print
+
+   # global step that is saved with a model to keep track of how many steps/epochs
    global_step = tf.Variable(0, name='global_step', trainable=False)
-  
+
+   # load data
    Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE)
+   # number of training images
    num_train = Data.count
    
    # The gray 'lightness' channel in range [-1, 1]
@@ -79,7 +111,8 @@ if __name__ == '__main__':
    
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
-   
+
+   # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
       encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(L_image)
@@ -100,27 +133,30 @@ if __name__ == '__main__':
       # error for the generator, including the L1 loss
       errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
       tf.summary.scalar('encoding_loss', l1_loss)
-      
+
+   # architecture from
+   # http://hi.cs.waseda.ac.jp/~iizuka/projects/colorization/data/colorization_sig2016.pdf
    if ARCHITECTURE == 'colorarch':
       import colorarch
       # generate a colored image
-      gen_img = colorarch.netG(L_image, BATCH_SIZE)
+      gen_img = colorarch.netG(L_image, BATCH_SIZE, NUM_GPU)
 
       # send real image to D
-      errD_real = colorarch.netD(ab_image, BATCH_SIZE)
+      errD_real = colorarch.netD(ab_image, BATCH_SIZE, NUM_GPU)
 
       # send generated image to D
-      errD_fake = colorarch.netD(gen_img, BATCH_SIZE, reuse=True)
+      errD_fake = colorarch.netD(gen_img, BATCH_SIZE, NUM_GPU, reuse=True)
   
    if LOSS_METHOD == 'wasserstein':
+      print 'Using Wasserstein loss'
       errD = tf.reduce_mean(errD_real - errD_fake)
       errG = tf.reduce_mean(errD_fake) + tf.reduce_mean((ab_image-gen_img)**2)
    if LOSS_METHOD == 'energy':
-      print 'using ebgans'
-
+      print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
-      errD = tf.reduce_mean((errD_real-b)**2 - (errD_fake-a)**2)
-      errG = tf.reduce_mean((errD_fake-c)**2)
+      print 'Using least squares loss'
+      errD = tf.reduce_mean((errD_real-1)**2) + tf.reduce_mean((errD_fake-1)**2)
+      errG = tf.reduce_mean((errD_fake-1)**2)
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
