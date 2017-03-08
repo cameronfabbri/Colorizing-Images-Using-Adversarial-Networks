@@ -183,7 +183,7 @@ if __name__ == '__main__':
       s = time.time()
       if step < 25 or step % 500 == 0:
          n_critic = 100
-      else: n_critic = 1
+      else: n_critic = 15
 
       for critic_itr in range(n_critic):
          sess.run(D_train_op)
