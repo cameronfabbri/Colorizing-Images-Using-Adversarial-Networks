@@ -52,7 +52,6 @@ if __name__ == '__main__':
    print 'GAN_LR:          ',GAN_LR
    print 'NUM_GPU:         ',NUM_GPU
    print
-   DATA_DIR = '/mnt/data2/images/celeba/images/'
 
    Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, train=False)
    num_train = Data.count
