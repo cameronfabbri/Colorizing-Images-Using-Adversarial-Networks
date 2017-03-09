@@ -202,7 +202,7 @@ if __name__ == '__main__':
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess, coord=coord)
    merged_summary_op = tf.summary.merge_all()
-
+   start = time.time()
    while True:
       # if PRETRAIN, don't run G or D until number of epochs is met
       epoch_num = step/(num_train/BATCH_SIZE)
@@ -248,4 +248,5 @@ if __name__ == '__main__':
             saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
             print 'Model saved\n'
 
-      print 'Finished training.'
+      print 'Finished training', time.time()-start
+      exit()
