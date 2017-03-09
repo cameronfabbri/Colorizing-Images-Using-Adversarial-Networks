@@ -140,6 +140,7 @@ if __name__ == '__main__':
       print 'Using Wasserstein loss'
       errD = tf.reduce_mean(errD_real - errD_fake)
       errG = tf.reduce_mean(errD_fake) + tf.reduce_mean((ab_image-gen_img)**2)
+
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
@@ -156,24 +157,27 @@ if __name__ == '__main__':
    d_vars = [var for var in t_vars if 'd_' in var.name]
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
+   if LOSS_METHOD == 'wasserstein':
+      # clip weights in D
+      clip_values = [-0.005, 0.005]
+      clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for
+      var in d_vars]
+
    # MSE loss for pretraining
    if PRETRAIN_EPOCHS > 0:
-      print 'Pretraining generator for',PRETRAIN_EPOCHS'epochs...'
+      print 'Pretraining generator for',PRETRAIN_EPOCHS,'epochs...'
       mse_loss = tf.reduce_mean((ab_image-gen_img)**2)
       mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       tf.add_to_collection('vars', mse_train_op)
       tf.summary.scalar('mse_loss', mse_loss)
 
-   # clip weights in D
-   clip_values = [-0.005, 0.005]
-   clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for
-      var in d_vars]
+   if LOSS_METHOD == 'wasserstein':
+      G_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      D_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
 
-   # optimize G
-   G_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-
-   # optimize D
-   D_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
+   else:
+      G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
 
    saver = tf.train.Saver(max_to_keep=1)
    
@@ -200,9 +204,14 @@ if __name__ == '__main__':
          pass
  
    if LOAD_MODEL:
-      print LOAD_MODEL
-      exit()
-   exit()
+      ckpt = tf.train.get_checkpoint_state(LOAD_MODEL)
+      print "Restoring model..."
+      try:
+         saver.restore(sess, ckpt.model_checkpoint_path)
+         print "Model restored"
+      except:
+         print "Could not restore model"
+         raise
 
    ########################################### training portion
    step = sess.run(global_step)
@@ -256,4 +265,6 @@ if __name__ == '__main__':
             print 'Model saved\n'
 
       print 'Finished training', time.time()-start
+      saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
+      saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
       exit()
