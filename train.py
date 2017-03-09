@@ -158,7 +158,7 @@ if __name__ == '__main__':
 
    # MSE loss for pretraining
    if PRETRAIN_EPOCHS > 0:
-      print 'Pretraining generator...'
+      print 'Pretraining generator for',PRETRAIN_EPOCHS'epochs...'
       mse_loss = tf.reduce_mean((ab_image-gen_img)**2)
       mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       tf.add_to_collection('vars', mse_train_op)
