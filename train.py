@@ -27,6 +27,7 @@ if __name__ == '__main__':
    parser.add_argument('--NUM_GPU',        required=False,type=int,default=1,help='Use multiple GPUs or not')
    parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=10,help='Number of critics')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
+   parser.add_argument('--LOAD_MODEL',     required=False,help='Load a previous model')
       choices=['wasserstein','least_squares','energy'])
    a = parser.parse_args()
 
@@ -41,6 +42,7 @@ if __name__ == '__main__':
    LOSS_METHOD     = a.LOSS_METHOD
    NUM_CRITIC      = a.NUM_CRITIC
    BATCH_SIZE      = a.BATCH_SIZE
+   LOAD_MODEL      = a.LOAD_MODEL
 
    EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
@@ -67,6 +69,7 @@ if __name__ == '__main__':
    exp_info['NUM_GPU']         = NUM_GPU
    exp_info['NUM_CRITIC']      = NUM_CRITIC
    exp_info['BATCH_SIZE']      = BATCH_SIZE
+   exp_info['LOAD_MODEL']      = LOAD_MODEL
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
@@ -142,8 +145,8 @@ if __name__ == '__main__':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
       print 'Using least squares loss'
-      errD = tf.reduce_mean((errD_real-1)**2) + tf.reduce_mean((errD_fake-1)**2)
-      errG = tf.reduce_mean((errD_fake-1)**2)
+      errD = tf.reduce_mean(0.5*((errD_real-1)**2) + 0.5*((errD_fake)**2))
+      errG = tf.reduce_mean(0.5*((errD_fake - 1)**2))
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
@@ -185,7 +188,6 @@ if __name__ == '__main__':
    tf.add_to_collection('vars', G_train_op)
    tf.add_to_collection('vars', D_train_op)
 
-   # only keep one model
    ckpt = tf.train.get_checkpoint_state(EXPERIMENT_DIR)
    # restore previous model if there is one
    if ckpt and ckpt.model_checkpoint_path:
@@ -196,7 +198,11 @@ if __name__ == '__main__':
       except:
          print "Could not restore model"
          pass
-  
+   if LOAD_MODEL:
+      print 'LOAD_MODEL:',LOAD_MODEL
+      exit()
+   exit()
+
    ########################################### training portion
    step = sess.run(global_step)
    coord = tf.train.Coordinator()
