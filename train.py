@@ -147,8 +147,8 @@ if __name__ == '__main__':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
       print 'Using least squares loss'
-      errD = tf.reduce_mean(0.5*((errD_real-1)**2) + 0.5*((errD_fake)**2))
-      errG = tf.reduce_mean(0.5*((errD_fake - 1)**2))
+      errD = tf.square(errD_real - 1) + tf.square(errD_fake)
+      errG = tf.square(errD_fake - 1)
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
