@@ -239,10 +239,11 @@ if __name__ == '__main__':
             print
             saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
             saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
-      print
-      print 'Done pretraing....training D and G now'
-      print
-      epoch_num = 0
+      if PRETRAIN_EPOCHS > 0:
+         print
+         print 'Done pretraing....training D and G now'
+         print
+         epoch_num = 0
       while epoch_num < GAN_EPOCHS:
          s = time.time()
          if LOSS_METHOD == 'wasserstein':
