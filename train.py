@@ -245,11 +245,12 @@ if __name__ == '__main__':
          print
          epoch_num = 0
       while epoch_num < GAN_EPOCHS:
+         epoch_num = step/(num_train/BATCH_SIZE)
          s = time.time()
          if LOSS_METHOD == 'wasserstein':
             if step < 25 or step % 500 == 0:
                n_critic = 50
-            else: n_critic = 5
+            else: n_critic = 1
 
             for critic_itr in range(n_critic):
                sess.run(D_train_op)
