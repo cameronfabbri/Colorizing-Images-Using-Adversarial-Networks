@@ -69,6 +69,7 @@ if __name__ == '__main__':
    exp_info['NUM_GPU']         = NUM_GPU
    exp_info['NUM_CRITIC']      = NUM_CRITIC
    exp_info['BATCH_SIZE']      = BATCH_SIZE
+   exp_info['LOAD_MODEL']      = LOAD_MODEL
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
@@ -85,6 +86,7 @@ if __name__ == '__main__':
    print 'GAN_LR:          ',GAN_LR
    print 'NUM_GPU:         ',NUM_GPU
    print 'NUM_CRITIC:      ',NUM_CRITIC
+   print 'LOAD_MODEL:      ',LOAD_MODEL
    print
 
    # global step that is saved with a model to keep track of how many steps/epochs
