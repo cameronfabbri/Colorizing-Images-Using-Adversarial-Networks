@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
       # send generated image to D
       errD_fake = colorarch.netD(gen_img, BATCH_SIZE, NUM_GPU, reuse=True)
-  
+
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       errD = tf.reduce_mean(errD_real - errD_fake)
@@ -147,6 +147,9 @@ if __name__ == '__main__':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
       print 'Using least squares loss'
+      # Least squares requires sigmoid activation on D
+      errD_real = tf.nn.sigmoid(errD_real)
+      errD_fake = tf.nn.sigmoid(errD_fake)
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
       errG = tf.reduce_mean(tf.square(errD_fake - 1))
 
