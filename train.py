@@ -21,7 +21,7 @@ if __name__ == '__main__':
    parser.add_argument('--ARCHITECTURE',   required=True,help='Architecture for the generator')
    parser.add_argument('--DATASET',        required=True,help='The dataset to use')
    parser.add_argument('--DATA_DIR',       required=True,help='Directory where data is')
-   parser.add_argument('--PRETRAIN_LR',    required=True,type=float,help='Learning rate for the pretrained network')
+   parser.add_argument('--PRETRAIN_LR',    required=False,type=float,help='Learning rate for the pretrained network')
    parser.add_argument('--BATCH_SIZE',     required=False,type=int,default=32,help='Batch size to use')
    parser.add_argument('--GAN_LR',         required=False,type=float,default=2e-5,help='Learning rate for the GAN')
    parser.add_argument('--NUM_GPU',        required=False,type=int,default=1,help='Use multiple GPUs or not')
@@ -246,21 +246,21 @@ if __name__ == '__main__':
       while epoch_num < GAN_EPOCHS:
          s = time.time()
          if step < 25 or step % 500 == 0:
-            n_critic = 100
-         else: n_critic = 15
+            n_critic = 10
+         else: n_critic = 1
 
          for critic_itr in range(n_critic):
             sess.run(D_train_op)
             sess.run(clip_discriminator_var_op)
         
          sess.run(G_train_op)
-         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+         D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
-         print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+         print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
          step += 1
          
-         if step%500 == 0:
+         if step%100 == 0:
             print 'Saving model...'
             saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
             saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
