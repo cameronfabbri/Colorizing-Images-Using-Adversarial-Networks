@@ -147,8 +147,8 @@ if __name__ == '__main__':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
       print 'Using least squares loss'
-      errD = tf.square(errD_real - 1) + tf.square(errD_fake)
-      errG = tf.square(errD_fake - 1)
+      errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
+      errG = tf.reduce_mean(tf.square(errD_fake - 1))
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
@@ -245,16 +245,23 @@ if __name__ == '__main__':
       epoch_num = 0
       while epoch_num < GAN_EPOCHS:
          s = time.time()
-         if step < 25 or step % 500 == 0:
-            n_critic = 10
-         else: n_critic = 1
+         if LOSS_METHOD == 'wasserstein':
+            if step < 25 or step % 500 == 0:
+               n_critic = 50
+            else: n_critic = 5
 
-         for critic_itr in range(n_critic):
+            for critic_itr in range(n_critic):
+               sess.run(D_train_op)
+               if LOSS_METHOD == 'wasserstein': sess.run(clip_discriminator_var_op)
+           
+            sess.run(G_train_op)
+            D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
+
+         # For least squares it's 1:1 for D and G
+         elif LOSS_METHOD == 'least_squares':
             sess.run(D_train_op)
-            sess.run(clip_discriminator_var_op)
-        
-         sess.run(G_train_op)
-         D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
+            sess.run(G_train_op)
+            D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
          print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
