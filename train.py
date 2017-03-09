@@ -16,7 +16,7 @@ import data_ops
 if __name__ == '__main__':
 
    parser = argparse.ArgumentParser()
-   parser.add_argument('--PRETRAIN_EPOCHS',required=True,type=int,help='Number of epochs to pretrain')
+   parser.add_argument('--PRETRAIN_EPOCHS',required=False,default=0,type=int,help='Number of epochs to pretrain')
    parser.add_argument('--GAN_EPOCHS',     required=True,type=int,help='Number of epochs for GAN')
    parser.add_argument('--ARCHITECTURE',   required=True,help='Architecture for the generator')
    parser.add_argument('--DATASET',        required=True,help='The dataset to use')
@@ -253,7 +253,7 @@ if __name__ == '__main__':
          if LOSS_METHOD == 'wasserstein':
             if step < 25 or step % 500 == 0:
                n_critic = 50
-            else: n_critic = 1
+            else: n_critic = NUM_CRITIC
 
             for critic_itr in range(n_critic):
                sess.run(D_train_op)
