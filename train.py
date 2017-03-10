@@ -271,12 +271,11 @@ if __name__ == '__main__':
          # For least squares it's 1:1 for D and G
          elif LOSS_METHOD == 'least_squares':
             sess.run(D_train_op)
-            for i in range(10):
-               sess.run(G_train_op)
+            sess.run(G_train_op)
             D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
-         if step%10 == 0: print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
+         print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
          step += 1
          
          if step%500 == 0:

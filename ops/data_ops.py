@@ -199,13 +199,13 @@ def loadData(data_dir, dataset, batch_size, train=True):
          pf.close()
    if dataset == 'imagenet':
       print 'Using imagenet'
-   if dataset == 'places':
+   if dataset == 'places2':
       print 'Using places'
       pkl_train_file = 'files/places_train.pkl'
       pkl_test_file  = 'files/places_test.pkl'
 
       if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
-         print 'Found pickle file'
+         print 'Found pickle file, loading data...'
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
          test_paths  = pickle.load(open(pkl_test_file, 'rb'))
       else:
@@ -223,7 +223,7 @@ def loadData(data_dir, dataset, batch_size, train=True):
          data = pickle.dumps(test_paths)
          pf.write(data)
          pf.close()
-
+   print 'Done!'
    if train: input_paths = train_paths
    else: input_paths = test_paths
    

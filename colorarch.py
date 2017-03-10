@@ -167,11 +167,17 @@ def netD(input_images, batch_size, num_gpu, reuse=False):
          
             conv3 = slim.convolution(conv2, 256, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv3')
             conv3 = lrelu(conv3)
-
-            conv4 = slim.convolution(conv3, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
+            
+            conv4 = slim.convolution(conv3, 256, 5, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
             conv4 = lrelu(conv4)
 
-            conv5 = slim.convolution(conv4, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv5')
+            conv5 = slim.convolution(conv4, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv5')
+            conv5 = lrelu(conv5)
+            
+            conv6 = slim.convolution(conv5, 512, 5, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv6')
+            conv6 = lrelu(conv4)
+
+            conv7 = slim.convolution(conv6, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv7')
       
    print 'DISCRIMINATOR' 
    print 'input images:',input_images
@@ -180,6 +186,8 @@ def netD(input_images, batch_size, num_gpu, reuse=False):
    print 'conv3:',conv3
    print 'conv4:',conv4
    print 'conv5:',conv5
+   print 'conv6:',conv6
+   print 'conv7:',conv7
    print 'END D\n'
    
    tf.add_to_collection('vars', conv1)
@@ -187,5 +195,7 @@ def netD(input_images, batch_size, num_gpu, reuse=False):
    tf.add_to_collection('vars', conv3)
    tf.add_to_collection('vars', conv4)
    tf.add_to_collection('vars', conv5)
+   tf.add_to_collection('vars', conv6)
+   tf.add_to_collection('vars', conv7)
    
-   return conv5
+   return conv7

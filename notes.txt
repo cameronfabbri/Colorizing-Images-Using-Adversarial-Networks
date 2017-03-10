@@ -27,6 +27,6 @@ Going to try the places2 dataset with the following experiments.
 
 Also going to beef up the discriminator a bit, add more layers.
 
-least squares, learning rate 0.001, colorarch, 10 epochs, 2GPUs
-wasserstein, learning rate 5e-5, colorarch, 10 epochs, 2GPUs
+least squares, learning rate 0.001, colorarch, 10 epochs, 2GPUs, batch size 32
+wasserstein, learning rate 5e-5, colorarch, 10 epochs, 2GPUs, batch size 16
 
