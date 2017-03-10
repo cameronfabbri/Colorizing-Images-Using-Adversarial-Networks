@@ -234,10 +234,8 @@ def loadData(data_dir, dataset, batch_size, train=True):
    # synchronize seed for image operations so that we do the same operations to both
    # input and output images
    flip = 1
-   #scale_size = 286
-   #CROP_SIZE  = 256
-   scale_size = 74
-   CROP_SIZE  = 64
+   scale_size = 286
+   CROP_SIZE  = 256
    seed = random.randint(0, 2**31 - 1)
    def transform(image):
       r = image
