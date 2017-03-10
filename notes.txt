@@ -1,0 +1,23 @@
+Terminal 1: cganarch wasserstein lr 5e-5    - seems to be doing okay, going to continue training
+Terminal 2: cganarch wasserstein lr 1e-4    - seems to be doing okay, going to continue training
+Terminal 3: cganarch least squares lr 1e-4  - did not work, model collapsed
+Terminal 4: cganarch least squares lr 0.001 - did not work, model collapsed
+
+All batch size 16
+All celeba
+All size 64x64
+
+Looks like least squares with the cganarch did not work at all. Going to change the size
+from 64x64 to 256x256 and continue training wasserstein
+
+------------------------------------------- 
+
+NOW:
+
+Continuing top two wasserstein at 256x256
+colorarch least squares lr 1e-4
+colorarch least squares lr 0.001
+
+All batch size 16
+All celeba 
+All 256x256

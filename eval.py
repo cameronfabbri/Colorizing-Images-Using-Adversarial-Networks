@@ -39,7 +39,7 @@ if __name__ == '__main__':
    NUM_CRITIC      = a['NUM_CRITIC']
    BATCH_SIZE      = a['BATCH_SIZE']
    
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
    
    print
@@ -68,7 +68,10 @@ if __name__ == '__main__':
    if ARCHITECTURE == 'colorarch':
       import colorarch
       predict_ab = colorarch.netG(test_L, BATCH_SIZE, 0)
-  
+   if ARCHITECTURE == 'cganarch':
+      import cganarch
+      predict_ab = cganarch.netG(test_L, BATCH_SIZE, 0)
+
    # reconstruct prediction image from test_L and predict_ab
    prediction = data_ops.augment(predict_ab, test_L)
    prediction = tf.image.convert_image_dtype(prediction, dtype=tf.uint8, saturate=True)

@@ -88,6 +88,7 @@ def netG(L_image, batch_size, num_gpu):
          
          col_conv3 = slim.convolution(col_conv2, 64, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv3')
          col_conv3 = lrelu(col_conv3)
+
          # upsample - double the size
          col_conv3 = tf.image.resize_nearest_neighbor(col_conv3, [256, 256])
 
@@ -120,6 +121,7 @@ def netG(L_image, batch_size, num_gpu):
    print 'col_conv5:',col_conv5
    print 'END G'
    print
+   
    tf.add_to_collection('vars', conv1)
    tf.add_to_collection('vars', conv2)
    tf.add_to_collection('vars', conv3)
