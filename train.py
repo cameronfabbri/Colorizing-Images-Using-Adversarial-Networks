@@ -138,11 +138,17 @@ if __name__ == '__main__':
       # send generated image to D
       errD_fake = colorarch.netD(gen_img, BATCH_SIZE, NUM_GPU, reuse=True)
 
+   if ARCHITECTURE == 'cganarch':
+      import cganarch
+      gen_img = cganarch.netG(L_image, BATCH_SIZE, NUM_GPU)
+      errD_real = tf.reduce_mean(cganarch.netD(ab_image, BATCH_SIZE, NUM_GPU))
+      errD_fake = tf.reduce_mean(cganarch.netD(gen_img, BATCH_SIZE, NUM_GPU, reuse=True))
+      errG = tf.reduce_mean(errD_fake)
+
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       errD = tf.reduce_mean(errD_real - errD_fake)
-      errG = tf.reduce_mean(errD_fake) + tf.reduce_mean((ab_image-gen_img)**2)
-
+      errG = tf.reduce_mean(errD_fake) 
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
@@ -252,7 +258,7 @@ if __name__ == '__main__':
          s = time.time()
          if LOSS_METHOD == 'wasserstein':
             if step < 25 or step % 500 == 0:
-               n_critic = 50
+               n_critic = 100
             else: n_critic = NUM_CRITIC
 
             for critic_itr in range(n_critic):
@@ -265,14 +271,15 @@ if __name__ == '__main__':
          # For least squares it's 1:1 for D and G
          elif LOSS_METHOD == 'least_squares':
             sess.run(D_train_op)
-            sess.run(G_train_op)
+            for i in range(10):
+               sess.run(G_train_op)
             D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
-         print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
+         if step%10 == 0: print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
          step += 1
          
-         if step%100 == 0:
+         if step%500 == 0:
             print 'Saving model...'
             saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
             saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
