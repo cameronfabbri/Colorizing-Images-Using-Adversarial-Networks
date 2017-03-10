@@ -174,6 +174,7 @@ def loadData(data_dir, dataset, batch_size, train=True):
 
    # get train/test sets
    if dataset == 'celeba':
+      print 'Using celeba'
       pkl_train_file = 'files/celeba_train.pkl'
       pkl_test_file  = 'files/celeba_test.pkl'
       if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
@@ -198,12 +199,33 @@ def loadData(data_dir, dataset, batch_size, train=True):
          pf.close()
    if dataset == 'imagenet':
       print 'Using imagenet'
+   if dataset == 'places':
+      print 'Using places'
+      pkl_train_file = 'files/places_train.pkl'
+      pkl_test_file  = 'files/places_test.pkl'
+
+      if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
+         print 'Found pickle file'
+         train_paths = pickle.load(open(pkl_train_file, 'rb'))
+         test_paths  = pickle.load(open(pkl_test_file, 'rb'))
+      else:
+         train_dir = data_dir+'train_256/'
+         test_dir  = data_dir+'test_256/'
+         train_paths = getPaths(train_dir)
+         test_paths  = getPaths(test_dir)
+         random.shuffle(train_paths)
+         random.shuffle(test_paths)
+         pf   = open(pkl_train_file, 'wb')
+         data = pickle.dumps(train_paths)
+         pf.write(data)
+         pf.close()
+         pf   = open(pkl_test_file, 'wb')
+         data = pickle.dumps(test_paths)
+         pf.write(data)
+         pf.close()
 
    if train: input_paths = train_paths
    else: input_paths = test_paths
-   
-   # TODO REMOVE TEMP
-   #input_paths = train_paths[:4]
    
    decode = tf.image.decode_jpeg
 
