@@ -21,3 +21,12 @@ colorarch least squares lr 0.001
 All batch size 16
 All celeba 
 All 256x256
+
+Wasserstein not doing much. Least squares is now stable it seems using colorarch. Using the cganarch did not work at all. 
+Going to try the places2 dataset with the following experiments.
+
+Also going to beef up the discriminator a bit, add more layers.
+
+least squares, learning rate 0.001, colorarch, 10 epochs, 2GPUs
+wasserstein, learning rate 5e-5, colorarch, 10 epochs, 2GPUs
+
