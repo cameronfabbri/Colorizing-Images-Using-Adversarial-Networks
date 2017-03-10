@@ -202,6 +202,9 @@ def loadData(data_dir, dataset, batch_size, train=True):
    if train: input_paths = train_paths
    else: input_paths = test_paths
    
+   # TODO REMOVE TEMP
+   #input_paths = train_paths[:4]
+   
    decode = tf.image.decode_jpeg
 
    if len(input_paths) == 0:
@@ -231,8 +234,10 @@ def loadData(data_dir, dataset, batch_size, train=True):
    # synchronize seed for image operations so that we do the same operations to both
    # input and output images
    flip = 1
-   scale_size = 286
-   CROP_SIZE = 256
+   #scale_size = 286
+   #CROP_SIZE  = 256
+   scale_size = 74
+   CROP_SIZE  = 64
    seed = random.randint(0, 2**31 - 1)
    def transform(image):
       r = image
@@ -255,8 +260,8 @@ def loadData(data_dir, dataset, batch_size, train=True):
       with tf.name_scope('target_images'):
          target_images = transform(targets)
    else:
-      input_images = tf.image.resize_images(inputs, [256, 256], method=tf.image.ResizeMethod.AREA)
-      target_images = tf.image.resize_images(targets, [256, 256], method=tf.image.ResizeMethod.AREA)
+      input_images = tf.image.resize_images(inputs, [CROP_SIZE, CROP_SIZE], method=tf.image.ResizeMethod.AREA)
+      target_images = tf.image.resize_images(targets, [CROP_SIZE, CROP_SIZE], method=tf.image.ResizeMethod.AREA)
 
    paths_batch, inputs_batch, targets_batch = tf.train.batch([paths, input_images, target_images], batch_size=batch_size)
    steps_per_epoch = int(math.ceil(len(input_paths) / batch_size))
