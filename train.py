@@ -262,17 +262,22 @@ if __name__ == '__main__':
             else: n_critic = NUM_CRITIC
 
             for critic_itr in range(n_critic):
-               sess.run(D_train_op)
+               try: sess.run(D_train_op)
+               except: continue
                if LOSS_METHOD == 'wasserstein': sess.run(clip_discriminator_var_op)
            
-            sess.run(G_train_op)
+            try: sess.run(G_train_op)
+            except: continue
             D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
          # For least squares it's 1:1 for D and G
          elif LOSS_METHOD == 'least_squares':
-            sess.run(D_train_op)
-            sess.run(G_train_op)
-            D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
+            try:
+               sess.run(D_train_op)
+               sess.run(G_train_op)
+               D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
+            except:
+               continue
 
          summary_writer.add_summary(summary, step)
          print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
