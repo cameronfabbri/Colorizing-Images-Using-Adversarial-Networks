@@ -274,7 +274,8 @@ if __name__ == '__main__':
          elif LOSS_METHOD == 'least_squares':
             try:
                sess.run(D_train_op)
-               sess.run(G_train_op)
+               for i in range(10):
+                  sess.run(G_train_op)
                D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
             except:
                continue

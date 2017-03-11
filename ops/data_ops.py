@@ -227,7 +227,8 @@ def loadData(data_dir, dataset, batch_size, train=True):
    if train: input_paths = train_paths
    else: input_paths = test_paths
    
-   decode = tf.image.decode_jpeg
+   #decode = tf.image.decode_jpeg
+   decode = tf.image.decode_image
 
    if len(input_paths) == 0:
       raise Exception('data_dir contains no image files')
