@@ -259,7 +259,7 @@ if __name__ == '__main__':
          if LOSS_METHOD == 'wasserstein':
             if step < 25 or step % 500 == 0:
                n_critic = 100
-            else: n_critic = NUM_CRITIC
+            else: n_critic = 1#NUM_CRITIC - trying with just 1 critic because it seems D is very good
 
             for critic_itr in range(n_critic):
                try: sess.run(D_train_op)
