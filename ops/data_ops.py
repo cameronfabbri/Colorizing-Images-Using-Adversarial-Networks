@@ -168,7 +168,7 @@ def getPaths(data_dir, ext='jpg'):
 
 
 def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
-
+   
    if data_dir is None or not os.path.exists(data_dir):
       raise Exception('data_dir does not exist')
 
@@ -199,6 +199,27 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
          pf.close()
    if dataset == 'imagenet':
       print 'Using imagenet'
+      pkl_train_file = 'files/imagenet_train.pkl'
+      pkl_test_file  = 'files/imagenet_test.pkl'
+      if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
+         print 'Found pickle file, loading data...'
+         train_paths = pickle.load(open(pkl_train_file, 'rb'))
+         test_paths  = pickle.load(open(pkl_test_file, 'rb'))
+      else:
+         train_dir = data_dir+'train/'
+         test_dir  = data_dir+'test/'
+         train_paths = getPaths(train_dir, ext='JPEG')
+         test_paths  = getPaths(test_dir, ext='JPEG')
+         random.shuffle(train_paths)
+         random.shuffle(test_paths)
+         pf   = open(pkl_train_file, 'wb')
+         data = pickle.dumps(train_paths)
+         pf.write(data)
+         pf.close()
+         pf   = open(pkl_test_file, 'wb')
+         data = pickle.dumps(test_paths)
+         pf.write(data)
+         pf.close()
    if dataset == 'places2':
       print 'Using places'
       pkl_train_file = 'files/places_train.pkl'
@@ -251,8 +272,8 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
    print 'Done!'
    if train: input_paths = train_paths
    else: input_paths = test_paths
+   print len(input_paths),'training images!'
    
-   #decode = tf.image.decode_jpeg
    decode = tf.image.decode_image
 
    if len(input_paths) == 0:
@@ -300,16 +321,12 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
          raise Exception('scale size cannot be less than crop size')
       return r
 
-   if train and jitter:
+   if train:# and jitter:
       with tf.name_scope('input_images'):
          input_images = transform(inputs)
       with tf.name_scope('target_images'):
          target_images = transform(targets)
-   if train and not jitter:
-      print inputs
-      print targets
-      exit()
-   elif not train:
+   else:
       input_images = tf.image.resize_images(inputs, [CROP_SIZE, CROP_SIZE], method=tf.image.ResizeMethod.AREA)
       target_images = tf.image.resize_images(targets, [CROP_SIZE, CROP_SIZE], method=tf.image.ResizeMethod.AREA)
 
