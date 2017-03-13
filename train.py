@@ -109,24 +109,22 @@ if __name__ == '__main__':
    # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
-      encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = pix2pix.netG_encoder(L_image)
-      decoded = pix2pix.netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
-      # encode L and decode to ab -> this should be in [-1, 1] range
-      enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = pix2pix.netG_encoder(test_L)
-      dec_test_images = pix2pix.netG_decoder(enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
-      colored_image   = tf.concat([test_L, dec_test_images], axis=3)
-      
+      g_layers = pix2pix.netG_encoder(L_image, NUM_GPU)
+      gen_ab = pix2pix.netG_decoder(g_layers, NUM_GPU)
+
       # find L1 loss of decoded and original -> this loss is combined with D loss
-      l1_loss = tf.reduce_mean(tf.abs(decoded-ab_image))
+      #l1_loss = tf.reduce_sum(tf.abs(decoded-ab_image))
    
       # weight of how much the l1 loss takes into account 
-      l1_weight = 100.0
-   
+      #l1_weight = 100.0
+
+      errD_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
+      errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU)
+
       # total error for the critic
-      errD = tf.reduce_mean(errD_real - errD_fake)
       # error for the generator, including the L1 loss
-      errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
-      tf.summary.scalar('encoding_loss', l1_loss)
+      #errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
+      #tf.summary.scalar('encoding_loss', l1_loss)
 
    # architecture from
    # http://hi.cs.waseda.ac.jp/~iizuka/projects/colorization/data/colorization_sig2016.pdf
@@ -151,7 +149,7 @@ if __name__ == '__main__':
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       errD = tf.reduce_mean(errD_real - errD_fake)
-      errG = tf.reduce_mean(errD_fake) + tf.reduce_sum(tf.abs(gen_img - ab_image))
+      errG = tf.reduce_mean(errD_fake)
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
@@ -262,15 +260,12 @@ if __name__ == '__main__':
          if LOSS_METHOD == 'wasserstein':
             if step < 25 or step % 500 == 0:
                n_critic = 100
-            else: n_critic = 1#NUM_CRITIC - trying with just 1 critic because it seems D is very good
-
+            else: n_critic = NUM_CRITIC
             for critic_itr in range(n_critic):
                try: sess.run(D_train_op)
                except: continue
                if LOSS_METHOD == 'wasserstein': sess.run(clip_discriminator_var_op)
-           
-            for i in range(5):
-               sess.run(G_train_op)
+            sess.run(G_train_op)
             D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
          # For least squares it's 1:1 for D and G
