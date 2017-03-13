@@ -24,7 +24,7 @@ if __name__ == '__main__':
    parser.add_argument('--BATCH_SIZE',     required=False,type=int,default=32,help='Batch size to use')
    parser.add_argument('--GAN_LR',         required=False,type=float,default=2e-5,help='Learning rate for the GAN')
    parser.add_argument('--NUM_GPU',        required=False,type=int,default=1,help='Use multiple GPUs or not')
-   parser.add_argument('--JITTER',         required=False,type=bool,default=True,help='Whether or not to add jitter')
+   parser.add_argument('--JITTER',         required=False,type=str,default='True',help='Whether or not to add jitter')
    parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=10,help='Number of critics')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
       choices=['wasserstein','least_squares','energy'])
@@ -43,7 +43,7 @@ if __name__ == '__main__':
    NUM_CRITIC      = a.NUM_CRITIC
    BATCH_SIZE      = a.BATCH_SIZE
    LOAD_MODEL      = a.LOAD_MODEL
-   JITTER          = a.JITTER
+   JITTER          = bool(a.JITTER)
 
    EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
