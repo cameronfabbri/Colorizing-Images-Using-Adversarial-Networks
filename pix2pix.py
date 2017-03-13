@@ -1,11 +1,8 @@
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import sys
-import config
 
 multi_gpu = True
-
-batch_size = config.batch_size
 
 '''
    Leaky RELU
@@ -57,7 +54,7 @@ def netG_encoder(L_image):
       conv8 = lrelu(conv8)
       print 'conv8:',conv8
       print
-
+   exit()
    tf.add_to_collection('vars',conv1)
    tf.add_to_collection('vars',conv2)
    tf.add_to_collection('vars',conv3)
@@ -76,9 +73,6 @@ def netG_encoder(L_image):
 '''
 def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1):
 
-   if multi_gpu: gpu_num = 1
-   else: gpu_num = 0
-   #with tf.device('/gpu:'+str(gpu_num)):
    if 1:
       ###### decoder ######
       dconv1 = slim.convolution2d_transpose(conv8, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv1')
@@ -104,9 +98,6 @@ def netG_decoder(conv8, conv7, conv6, conv5, conv4, conv3, conv2, conv1):
       dconv4 = tf.nn.relu(dconv4)
       print 'dconv4:',dconv4
    
-   if multi_gpu: gpu_num = 2
-   else: gpu_num = 0
-   #with tf.device('/gpu:'+str(gpu_num)):
    if 1:
       dconv5 = slim.convolution2d_transpose(dconv4, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv5')
       dconv5 = tf.concat([conv3, dconv5], 3)

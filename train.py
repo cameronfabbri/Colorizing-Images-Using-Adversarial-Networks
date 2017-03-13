@@ -14,7 +14,6 @@ sys.path.insert(0, 'config/')
 import data_ops
 
 if __name__ == '__main__':
-
    parser = argparse.ArgumentParser()
    parser.add_argument('--PRETRAIN_EPOCHS',required=False,default=0,type=int,help='Number of epochs to pretrain')
    parser.add_argument('--GAN_EPOCHS',     required=True,type=int,help='Number of epochs for GAN')
@@ -25,6 +24,7 @@ if __name__ == '__main__':
    parser.add_argument('--BATCH_SIZE',     required=False,type=int,default=32,help='Batch size to use')
    parser.add_argument('--GAN_LR',         required=False,type=float,default=2e-5,help='Learning rate for the GAN')
    parser.add_argument('--NUM_GPU',        required=False,type=int,default=1,help='Use multiple GPUs or not')
+   parser.add_argument('--JITTER',         required=False,type=bool,default=True,help='Whether or not to add jitter')
    parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=10,help='Number of critics')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
       choices=['wasserstein','least_squares','energy'])
@@ -43,8 +43,9 @@ if __name__ == '__main__':
    NUM_CRITIC      = a.NUM_CRITIC
    BATCH_SIZE      = a.BATCH_SIZE
    LOAD_MODEL      = a.LOAD_MODEL
+   JITTER          = a.JITTER
 
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
 
    print
@@ -70,6 +71,7 @@ if __name__ == '__main__':
    exp_info['NUM_CRITIC']      = NUM_CRITIC
    exp_info['BATCH_SIZE']      = BATCH_SIZE
    exp_info['LOAD_MODEL']      = LOAD_MODEL
+   exp_info['JITTER']          = JITTER
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
@@ -87,13 +89,14 @@ if __name__ == '__main__':
    print 'NUM_GPU:         ',NUM_GPU
    print 'NUM_CRITIC:      ',NUM_CRITIC
    print 'LOAD_MODEL:      ',LOAD_MODEL
+   print 'JITTER:          ',JITTER
    print
 
    # global step that is saved with a model to keep track of how many steps/epochs
    global_step = tf.Variable(0, name='global_step', trainable=False)
 
    # load data
-   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE)
+   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, jitter=JITTER)
    # number of training images
    num_train = Data.count
    
@@ -102,15 +105,15 @@ if __name__ == '__main__':
    
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
-
+   
    # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
-      encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = netG_encoder(L_image)
-      decoded = netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
+      encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1 = pix2pix.netG_encoder(L_image)
+      decoded = pix2pix.netG_decoder(encoded, conv7, conv6, conv5, conv4, conv3, conv2, conv1)
       # encode L and decode to ab -> this should be in [-1, 1] range
-      enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = netG_encoder(test_L)
-      dec_test_images = netG_decoder(enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
+      enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = pix2pix.netG_encoder(test_L)
+      dec_test_images = pix2pix.netG_decoder(enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
       colored_image   = tf.concat([test_L, dec_test_images], axis=3)
       
       # find L1 loss of decoded and original -> this loss is combined with D loss
@@ -148,7 +151,7 @@ if __name__ == '__main__':
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       errD = tf.reduce_mean(errD_real - errD_fake)
-      errG = tf.reduce_mean(errD_fake) 
+      errG = tf.reduce_mean(errD_fake) + tf.reduce_sum(tf.abs(gen_img - ab_image))
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
@@ -266,8 +269,8 @@ if __name__ == '__main__':
                except: continue
                if LOSS_METHOD == 'wasserstein': sess.run(clip_discriminator_var_op)
            
-            try: sess.run(G_train_op)
-            except: continue
+            for i in range(5):
+               sess.run(G_train_op)
             D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
          # For least squares it's 1:1 for D and G

@@ -93,9 +93,11 @@ def netG(L_image, batch_size, num_gpu):
          col_conv3 = tf.image.resize_nearest_neighbor(col_conv3, [256, 256])
 
          col_conv4 = slim.convolution(col_conv3, 32, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv4')
+         col_conv4 = tf.nn.dropout(col_conv4, 0.9)
          col_conv4 = lrelu(col_conv4)
          
          col_conv5 = slim.convolution(col_conv4, 2, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_col_conv5')
+         col_conv5 = tf.nn.dropout(col_conv5, 0.9)
          col_conv5 = tf.nn.tanh(col_conv5)
 
    print 'GENERATOR'

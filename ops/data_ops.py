@@ -167,7 +167,7 @@ def getPaths(data_dir, ext='jpg'):
    return image_paths
 
 
-def loadData(data_dir, dataset, batch_size, train=True):
+def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
 
    if data_dir is None or not os.path.exists(data_dir):
       raise Exception('data_dir does not exist')
@@ -300,12 +300,16 @@ def loadData(data_dir, dataset, batch_size, train=True):
          raise Exception('scale size cannot be less than crop size')
       return r
 
-   if train:
+   if train and jitter:
       with tf.name_scope('input_images'):
          input_images = transform(inputs)
       with tf.name_scope('target_images'):
          target_images = transform(targets)
-   else:
+   if train and not jitter:
+      print inputs
+      print targets
+      exit()
+   elif not train:
       input_images = tf.image.resize_images(inputs, [CROP_SIZE, CROP_SIZE], method=tf.image.ResizeMethod.AREA)
       target_images = tf.image.resize_images(targets, [CROP_SIZE, CROP_SIZE], method=tf.image.ResizeMethod.AREA)
 
