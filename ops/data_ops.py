@@ -223,6 +223,31 @@ def loadData(data_dir, dataset, batch_size, train=True):
          data = pickle.dumps(test_paths)
          pf.write(data)
          pf.close()
+
+   if dataset == 'creek':
+      pkl_train_file = 'files/creek_train.pkl'
+      pkl_test_file  = 'files/creek_test.pkl'
+      if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
+         print 'Found pickle file'
+         train_paths = pickle.load(open(pkl_train_file, 'rb'))
+         test_paths  = pickle.load(open(pkl_test_file, 'rb'))
+      else:   
+         print 'Using places2 subset creek'
+         images_dir = data_dir+'data_256/c/creek/'
+         image_paths = getPaths(images_dir)
+         random.shuffle(image_paths)
+         train_paths = image_paths[:39000]
+         test_paths  = image_paths[39000:]
+         random.shuffle(train_paths)
+         random.shuffle(test_paths)
+         pf   = open(pkl_train_file, 'wb')
+         data = pickle.dumps(train_paths)
+         pf.write(data)
+         pf.close()
+         pf   = open(pkl_test_file, 'wb')
+         data = pickle.dumps(test_paths)
+         pf.write(data)
+         pf.close()
    print 'Done!'
    if train: input_paths = train_paths
    else: input_paths = test_paths
