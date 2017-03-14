@@ -305,6 +305,8 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
    flip = 1
    scale_size = 286
    CROP_SIZE  = 256
+   #scale_size = 156
+   #CROP_SIZE  = 128
    seed = random.randint(0, 2**31 - 1)
    def transform(image):
       r = image

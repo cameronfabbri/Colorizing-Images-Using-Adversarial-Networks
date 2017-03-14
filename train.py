@@ -113,19 +113,19 @@ if __name__ == '__main__':
       gen_ab = pix2pix.netG_decoder(g_layers, NUM_GPU)
 
       # find L1 loss of decoded and original -> this loss is combined with D loss
-      l1_loss = tf.reduce_sum(tf.abs(gen_ab-ab_image))
+      #l1_loss = tf.reduce_sum(tf.abs(gen_ab-ab_image))
    
       # weight of how much the l1 loss takes into account 
-      l1_weight = 100.0
+      #l1_weight = 100.0
 
       errD_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
-      errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU)
-
+      errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
       # total error for the critic
       # error for the generator, including the L1 loss
       #errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
       #tf.summary.scalar('encoding_loss', l1_loss)
 
+   '''
    # architecture from
    # http://hi.cs.waseda.ac.jp/~iizuka/projects/colorization/data/colorization_sig2016.pdf
    if ARCHITECTURE == 'colorarch':
@@ -145,11 +145,14 @@ if __name__ == '__main__':
       errD_real = tf.reduce_mean(cganarch.netD(ab_image, BATCH_SIZE, NUM_GPU))
       errD_fake = tf.reduce_mean(cganarch.netD(gen_img, BATCH_SIZE, NUM_GPU, reuse=True))
       errG = tf.reduce_mean(errD_fake)
+   '''
 
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       errD = tf.reduce_mean(errD_real - errD_fake)
       errG = tf.reduce_mean(errD_fake)
+   
+   '''
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
@@ -162,10 +165,10 @@ if __name__ == '__main__':
    if LOSS_METHOD == 'gan':
       print 'Using original GAN loss'
       #errD_real = tf.nn.sigmoid_cross_entropy_with_logits(
-
+   '''
    # tensorboard summaries
-   tf.summary.scalar('d_loss', errD)
-   tf.summary.scalar('g_loss', errG)
+   #tf.summary.scalar('d_loss', errD)
+   #tf.summary.scalar('g_loss', errG)
 
    # get all trainable variables, and split by network G and network D
    t_vars = tf.trainable_variables()
@@ -176,24 +179,24 @@ if __name__ == '__main__':
       # clip weights in D
       #clip_values = [-0.005, 0.005]
       clip_values = [-0.001, 0.001]
-      clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for
-      var in d_vars]
+      clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for var in d_vars]
 
    # MSE loss for pretraining
+   '''
    if PRETRAIN_EPOCHS > 0:
       print 'Pretraining generator for',PRETRAIN_EPOCHS,'epochs...'
       mse_loss = tf.reduce_mean((ab_image-gen_img)**2)
       mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       tf.add_to_collection('vars', mse_train_op)
       tf.summary.scalar('mse_loss', mse_loss)
-
+   '''
    if LOSS_METHOD == 'wasserstein':
       G_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       D_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
-
    else:
-      G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-      D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
+      a = 1
+      #G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      #D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
 
    saver = tf.train.Saver(max_to_keep=1)
    
@@ -202,7 +205,7 @@ if __name__ == '__main__':
    sess.run(init)
 
    # write out logs for tensorboard to the checkpointSdir
-   summary_writer = tf.summary.FileWriter(EXPERIMENT_DIR+'/logs/', graph=tf.get_default_graph())
+   #summary_writer = tf.summary.FileWriter(EXPERIMENT_DIR+'/logs/', graph=tf.get_default_graph())
 
    tf.add_to_collection('vars', G_train_op)
    tf.add_to_collection('vars', D_train_op)
@@ -218,7 +221,7 @@ if __name__ == '__main__':
       except:
          print "Could not restore model"
          pass
- 
+   '''
    if LOAD_MODEL:
       ckpt = tf.train.get_checkpoint_state(LOAD_MODEL)
       print "Restoring model..."
@@ -228,17 +231,17 @@ if __name__ == '__main__':
       except:
          print "Could not restore model"
          raise
-
+   '''
    ########################################### training portion
    step = sess.run(global_step)
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess, coord=coord)
-   merged_summary_op = tf.summary.merge_all()
+   #merged_summary_op = tf.summary.merge_all()
    start = time.time()
    while True:
       # if PRETRAIN, don't run G or D until number of epochs is met
       epoch_num = step/(num_train/BATCH_SIZE)
-      
+      '''
       while epoch_num < PRETRAIN_EPOCHS:
          epoch_num = step/(num_train/BATCH_SIZE)
          s = time.time()
@@ -258,33 +261,33 @@ if __name__ == '__main__':
          print 'Done pretraing....training D and G now'
          print
          epoch_num = 0
+      '''
       while epoch_num < GAN_EPOCHS:
          epoch_num = step/(num_train/BATCH_SIZE)
          s = time.time()
-         if LOSS_METHOD == 'wasserstein':
-            if step < 10 or step % 500 == 0:
-               n_critic = 100
-            else: n_critic = NUM_CRITIC
-            for critic_itr in range(n_critic):
-               try: sess.run(D_train_op)
-               except: continue
-               if LOSS_METHOD == 'wasserstein': sess.run(clip_discriminator_var_op)
-            sess.run(G_train_op)
+         #if LOSS_METHOD == 'wasserstein':
+         if step < 10 or step % 500 == 0:
+            n_critic = 100
+         else: n_critic = NUM_CRITIC
+         
+         for critic_itr in range(n_critic):
+            sess.run(D_train_op)
+               #if LOSS_METHOD == 'wasserstein': sess.run(clip_discriminator_var_op)
+            sess.run(clip_discriminator_var_op)
+         sess.run(G_train_op)
             #D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
-            D_loss, D_loss_f, D_loss_r, G_loss = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG])
-
+            #D_loss, D_loss_f, D_loss_r, G_loss = sess.run([errD, errD_fake, errD_real, errG])
+         D_loss, G_loss = sess.run([errD, errG])
          # For least squares it's 1:1 for D and G
-         elif LOSS_METHOD == 'least_squares':
-            try:
-               sess.run(D_train_op)
-               for i in range(10):
-                  sess.run(G_train_op)
-               D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
-            except:
-               continue
+         #elif LOSS_METHOD == 'least_squares':
+         #   sess.run(D_train_op)
+         #   for i in range(10):
+         #      sess.run(G_train_op)
+         #   D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
          #summary_writer.add_summary(summary, step)
-         print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
+         #print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
+         print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
          step += 1
          
          if step%500 == 0:
