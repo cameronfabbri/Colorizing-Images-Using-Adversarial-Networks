@@ -106,34 +106,34 @@ def netG_decoder(g_layers, num_gpu):
          ###### decoder ######
          dconv1 = slim.convolution2d_transpose(conv8, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv1')
          dconv1 = tf.nn.dropout(dconv1, 0.5)
-         dconv1 = tf.concat([conv7, dconv1], 3)
          dconv1 = tf.nn.relu(dconv1)
+         dconv1 = tf.concat([conv7, dconv1], 3)
 
          dconv2 = slim.convolution2d_transpose(dconv1, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv2')
          dconv2 = tf.nn.dropout(dconv2, 0.5)
-         dconv2 = tf.concat([conv6, dconv2], 3)
          dconv2 = tf.nn.relu(dconv2)
+         dconv2 = tf.concat([conv6, dconv2], 3)
          
          dconv3 = slim.convolution2d_transpose(dconv2, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv3')
          dconv3 = tf.nn.dropout(dconv3, 0.5)
-         dconv3 = tf.concat([conv5, dconv3], 3)
          dconv3 = tf.nn.relu(dconv3)
+         dconv3 = tf.concat([conv5, dconv3], 3)
         
          dconv4 = slim.convolution2d_transpose(dconv3, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv4')
-         dconv4 = tf.concat([conv4, dconv4], 3)
          dconv4 = tf.nn.relu(dconv4)
+         dconv4 = tf.concat([conv4, dconv4], 3)
       
          dconv5 = slim.convolution2d_transpose(dconv4, 512, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv5')
-         dconv5 = tf.concat([conv3, dconv5], 3)
          dconv5 = tf.nn.relu(dconv5)
+         dconv5 = tf.concat([conv3, dconv5], 3)
 
          dconv6 = slim.convolution2d_transpose(dconv5, 256, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv6')
-         dconv6 = tf.concat([conv2, dconv6], 3)
          dconv6 = tf.nn.relu(dconv6)
+         dconv6 = tf.concat([conv2, dconv6], 3)
          
          dconv7 = slim.convolution2d_transpose(dconv6, 128, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv7')
-         dconv7 = tf.concat([conv1, dconv7], 3)
          dconv7 = tf.nn.relu(dconv7)
+         dconv7 = tf.concat([conv1, dconv7], 3)
          
          dconv8 = slim.convolution2d_transpose(dconv7, 64, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_dconv8')
          dconv8 = tf.nn.relu(dconv8)
@@ -193,16 +193,16 @@ def netD(ab_images, L_images, NUM_GPU, reuse=False):
          conv3 = slim.convolution(conv2, 256, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv3')
          conv3 = lrelu(conv3)
          
-         conv4 = slim.convolution(conv3, 256, 5, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
-         conv4 = lrelu(conv3)
+         #conv4 = slim.convolution(conv3, 256, 5, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
+         #conv4 = lrelu(conv3)
 
-         conv5 = slim.convolution(conv4, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv5')
-         conv5 = lrelu(conv5)
+         conv4 = slim.convolution(conv3, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
+         conv4 = lrelu(conv4)
          
-         conv6 = slim.convolution(conv5, 512, 5, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv6')
-         conv6 = lrelu(conv6)
+         #conv6 = slim.convolution(conv5, 512, 5, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv6')
+         #conv6 = lrelu(conv6)
 
-         conv7 = slim.convolution(conv6, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv7')
+         conv5 = slim.convolution(conv4, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv5')
          
    
       print 'input images:',input_images
@@ -211,16 +211,16 @@ def netD(ab_images, L_images, NUM_GPU, reuse=False):
       print 'conv3:',conv3
       print 'conv4:',conv4
       print 'conv5:',conv5
-      print 'conv6:',conv6
-      print 'conv6:',conv7
+      #print 'conv6:',conv6
+      #print 'conv6:',conv7
       
       tf.add_to_collection('vars',conv1)
       tf.add_to_collection('vars',conv2)
       tf.add_to_collection('vars',conv3)
       tf.add_to_collection('vars',conv4)
       tf.add_to_collection('vars',conv5)
-      tf.add_to_collection('vars',conv6)
-      tf.add_to_collection('vars',conv7)
+      #tf.add_to_collection('vars',conv6)
+      #tf.add_to_collection('vars',conv7)
       
       print 'END D\n'
-      return conv7
+      return conv5

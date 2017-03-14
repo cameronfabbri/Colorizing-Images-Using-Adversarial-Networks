@@ -254,7 +254,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
          test_paths  = pickle.load(open(pkl_test_file, 'rb'))
       else:   
          print 'Using places2 subset creek'
-         images_dir = data_dir+'data_256/c/creek/'
+         images_dir = data_dir+'train_256/c/creek/'
          image_paths = getPaths(images_dir)
          random.shuffle(image_paths)
          train_paths = image_paths[:39000]

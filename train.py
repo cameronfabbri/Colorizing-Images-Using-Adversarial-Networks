@@ -25,7 +25,7 @@ if __name__ == '__main__':
    parser.add_argument('--GAN_LR',         required=False,type=float,default=2e-5,help='Learning rate for the GAN')
    parser.add_argument('--NUM_GPU',        required=False,type=int,default=1,help='Use multiple GPUs or not')
    parser.add_argument('--JITTER',         required=False,type=str,default='True',help='Whether or not to add jitter')
-   parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=10,help='Number of critics')
+   parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=5,help='Number of critics')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
       choices=['wasserstein','least_squares','energy'])
    parser.add_argument('--LOAD_MODEL', required=False,help='Load a trained model')
@@ -113,10 +113,10 @@ if __name__ == '__main__':
       gen_ab = pix2pix.netG_decoder(g_layers, NUM_GPU)
 
       # find L1 loss of decoded and original -> this loss is combined with D loss
-      #l1_loss = tf.reduce_sum(tf.abs(decoded-ab_image))
+      l1_loss = tf.reduce_sum(tf.abs(gen_ab-ab_image))
    
       # weight of how much the l1 loss takes into account 
-      #l1_weight = 100.0
+      l1_weight = 100.0
 
       errD_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
       errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU)
@@ -159,6 +159,9 @@ if __name__ == '__main__':
       errD_fake = tf.nn.sigmoid(errD_fake)
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
       errG = tf.reduce_mean(tf.square(errD_fake - 1))
+   if LOSS_METHOD == 'gan':
+      print 'Using original GAN loss'
+      #errD_real = tf.nn.sigmoid_cross_entropy_with_logits(
 
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
@@ -171,7 +174,8 @@ if __name__ == '__main__':
 
    if LOSS_METHOD == 'wasserstein':
       # clip weights in D
-      clip_values = [-0.005, 0.005]
+      #clip_values = [-0.005, 0.005]
+      clip_values = [-0.001, 0.001]
       clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for
       var in d_vars]
 
@@ -258,7 +262,7 @@ if __name__ == '__main__':
          epoch_num = step/(num_train/BATCH_SIZE)
          s = time.time()
          if LOSS_METHOD == 'wasserstein':
-            if step < 25 or step % 500 == 0:
+            if step < 10 or step % 500 == 0:
                n_critic = 100
             else: n_critic = NUM_CRITIC
             for critic_itr in range(n_critic):
@@ -266,7 +270,8 @@ if __name__ == '__main__':
                except: continue
                if LOSS_METHOD == 'wasserstein': sess.run(clip_discriminator_var_op)
             sess.run(G_train_op)
-            D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
+            #D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
+            D_loss, D_loss_f, D_loss_r, G_loss = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG])
 
          # For least squares it's 1:1 for D and G
          elif LOSS_METHOD == 'least_squares':
@@ -278,7 +283,7 @@ if __name__ == '__main__':
             except:
                continue
 
-         summary_writer.add_summary(summary, step)
+         #summary_writer.add_summary(summary, step)
          print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
          step += 1
          

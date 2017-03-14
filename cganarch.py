@@ -37,7 +37,7 @@ def netG(L_image, batch_size, num_gpu):
          conv5 = lrelu(conv5)
    
          conv6 = slim.convolution(conv4, 2, 3, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_conv6')
-         conv5 = lrelu(conv6)
+         conv5 = tf.nn.tanh(conv6)
    
    print 'GENERATOR'
    print 'conv1:',conv1
