@@ -27,7 +27,7 @@ if __name__ == '__main__':
    parser.add_argument('--JITTER',         required=False,type=str,default='True',help='Whether or not to add jitter')
    parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=5,help='Number of critics')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
-      choices=['wasserstein','least_squares','energy'])
+      choices=['wasserstein','least_squares','energy','gan'])
    parser.add_argument('--LOAD_MODEL', required=False,help='Load a trained model')
    a = parser.parse_args()
 
@@ -107,52 +107,42 @@ if __name__ == '__main__':
    ab_image  = Data.targets
    
    # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
-   #if ARCHITECTURE == 'pix2pix':
-   import pix2pix
-   g_layers = pix2pix.netG_encoder(L_image, NUM_GPU)
-   gen_ab = pix2pix.netG_decoder(g_layers, NUM_GPU)
+   if ARCHITECTURE == 'pix2pix':
+      import pix2pix
+      g_layers = pix2pix.netG_encoder(L_image, NUM_GPU)
+      gen_ab   = pix2pix.netG_decoder(g_layers, NUM_GPU)
 
       # find L1 loss of decoded and original -> this loss is combined with D loss
       #l1_loss = tf.reduce_sum(tf.abs(gen_ab-ab_image))
    
       # weight of how much the l1 loss takes into account 
       #l1_weight = 100.0
-   errD_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
-      #errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
-   errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
-      # total error for the critic
-      # error for the generator, including the L1 loss
-      #errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
-      #tf.summary.scalar('encoding_loss', l1_loss)
-
-   '''
+      D_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
+      D_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
+      
    # architecture from
    # http://hi.cs.waseda.ac.jp/~iizuka/projects/colorization/data/colorization_sig2016.pdf
    if ARCHITECTURE == 'colorarch':
       import colorarch
       # generate a colored image
-      gen_img = colorarch.netG(L_image, BATCH_SIZE, NUM_GPU)
+      gen_ab = colorarch.netG(L_image, BATCH_SIZE, NUM_GPU)
 
       # send real image to D
       errD_real = colorarch.netD(ab_image, BATCH_SIZE, NUM_GPU)
 
       # send generated image to D
-      errD_fake = colorarch.netD(gen_img, BATCH_SIZE, NUM_GPU, reuse=True)
-
+      errD_fake = colorarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True)
    if ARCHITECTURE == 'cganarch':
       import cganarch
-      gen_img = cganarch.netG(L_image, BATCH_SIZE, NUM_GPU)
+      gen_ab = cganarch.netG(L_image, BATCH_SIZE, NUM_GPU)
       errD_real = tf.reduce_mean(cganarch.netD(ab_image, BATCH_SIZE, NUM_GPU))
-      errD_fake = tf.reduce_mean(cganarch.netD(gen_img, BATCH_SIZE, NUM_GPU, reuse=True))
+      errD_fake = tf.reduce_mean(cganarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True))
       errG = tf.reduce_mean(errD_fake)
-   '''
 
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       errD = tf.reduce_mean(errD_real - errD_fake)
       errG = tf.reduce_mean(errD_fake)
-   
-   '''
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
@@ -163,12 +153,24 @@ if __name__ == '__main__':
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
       errG = tf.reduce_mean(tf.square(errD_fake - 1))
    if LOSS_METHOD == 'gan':
+      EPS = 1e-12
+      gan_weight = 1.0
+      l1_weight  = 100.0
+      
       print 'Using original GAN loss'
-      #errD_real = tf.nn.sigmoid_cross_entropy_with_logits(
-   '''
+      D_real = tf.nn.sigmoid(D_real)
+      D_fake = tf.nn.sigmoid(D_fake)
+      
+      gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
+      gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+      errG         = gen_loss_GAN*gan_weight + gen_loss_L1*l1_weight
+
+      errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
+
+   
    # tensorboard summaries
-   #tf.summary.scalar('d_loss', errD)
-   #tf.summary.scalar('g_loss', errG)
+   tf.summary.scalar('d_loss', errD)
+   tf.summary.scalar('g_loss', errG)
 
    # get all trainable variables, and split by network G and network D
    t_vars = tf.trainable_variables()
@@ -177,26 +179,22 @@ if __name__ == '__main__':
 
    if LOSS_METHOD == 'wasserstein':
       # clip weights in D
-      #clip_values = [-0.005, 0.005]
       clip_values = [-0.001, 0.001]
       clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for var in d_vars]
 
    # MSE loss for pretraining
-   '''
    if PRETRAIN_EPOCHS > 0:
       print 'Pretraining generator for',PRETRAIN_EPOCHS,'epochs...'
-      mse_loss = tf.reduce_mean((ab_image-gen_img)**2)
+      mse_loss = tf.reduce_mean((ab_image-gen_ab)**2)
       mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       tf.add_to_collection('vars', mse_train_op)
       tf.summary.scalar('mse_loss', mse_loss)
-   '''
    if LOSS_METHOD == 'wasserstein':
       G_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       D_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
    else:
-      a = 1
-      #G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-      #D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
+      G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
 
    saver = tf.train.Saver(max_to_keep=1)
    
@@ -205,7 +203,7 @@ if __name__ == '__main__':
    sess.run(init)
 
    # write out logs for tensorboard to the checkpointSdir
-   #summary_writer = tf.summary.FileWriter(EXPERIMENT_DIR+'/logs/', graph=tf.get_default_graph())
+   summary_writer = tf.summary.FileWriter(EXPERIMENT_DIR+'/logs/', graph=tf.get_default_graph())
 
    tf.add_to_collection('vars', G_train_op)
    tf.add_to_collection('vars', D_train_op)
@@ -221,7 +219,6 @@ if __name__ == '__main__':
       except:
          print "Could not restore model"
          pass
-   '''
    if LOAD_MODEL:
       ckpt = tf.train.get_checkpoint_state(LOAD_MODEL)
       print "Restoring model..."
@@ -231,17 +228,14 @@ if __name__ == '__main__':
       except:
          print "Could not restore model"
          raise
-   '''
    ########################################### training portion
    step = sess.run(global_step)
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess, coord=coord)
-   #merged_summary_op = tf.summary.merge_all()
+   merged_summary_op = tf.summary.merge_all()
    start = time.time()
    while True:
-      # if PRETRAIN, don't run G or D until number of epochs is met
       epoch_num = step/(num_train/BATCH_SIZE)
-      '''
       while epoch_num < PRETRAIN_EPOCHS:
          epoch_num = step/(num_train/BATCH_SIZE)
          s = time.time()
@@ -257,36 +251,34 @@ if __name__ == '__main__':
             saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
             saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
       if PRETRAIN_EPOCHS > 0:
-         print
-         print 'Done pretraing....training D and G now'
-         print
+         print 'Done pretraining....training D and G now'
          epoch_num = 0
-      '''
       while epoch_num < GAN_EPOCHS:
          epoch_num = step/(num_train/BATCH_SIZE)
          s = time.time()
-         #if LOSS_METHOD == 'wasserstein':
-         if step < 10 or step % 500 == 0:
-            n_critic = 100
-         else: n_critic = NUM_CRITIC
-         
-         for critic_itr in range(n_critic):
-            sess.run(D_train_op)
-               #if LOSS_METHOD == 'wasserstein': sess.run(clip_discriminator_var_op)
-            sess.run(clip_discriminator_var_op)
-         sess.run(G_train_op)
-            #D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
-            #D_loss, D_loss_f, D_loss_r, G_loss = sess.run([errD, errD_fake, errD_real, errG])
-         D_loss, G_loss = sess.run([errD, errG])
-         # For least squares it's 1:1 for D and G
-         #elif LOSS_METHOD == 'least_squares':
-         #   sess.run(D_train_op)
-         #   for i in range(10):
-         #      sess.run(G_train_op)
-         #   D_loss, D_loss_f, D_loss_r, G_loss, summary = sess.run([errD, tf.reduce_mean(errD_fake), tf.reduce_mean(errD_real), errG, merged_summary_op])
 
-         #summary_writer.add_summary(summary, step)
-         #print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'D_loss_fake:',D_loss_f,'D_loss_r:',D_loss_r,'G_loss:',G_loss,' time:',time.time()-s
+         if LOSS_METHOD == 'wasserstein':
+            if step < 10 or step % 500 == 0:
+               n_critic = 100
+            else: n_critic = NUM_CRITIC
+            for critic_itr in range(n_critic):
+               sess.run(D_train_op)
+               sess.run(clip_discriminator_var_op)
+            sess.run(G_train_op)
+            D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+         
+         elif LOSS_METHOD == 'least_squares':
+            sess.run(D_train_op)
+            for i in range(10):
+               sess.run(G_train_op)
+            D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+
+         elif LOSS_METHOD == 'gan':
+            sess.run(D_train_op)
+            sess.run(G_train_op)
+            D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+
+         summary_writer.add_summary(summary, step)
          print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
          step += 1
          

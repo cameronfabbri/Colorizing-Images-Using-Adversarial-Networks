@@ -190,16 +190,16 @@ def netD(ab_images, L_images, num_gpu, reuse=False):
       for d in gpus:
          with tf.device(d):
             conv1 = slim.convolution(input_images, 64, 5, stride=2, activation_fn=tf.identity, scope='d_conv1')
-            conv1 = lrelu(conv1)
+            conv1 = tf.nn.relu(conv1)
 
             conv2 = slim.convolution(conv1, 128, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv2')
-            conv2 = lrelu(conv2)
+            conv2 = tf.nn.relu(conv2)
             
             conv3 = slim.convolution(conv2, 256, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv3')
-            conv3 = lrelu(conv3)
+            conv3 = tf.nn.relu(conv3)
             
             conv4 = slim.convolution(conv3, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
-            conv4 = lrelu(conv4)
+            conv4 = tf.nn.relu(conv4)
             
             conv5 = slim.convolution(conv4, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv5')
          

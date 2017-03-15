@@ -66,8 +66,6 @@ if __name__ == '__main__':
       import pix2pix
       g_layers = pix2pix.netG_encoder(test_L, 0)
       predict_ab = pix2pix.netG_decoder(g_layers, 0)
-      #enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1 = netG_encoder(test_L)
-      #dec_test_images = netG_decoder(enc_test_images, tconv7, tconv6, tconv5, tconv4, tconv3, tconv2, tconv1)
    if ARCHITECTURE == 'colorarch':
       import colorarch
       predict_ab = colorarch.netG(test_L, BATCH_SIZE, 0)
