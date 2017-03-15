@@ -28,6 +28,7 @@ if __name__ == '__main__':
    parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=5,help='Number of critics')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
       choices=['wasserstein','least_squares','energy','gan'])
+   parser.add_argument('--SIZE',           required=False,default=256,help='size of the image',type=int)
    parser.add_argument('--LOAD_MODEL', required=False,help='Load a trained model')
    a = parser.parse_args()
 
@@ -44,8 +45,9 @@ if __name__ == '__main__':
    BATCH_SIZE      = a.BATCH_SIZE
    LOAD_MODEL      = a.LOAD_MODEL
    JITTER          = bool(a.JITTER)
+   SIZE            = a.SIZE
 
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
 
    print
@@ -72,6 +74,7 @@ if __name__ == '__main__':
    exp_info['BATCH_SIZE']      = BATCH_SIZE
    exp_info['LOAD_MODEL']      = LOAD_MODEL
    exp_info['JITTER']          = JITTER
+   exp_info['SIZE']            = SIZE
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
@@ -90,13 +93,14 @@ if __name__ == '__main__':
    print 'NUM_CRITIC:      ',NUM_CRITIC
    print 'LOAD_MODEL:      ',LOAD_MODEL
    print 'JITTER:          ',JITTER
+   print 'SIZE:            ',SIZE
    print
 
    # global step that is saved with a model to keep track of how many steps/epochs
    global_step = tf.Variable(0, name='global_step', trainable=False)
 
    # load data
-   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, jitter=JITTER)
+   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, jitter=JITTER, size=SIZE)
    # number of training images
    num_train = Data.count
    
@@ -129,6 +133,7 @@ if __name__ == '__main__':
       errD_fake = colorarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True)
    if ARCHITECTURE == 'cganarch':
       import cganarch
+      z = tf.placeholder(tf.float32, size=(batch_size, 64, 64, 1))
       gen_ab = cganarch.netG(L_image, BATCH_SIZE, NUM_GPU)
 
    if LOSS_METHOD == 'wasserstein':

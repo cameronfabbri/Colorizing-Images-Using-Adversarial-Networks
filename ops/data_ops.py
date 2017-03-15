@@ -167,7 +167,7 @@ def getPaths(data_dir, ext='jpg'):
    return image_paths
 
 
-def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
+def loadData(data_dir, dataset, batch_size, jitter=True, train=True, size=256):
    
    if data_dir is None or not os.path.exists(data_dir):
       raise Exception('data_dir does not exist')
@@ -271,17 +271,17 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
          pf.write(data)
          pf.close()
 
-   if dataset == 'church':
-      pkl_train_file = 'files/church_train.pkl'
-      pkl_test_file  = 'files/church_test.pkl'
+   if dataset == 'bedroom':
+      pkl_train_file = 'files/bedroom_train.pkl'
+      pkl_test_file  = 'files/bedroom_test.pkl'
       if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
          print 'Found pickle file'
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
          test_paths  = pickle.load(open(pkl_test_file, 'rb'))
       else:   
-         print 'Using lsun subset church'
-         train_dir = data_dir+'images/church/train/'
-         test_dir  = data_dir+'images/church/val/'
+         print 'Using lsun subset bedroom'
+         train_dir = data_dir+'images/bedroom/train/'
+         test_dir  = data_dir+'images/bedroom/val/'
          train_paths = getPaths(train_dir)
          test_paths  = getPaths(test_dir)
          random.shuffle(train_paths)
@@ -329,10 +329,12 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
    # synchronize seed for image operations so that we do the same operations to both
    # input and output images
    flip = 1
-   #scale_size = 286
-   #CROP_SIZE  = 256
-   scale_size = 64
-   CROP_SIZE  = 64
+   scale_size = SIZE+20
+   CROP_SIZE  = SIZE
+   
+   print scale_size
+   print CROP_SIZE
+   exit()
    seed = random.randint(0, 2**31 - 1)
    def transform(image):
       r = image
