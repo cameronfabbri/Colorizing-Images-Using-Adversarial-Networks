@@ -167,7 +167,7 @@ def getPaths(data_dir, ext='jpg'):
    return image_paths
 
 
-def loadData(data_dir, dataset, batch_size, jitter=True, train=True, size=256):
+def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
    
    if data_dir is None or not os.path.exists(data_dir):
       raise Exception('data_dir does not exist')
@@ -331,24 +331,17 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, size=256):
    flip = 1
    scale_size = SIZE+20
    CROP_SIZE  = SIZE
-   
-   print scale_size
-   print CROP_SIZE
-   exit()
-   seed = random.randint(0, 2**31 - 1)
+
+   seed = random.randint(0, 2**31 - 1) 
    def transform(image):
       r = image
-      if flip:
-         r = tf.image.random_flip_left_right(r, seed=seed)
+      r = tf.image.random_flip_left_right(r, seed=seed)
 
       # area produces a nice downscaling, but does nearest neighbor for upscaling
       # assume we're going to be doing downscaling here
       r = tf.image.resize_images(r, [scale_size, scale_size], method=tf.image.ResizeMethod.AREA)
       offset = tf.cast(tf.floor(tf.random_uniform([2], 0, scale_size - CROP_SIZE + 1, seed=seed)), dtype=tf.int32)
-      if scale_size > CROP_SIZE:
-         r = tf.image.crop_to_bounding_box(r, offset[0], offset[1], CROP_SIZE, CROP_SIZE)
-      elif scale_size < CROP_SIZE:
-         raise Exception('scale size cannot be less than crop size')
+      r = tf.image.crop_to_bounding_box(r, offset[0], offset[1], CROP_SIZE, CROP_SIZE)
       return r
 
    if train and jitter:

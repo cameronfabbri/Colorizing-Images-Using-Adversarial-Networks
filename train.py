@@ -24,12 +24,12 @@ if __name__ == '__main__':
    parser.add_argument('--BATCH_SIZE',     required=False,type=int,default=32,help='Batch size to use')
    parser.add_argument('--GAN_LR',         required=False,type=float,default=2e-5,help='Learning rate for the GAN')
    parser.add_argument('--NUM_GPU',        required=False,type=int,default=1,help='Use multiple GPUs or not')
-   parser.add_argument('--JITTER',         required=False,type=str,default='True',help='Whether or not to add jitter')
+   parser.add_argument('--JITTER',         required=False,type=int,default=1,help='Whether or not to add jitter')
    parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=5,help='Number of critics')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
       choices=['wasserstein','least_squares','energy','gan'])
    parser.add_argument('--SIZE',           required=False,default=256,help='size of the image',type=int)
-   parser.add_argument('--LOAD_MODEL', required=False,help='Load a trained model')
+   parser.add_argument('--LOAD_MODEL',     required=False,help='Load a trained model')
    a = parser.parse_args()
 
    PRETRAIN_EPOCHS = a.PRETRAIN_EPOCHS
@@ -46,7 +46,7 @@ if __name__ == '__main__':
    LOAD_MODEL      = a.LOAD_MODEL
    JITTER          = bool(a.JITTER)
    SIZE            = a.SIZE
-
+   
    EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
    global_step = tf.Variable(0, name='global_step', trainable=False)
 
    # load data
-   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, jitter=JITTER, size=SIZE)
+   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, jitter=JITTER, SIZE=SIZE)
    # number of training images
    num_train = Data.count
    
@@ -133,8 +133,9 @@ if __name__ == '__main__':
       errD_fake = colorarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True)
    if ARCHITECTURE == 'cganarch':
       import cganarch
-      z = tf.placeholder(tf.float32, size=(batch_size, 64, 64, 1))
+      z = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 64, 64, 1))
       gen_ab = cganarch.netG(L_image, BATCH_SIZE, NUM_GPU)
+      # TODO Finish here
 
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
