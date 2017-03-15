@@ -107,19 +107,19 @@ if __name__ == '__main__':
    ab_image  = Data.targets
    
    # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
-   if ARCHITECTURE == 'pix2pix':
-      import pix2pix
-      g_layers = pix2pix.netG_encoder(L_image, NUM_GPU)
-      gen_ab = pix2pix.netG_decoder(g_layers, NUM_GPU)
+   #if ARCHITECTURE == 'pix2pix':
+   import pix2pix
+   g_layers = pix2pix.netG_encoder(L_image, NUM_GPU)
+   gen_ab = pix2pix.netG_decoder(g_layers, NUM_GPU)
 
       # find L1 loss of decoded and original -> this loss is combined with D loss
       #l1_loss = tf.reduce_sum(tf.abs(gen_ab-ab_image))
    
       # weight of how much the l1 loss takes into account 
       #l1_weight = 100.0
-
-      errD_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
-      errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
+   errD_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
+      #errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
+   errD_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
       # total error for the critic
       # error for the generator, including the L1 loss
       #errG = tf.reduce_mean(errD_fake) + l1_loss*l1_weight
