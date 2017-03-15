@@ -12,7 +12,7 @@ def lrelu(x, leak=0.2, name='lrelu'):
 
 '''
 '''
-def netG(L_image, batch_size, num_gpu):
+def netG(L_image, z, batch_size, num_gpu):
    if num_gpu == 0: gpus = ['/cpu:0']
    elif num_gpu == 1: gpus = ['/gpu:0']
    elif num_gpu == 2: gpus = ['/gpu:0', '/gpu:1']

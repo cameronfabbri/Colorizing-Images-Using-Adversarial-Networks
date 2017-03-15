@@ -112,11 +112,6 @@ if __name__ == '__main__':
       g_layers = pix2pix.netG_encoder(L_image, NUM_GPU)
       gen_ab   = pix2pix.netG_decoder(g_layers, NUM_GPU)
 
-      # find L1 loss of decoded and original -> this loss is combined with D loss
-      #l1_loss = tf.reduce_sum(tf.abs(gen_ab-ab_image))
-   
-      # weight of how much the l1 loss takes into account 
-      #l1_weight = 100.0
       D_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
       D_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
       
@@ -135,9 +130,6 @@ if __name__ == '__main__':
    if ARCHITECTURE == 'cganarch':
       import cganarch
       gen_ab = cganarch.netG(L_image, BATCH_SIZE, NUM_GPU)
-      errD_real = tf.reduce_mean(cganarch.netD(ab_image, BATCH_SIZE, NUM_GPU))
-      errD_fake = tf.reduce_mean(cganarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True))
-      errG = tf.reduce_mean(errD_fake)
 
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'

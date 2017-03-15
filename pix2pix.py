@@ -177,10 +177,8 @@ def netD(ab_images, L_images, num_gpu, reuse=False):
    input_images = tf.concat([L_images, ab_images], axis=3)
    
    print 'DISCRIMINATOR' 
-   #sc = tf.get_variable_scope()
-   #with tf.variable_scope(sc, reuse=reuse):
-   with tf.variable_scope('discriminator') as scope:
-      if reuse: scope.reuse_variables()
+   sc = tf.get_variable_scope()
+   with tf.variable_scope(sc, reuse=reuse):
       if num_gpu == 0: gpus = ['/cpu:0']
       elif num_gpu == 1: gpus = ['/gpu:0']
       elif num_gpu == 2: gpus = ['/gpu:0', '/gpu:1']
@@ -216,6 +214,6 @@ def netD(ab_images, L_images, num_gpu, reuse=False):
       tf.add_to_collection('vars',conv3)
       tf.add_to_collection('vars',conv4)
       tf.add_to_collection('vars',conv5)
-      
+      exit()
       print 'END D\n'
       return conv5

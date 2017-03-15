@@ -177,6 +177,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
       print 'Using celeba'
       pkl_train_file = 'files/celeba_train.pkl'
       pkl_test_file  = 'files/celeba_test.pkl'
+
       if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
          print 'Found pickle file'
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
@@ -269,6 +270,31 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
          data = pickle.dumps(test_paths)
          pf.write(data)
          pf.close()
+
+   if dataset == 'church':
+      pkl_train_file = 'files/church_train.pkl'
+      pkl_test_file  = 'files/church_test.pkl'
+      if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
+         print 'Found pickle file'
+         train_paths = pickle.load(open(pkl_train_file, 'rb'))
+         test_paths  = pickle.load(open(pkl_test_file, 'rb'))
+      else:   
+         print 'Using lsun subset church'
+         train_dir = data_dir+'images/church/train/'
+         test_dir  = data_dir+'images/church/val/'
+         train_paths = getPaths(train_dir)
+         test_paths  = getPaths(test_dir)
+         random.shuffle(train_paths)
+         random.shuffle(test_paths)
+         pf   = open(pkl_train_file, 'wb')
+         data = pickle.dumps(train_paths)
+         pf.write(data)
+         pf.close()
+         pf   = open(pkl_test_file, 'wb')
+         data = pickle.dumps(test_paths)
+         pf.write(data)
+         pf.close()
+
    print 'Done!'
    if train: input_paths = train_paths
    else: input_paths = test_paths
@@ -303,10 +329,10 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
    # synchronize seed for image operations so that we do the same operations to both
    # input and output images
    flip = 1
-   scale_size = 286
-   CROP_SIZE  = 256
-   #scale_size = 156
-   #CROP_SIZE  = 128
+   #scale_size = 286
+   #CROP_SIZE  = 256
+   scale_size = 64
+   CROP_SIZE  = 64
    seed = random.randint(0, 2**31 - 1)
    def transform(image):
       r = image
@@ -323,7 +349,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True):
          raise Exception('scale size cannot be less than crop size')
       return r
 
-   if train:# and jitter:
+   if train and jitter:
       with tf.name_scope('input_images'):
          input_images = transform(inputs)
       with tf.name_scope('target_images'):
