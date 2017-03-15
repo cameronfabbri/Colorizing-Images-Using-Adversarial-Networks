@@ -139,7 +139,8 @@ def netG_decoder(g_layers, num_gpu):
          dconv8 = tf.nn.relu(dconv8)
          
          # return 2 channels instead of 3 because of a b colorspace
-         conv9 = slim.convolution(dconv8, 2, 4, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_conv9')
+         #conv9 = slim.convolution(dconv8, 2, 4, stride=1, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='g_d_conv9')
+         conv9 = slim.convolution(dconv8, 2, 4, stride=1, activation_fn=tf.identity, scope='g_d_conv9')
          conv9 = tf.nn.tanh(conv9)
          
    print 'dconv1:',dconv1

@@ -134,8 +134,9 @@ if __name__ == '__main__':
    if ARCHITECTURE == 'cganarch':
       import cganarch
       z = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 64, 64, 1))
-      gen_ab = cganarch.netG(L_image, BATCH_SIZE, NUM_GPU)
-      # TODO Finish here
+      gen_ab = cganarch.netG(L_image, z, NUM_GPU)
+      D_real = cganarch.netD(L_image, ab_image, NUM_GPU, LOSS_METHOD)
+      D_fake = cganarch.netD(L_image, gen_ab, NUM_GPU, LOSS_METHOD, reuse=True)
 
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
@@ -151,20 +152,23 @@ if __name__ == '__main__':
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
       errG = tf.reduce_mean(tf.square(errD_fake - 1))
    if LOSS_METHOD == 'gan':
-      EPS = 1e-12
-      gan_weight = 1.0
-      l1_weight  = 100.0
       
       print 'Using original GAN loss'
       D_real = tf.nn.sigmoid(D_real)
       D_fake = tf.nn.sigmoid(D_fake)
       
-      gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
-      gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
-      errG         = gen_loss_GAN*gan_weight + gen_loss_L1*l1_weight
+      if ARCHITECTURE == 'pix2pix':
+         EPS = 1e-12
+         gan_weight = 1.0
+         l1_weight  = 100.0
+         gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
+         gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+         errG         = gen_loss_GAN*gan_weight + gen_loss_L1*l1_weight
+      else:
+         errG = tf.reduce_mean(-tf.log(D_fake))
 
-      errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
-
+      if ARCHITECTURE == 'pix2pix': errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
+      else: errD = tf.reduce_mean(-(tf.log(D_real)+tf.log(1-D_fake)))
    
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
@@ -177,7 +181,7 @@ if __name__ == '__main__':
 
    if LOSS_METHOD == 'wasserstein':
       # clip weights in D
-      clip_values = [-0.001, 0.001]
+      clip_values = [-0.005, 0.005]
       clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_values[0], clip_values[1])) for var in d_vars]
 
    # MSE loss for pretraining
@@ -272,9 +276,12 @@ if __name__ == '__main__':
             D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
          elif LOSS_METHOD == 'gan':
-            sess.run(D_train_op)
-            sess.run(G_train_op)
-            D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+            if ARCHITECTURE == 'cganarch': batch_z = np.random.normal(-1.0, 1.0, size=[BATCH_SIZE, 64, 64, 1]).astype(np.float32)
+            sess.run(D_train_op, feed_dict={z:batch_z})
+            sess.run(G_train_op, feed_dict={z:batch_z})
+            if ARCHITECTURE == 'cganarch':
+               D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={z:batch_z})
+            else: D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
          print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
