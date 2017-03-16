@@ -271,7 +271,7 @@ if __name__ == '__main__':
          
          elif LOSS_METHOD == 'least_squares':
             sess.run(D_train_op)
-            for i in range(3):
+            for i in range(10):
                sess.run(G_train_op)
             D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
