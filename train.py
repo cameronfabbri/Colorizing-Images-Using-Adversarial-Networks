@@ -140,15 +140,15 @@ if __name__ == '__main__':
 
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
-      errD = tf.reduce_mean(errD_real - errD_fake)
-      errG = tf.reduce_mean(errD_fake)
+      errD = tf.reduce_mean(D_real - D_fake)
+      errG = tf.reduce_mean(D_fake)
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
    if LOSS_METHOD == 'least_squares':
       print 'Using least squares loss'
       # Least squares requires sigmoid activation on D
-      errD_real = tf.nn.sigmoid(errD_real)
-      errD_fake = tf.nn.sigmoid(errD_fake)
+      errD_real = tf.nn.sigmoid(D_real)
+      errD_fake = tf.nn.sigmoid(D_fake)
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
       errG = tf.reduce_mean(tf.square(errD_fake - 1))
    if LOSS_METHOD == 'gan':
@@ -271,7 +271,7 @@ if __name__ == '__main__':
          
          elif LOSS_METHOD == 'least_squares':
             sess.run(D_train_op)
-            for i in range(10):
+            for i in range(3):
                sess.run(G_train_op)
             D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 

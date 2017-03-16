@@ -215,6 +215,5 @@ def netD(ab_images, L_images, num_gpu, reuse=False):
       tf.add_to_collection('vars',conv3)
       tf.add_to_collection('vars',conv4)
       tf.add_to_collection('vars',conv5)
-      exit()
       print 'END D\n'
       return conv5

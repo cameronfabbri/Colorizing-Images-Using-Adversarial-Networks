@@ -39,8 +39,9 @@ if __name__ == '__main__':
    NUM_CRITIC      = a['NUM_CRITIC']
    BATCH_SIZE      = a['BATCH_SIZE']
    JITTER          = a['JITTER']
+   SIZE            = a['SIZE']
 
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
    
    print
@@ -54,7 +55,7 @@ if __name__ == '__main__':
    print 'NUM_GPU:         ',NUM_GPU
    print
 
-   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, train=False)
+   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, train=False, SIZE=SIZE)
    num_train = Data.count
    
    # The gray 'lightness' channel in range [-1, 1]
@@ -71,7 +72,8 @@ if __name__ == '__main__':
       predict_ab = colorarch.netG(test_L, BATCH_SIZE, 0)
    if ARCHITECTURE == 'cganarch':
       import cganarch
-      predict_ab = cganarch.netG(test_L, BATCH_SIZE, 0)
+      z = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 64, 64, 1))
+      predict_ab = cganarch.netG(test_L, z, 0)
 
    # reconstruct prediction image from test_L and predict_ab
    prediction = data_ops.augment(predict_ab, test_L)
@@ -100,7 +102,9 @@ if __name__ == '__main__':
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess, coord=coord)
 
+   #batch_z = np.random.normal(-1.0, 1.0, size=[BATCH_SIZE, 64, 64, 1]).astype(np.float32)
    # get predictions and true images
+   #colored = sess.run(prediction, feed_dict={z:batch_z})
    colored = sess.run(prediction)
    true_   = sess.run(true_image)
    
