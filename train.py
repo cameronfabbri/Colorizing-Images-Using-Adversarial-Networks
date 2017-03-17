@@ -7,6 +7,7 @@ import ntpath
 import sys
 import os
 import time
+from tf_ops import *
 
 sys.path.insert(0, 'ops/')
 sys.path.insert(0, 'config/')
@@ -136,6 +137,8 @@ if __name__ == '__main__':
 
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
+      D_real = lrelu(D_real)
+      D_fake = lrelu(D_fake)
       errD = tf.reduce_mean(D_real - D_fake)
       gen_loss_GAN = tf.reduce_mean(D_fake)
       gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
@@ -149,6 +152,11 @@ if __name__ == '__main__':
       # Least squares requires sigmoid activation on D
       errD_real = tf.nn.sigmoid(D_real)
       errD_fake = tf.nn.sigmoid(D_fake)
+      EPS = 1e-12
+      gan_weight = 1.0
+      L1_WEIGHT  = 100.0
+      gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
+      gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
       errG = tf.reduce_mean(tf.square(errD_fake - 1))
 
