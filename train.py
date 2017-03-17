@@ -49,7 +49,7 @@ if __name__ == '__main__':
    SIZE            = a.SIZE
    L1_WEIGHT       = a.L1_WEIGHT
    
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+str(L1_WEIGHT)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
 
    print
@@ -122,28 +122,28 @@ if __name__ == '__main__':
    
    # architecture from
    # http://hi.cs.waseda.ac.jp/~iizuka/projects/colorization/data/colorization_sig2016.pdf
-   if ARCHITECTURE == 'colorarch':
-      import colorarch
-      # generate a colored image
-      gen_ab = colorarch.netG(L_image, BATCH_SIZE, NUM_GPU)
-      # send real image to D
-      errD_real = colorarch.netD(ab_image, BATCH_SIZE, NUM_GPU)
-      # send generated image to D
-      errD_fake = colorarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True)
-
-   if ARCHITECTURE == 'cganarch':
-      import cganarch
-      z = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 64, 64, 1))
-      gen_ab = cganarch.netG(L_image, z, NUM_GPU)
-      D_real = cganarch.netD(L_image, ab_image, NUM_GPU, LOSS_METHOD)
-      D_fake = cganarch.netD(L_image, gen_ab, NUM_GPU, LOSS_METHOD, reuse=True)
+   #if ARCHITECTURE == 'colorarch':
+   #   import colorarch
+   #   gen_ab = colorarch.netG(L_image, BATCH_SIZE, NUM_GPU)
+   #   errD_real = colorarch.netD(ab_image, BATCH_SIZE, NUM_GPU)
+   #   errD_fake = colorarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True)
+   #if ARCHITECTURE == 'cganarch':
+   #   import cganarch
+   #   z = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 64, 64, 1))
+   #   gen_ab = cganarch.netG(L_image, z, NUM_GPU)
+   #   D_real = cganarch.netD(L_image, ab_image, NUM_GPU, LOSS_METHOD)
+   #   D_fake = cganarch.netD(L_image, gen_ab, NUM_GPU, LOSS_METHOD, reuse=True)
 
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       errD = tf.reduce_mean(D_real - D_fake)
-      errG = tf.reduce_mean(D_fake)
+      gen_loss_GAN = tf.reduce_mean(D_fake)
+      gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+      errG = gen_loss_GAN+gen_loss_L1*L1_WEIGHT
+
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
+
    if LOSS_METHOD == 'least_squares':
       print 'Using least squares loss'
       # Least squares requires sigmoid activation on D
@@ -151,11 +151,12 @@ if __name__ == '__main__':
       errD_fake = tf.nn.sigmoid(D_fake)
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
       errG = tf.reduce_mean(tf.square(errD_fake - 1))
+
    if LOSS_METHOD == 'gan':
       print 'Using original GAN loss'
       D_real = tf.nn.sigmoid(D_real)
       D_fake = tf.nn.sigmoid(D_fake)
-
+      
       EPS = 1e-12
       gan_weight = 1.0
       L1_WEIGHT  = 100.0
@@ -163,8 +164,8 @@ if __name__ == '__main__':
       gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
       errG         = gen_loss_GAN*gan_weight + gen_loss_L1*L1_WEIGHT
 
-      if ARCHITECTURE == 'pix2pix': errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
-      else: errD = tf.reduce_mean(-(tf.log(D_real)+tf.log(1-D_fake)))
+      #if ARCHITECTURE == 'pix2pix': errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
+      errD = tf.reduce_mean(-(tf.log(D_real)+tf.log(1-D_fake)))
    
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
