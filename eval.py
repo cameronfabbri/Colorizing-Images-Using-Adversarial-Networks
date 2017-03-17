@@ -66,8 +66,7 @@ if __name__ == '__main__':
    ab_image  = Data.targets
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
-      g_layers = pix2pix.netG_encoder(test_L, 0)
-      predict_ab = pix2pix.netG_decoder(g_layers, 0)
+      predict_ab = pix2pix.netG(test_L, 0)
    if ARCHITECTURE == 'colorarch':
       import colorarch
       predict_ab = colorarch.netG(test_L, BATCH_SIZE, 0)
