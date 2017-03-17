@@ -30,6 +30,7 @@ if __name__ == '__main__':
       choices=['wasserstein','least_squares','energy','gan'])
    parser.add_argument('--SIZE',           required=False,default=256,help='size of the image',type=int)
    parser.add_argument('--LOAD_MODEL',     required=False,help='Load a trained model')
+   parser.add_argument('--L1_WEIGHT',      required=False,help='weight of L1 for combined loss',type=float,default=100.0)
    a = parser.parse_args()
 
    PRETRAIN_EPOCHS = a.PRETRAIN_EPOCHS
@@ -46,8 +47,9 @@ if __name__ == '__main__':
    LOAD_MODEL      = a.LOAD_MODEL
    JITTER          = bool(a.JITTER)
    SIZE            = a.SIZE
+   L1_WEIGHT       = a.L1_WEIGHT
    
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+str(L1_WEIGHT)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
 
    print
@@ -75,6 +77,7 @@ if __name__ == '__main__':
    exp_info['LOAD_MODEL']      = LOAD_MODEL
    exp_info['JITTER']          = JITTER
    exp_info['SIZE']            = SIZE
+   exp_info['L1_WEIGHT']            = L1_WEIGHT
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
@@ -113,24 +116,21 @@ if __name__ == '__main__':
    # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
-      g_layers = pix2pix.netG_encoder(L_image, NUM_GPU)
-      gen_ab   = pix2pix.netG_decoder(g_layers, NUM_GPU)
-
+      gen_ab = pix2pix.netG(L_image, NUM_GPU)
       D_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
       D_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
-      
+   
    # architecture from
    # http://hi.cs.waseda.ac.jp/~iizuka/projects/colorization/data/colorization_sig2016.pdf
    if ARCHITECTURE == 'colorarch':
       import colorarch
       # generate a colored image
       gen_ab = colorarch.netG(L_image, BATCH_SIZE, NUM_GPU)
-
       # send real image to D
       errD_real = colorarch.netD(ab_image, BATCH_SIZE, NUM_GPU)
-
       # send generated image to D
       errD_fake = colorarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True)
+
    if ARCHITECTURE == 'cganarch':
       import cganarch
       z = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 64, 64, 1))
@@ -152,20 +152,16 @@ if __name__ == '__main__':
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
       errG = tf.reduce_mean(tf.square(errD_fake - 1))
    if LOSS_METHOD == 'gan':
-      
       print 'Using original GAN loss'
       D_real = tf.nn.sigmoid(D_real)
       D_fake = tf.nn.sigmoid(D_fake)
-      
-      if ARCHITECTURE == 'pix2pix':
-         EPS = 1e-12
-         gan_weight = 1.0
-         l1_weight  = 100.0
-         gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
-         gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
-         errG         = gen_loss_GAN*gan_weight + gen_loss_L1*l1_weight
-      else:
-         errG = tf.reduce_mean(-tf.log(D_fake))
+
+      EPS = 1e-12
+      gan_weight = 1.0
+      L1_WEIGHT  = 100.0
+      gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
+      gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+      errG         = gen_loss_GAN*gan_weight + gen_loss_L1*L1_WEIGHT
 
       if ARCHITECTURE == 'pix2pix': errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
       else: errD = tf.reduce_mean(-(tf.log(D_real)+tf.log(1-D_fake)))
@@ -276,9 +272,13 @@ if __name__ == '__main__':
             D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
          elif LOSS_METHOD == 'gan':
-            if ARCHITECTURE == 'cganarch': batch_z = np.random.normal(-1.0, 1.0, size=[BATCH_SIZE, 64, 64, 1]).astype(np.float32)
-            sess.run(D_train_op, feed_dict={z:batch_z})
-            sess.run(G_train_op, feed_dict={z:batch_z})
+            if ARCHITECTURE == 'cganarch':
+               batch_z = np.random.normal(-1.0, 1.0, size=[BATCH_SIZE, 64, 64, 1]).astype(np.float32)
+               sess.run(D_train_op, feed_dict={z:batch_z})
+               sess.run(G_train_op, feed_dict={z:batch_z})
+            else:
+               sess.run(D_train_op)
+               sess.run(G_train_op)
             if ARCHITECTURE == 'cganarch':
                D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={z:batch_z})
             else: D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
