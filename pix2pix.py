@@ -112,27 +112,32 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
                convolved = conv2d(input, ndf, stride=2)
                rectified = lrelu(convolved, 0.2)
                layers.append(rectified)
+               print rectified
+               tf.add_to_collection('vars',rectified)
 
-               # layer_2: [batch, 128, 128, ndf] => [batch, 64, 64, ndf * 2]
-               # layer_3: [batch, 64, 64, ndf * 2] => [batch, 32, 32, ndf * 4]
-               # layer_4: [batch, 32, 32, ndf * 4] => [batch, 31, 31, ndf * 8]
-               for i in range(n_layers):
-                  with tf.variable_scope('d_%d' % (len(layers) + 1)):
-                     out_channels = ndf * min(2**(i+1), 8)
-                     stride = 1 if i == n_layers - 1 else 2  # last layer here has stride 1
-                     convolved = conv2d(layers[-1], out_channels, stride=stride)
-                     normalized = batchnorm(convolved)
-                     rectified = lrelu(normalized, 0.2)
-                     layers.append(rectified)
-
-               # layer_5: [batch, 31, 31, ndf * 8] => [batch, 30, 30, 1]
+            # layer_2: [batch, 128, 128, ndf] => [batch, 64, 64, ndf * 2]
+            # layer_3: [batch, 64, 64, ndf * 2] => [batch, 32, 32, ndf * 4]
+            # layer_4: [batch, 32, 32, ndf * 4] => [batch, 31, 31, ndf * 8]
+            for i in range(n_layers):
                with tf.variable_scope('d_%d' % (len(layers) + 1)):
-                  convolved = conv2d(rectified, out_channels=1, stride=1)
-                  output = tf.sigmoid(convolved)
-                  layers.append(output)
+                  out_channels = ndf * min(2**(i+1), 8)
+                  stride = 1 if i == n_layers - 1 else 2  # last layer here has stride 1
+                  convolved = conv2d(layers[-1], out_channels, stride=stride)
+                  normalized = batchnorm(convolved)
+                  rectified = lrelu(normalized, 0.2)
+                  layers.append(rectified)
+                  print rectified
+                  tf.add_to_collection('vars',rectified)
 
-               print output
-               return output
+            # layer_5: [batch, 31, 31, ndf * 8] => [batch, 30, 30, 1]
+            with tf.variable_scope('d_%d' % (len(layers) + 1)):
+               convolved = conv2d(rectified, out_channels=1, stride=1)
+               output = tf.sigmoid(convolved)
+               layers.append(output)
+
+            tf.add_to_collection('vars',output)
+            print output
+            return output
 
 
 
