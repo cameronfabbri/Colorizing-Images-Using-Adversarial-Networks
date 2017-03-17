@@ -131,61 +131,10 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
 
             # layer_5: [batch, 31, 31, ndf * 8] => [batch, 30, 30, 1]
             with tf.variable_scope('d_%d' % (len(layers) + 1)):
-               convolved = conv2d(rectified, out_channels=1, stride=1)
-               output = tf.sigmoid(convolved)
+               output = conv2d(rectified, out_channels=1, stride=1)
                layers.append(output)
 
             tf.add_to_collection('vars',output)
             print output
             return output
 
-
-
-'''
-   Discriminator network
-'''
-def netD_(ab_images, L_images, num_gpu, reuse=False):
-
-   # input images are ab_images concat with L
-   input_images = tf.concat([L_images, ab_images], axis=3)
-   
-   print 'DISCRIMINATOR' 
-   sc = tf.get_variable_scope()
-   with tf.variable_scope(sc, reuse=reuse):
-      if num_gpu == 0: gpus = ['/cpu:0']
-      elif num_gpu == 1: gpus = ['/gpu:0']
-      elif num_gpu == 2: gpus = ['/gpu:0', '/gpu:1']
-      elif num_gpu == 3: gpus = ['/gpu:0', '/gpu:1', '/gpu:2']
-      elif num_gpu == 4: gpus = ['/gpu:0', '/gpu:1', '/gpu:2', '/gpu:3']
-
-      for d in gpus:
-         with tf.device(d):
-            conv1 = slim.convolution(input_images, 64, 5, stride=2, activation_fn=tf.identity, scope='d_conv1')
-            conv1 = tf.nn.relu(conv1)
-
-            conv2 = slim.convolution(conv1, 128, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv2')
-            conv2 = tf.nn.relu(conv2)
-            
-            conv3 = slim.convolution(conv2, 256, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv3')
-            conv3 = tf.nn.relu(conv3)
-            
-            conv4 = slim.convolution(conv3, 512, 5, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity, scope='d_conv4')
-            conv4 = tf.nn.relu(conv4)
-            
-            conv5 = slim.convolution(conv4, 1, 4, stride=2, activation_fn=tf.identity, scope='d_conv5')
-         
-   
-      print 'input images:',input_images
-      print 'conv1:',conv1
-      print 'conv2:',conv2
-      print 'conv3:',conv3
-      print 'conv4:',conv4
-      print 'conv5:',conv5
-      
-      tf.add_to_collection('vars',conv1)
-      tf.add_to_collection('vars',conv2)
-      tf.add_to_collection('vars',conv3)
-      tf.add_to_collection('vars',conv4)
-      tf.add_to_collection('vars',conv5)
-      print 'END D\n'
-      return conv5

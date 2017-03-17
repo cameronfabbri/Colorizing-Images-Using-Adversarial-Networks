@@ -7,10 +7,10 @@ import ntpath
 import sys
 import os
 import time
-from tf_ops import *
 
 sys.path.insert(0, 'ops/')
 sys.path.insert(0, 'config/')
+from tf_ops import *
 
 import data_ops
 
@@ -276,8 +276,8 @@ if __name__ == '__main__':
          
          elif LOSS_METHOD == 'least_squares':
             sess.run(D_train_op)
-            for i in range(10):
-               sess.run(G_train_op)
+            #for i in range(10):
+            sess.run(G_train_op)
             D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
          elif LOSS_METHOD == 'gan':
