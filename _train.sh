@@ -1,1 +1,1 @@
-python train.py --LOSS_METHOD=least_squares --DATASET=celeba --DATA_DIR=/mnt/data2/images/celeba/images/ --GAN_EPOCHS=20 --BATCH_SIZE=4 --GAN_LR=0.0001 --ARCHITECTURE=pix2pix
+python train.py --ARCHITECTURE=pix2pix --GAN_EPOCHS=4 --DATASET=celeba --DATA_DIR=/home/fabbric/data/images/celeba/original/ --BATCH_SIZE=4 --NUM_GPU=1 --JITTER=0 --LOSS_METHOD=gan --SIZE=256 --GAN_LR=1e-4 --L1_WEIGHT=100.0

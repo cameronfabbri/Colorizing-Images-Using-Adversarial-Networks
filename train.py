@@ -32,6 +32,8 @@ if __name__ == '__main__':
    parser.add_argument('--SIZE',           required=False,default=256,help='size of the image',type=int)
    parser.add_argument('--LOAD_MODEL',     required=False,help='Load a trained model')
    parser.add_argument('--L1_WEIGHT',      required=False,help='weight of L1 for combined loss',type=float,default=100.0)
+   parser.add_argument('--L2_WEIGHT',      required=False,help='weight of L2 for combined loss',type=float,default=0.0)
+   parser.add_argument('--GAN_WEIGHT',     required=False,help='weight of GAN for combined loss',type=float,default=1.0)
    a = parser.parse_args()
 
    PRETRAIN_EPOCHS = a.PRETRAIN_EPOCHS
@@ -49,8 +51,10 @@ if __name__ == '__main__':
    JITTER          = bool(a.JITTER)
    SIZE            = a.SIZE
    L1_WEIGHT       = a.L1_WEIGHT
+   L2_WEIGHT       = a.L2_WEIGHT
+   GAN_WEIGHT      = a.GAN_WEIGHT
    
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
 
    print
@@ -78,7 +82,9 @@ if __name__ == '__main__':
    exp_info['LOAD_MODEL']      = LOAD_MODEL
    exp_info['JITTER']          = JITTER
    exp_info['SIZE']            = SIZE
-   exp_info['L1_WEIGHT']            = L1_WEIGHT
+   exp_info['L1_WEIGHT']       = L1_WEIGHT
+   exp_info['L2_WEIGHT']       = L2_WEIGHT
+   exp_info['GAN_WEIGHT']      = GAN_WEIGHT
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
@@ -98,6 +104,9 @@ if __name__ == '__main__':
    print 'LOAD_MODEL:      ',LOAD_MODEL
    print 'JITTER:          ',JITTER
    print 'SIZE:            ',SIZE
+   print 'L1_WEIGHT:       ',L1_WEIGHT
+   print 'L2_WEIGHT:       ',L2_WEIGHT
+   print 'GAN_WEIGHT:      ',GAN_WEIGHT
    print
 
    # global step that is saved with a model to keep track of how many steps/epochs
@@ -118,31 +127,28 @@ if __name__ == '__main__':
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
       gen_ab = pix2pix.netG(L_image, NUM_GPU)
-      D_real = pix2pix.netD(ab_image, L_image, NUM_GPU)
-      D_fake = pix2pix.netD(gen_ab, L_image, NUM_GPU, reuse=True)
+      D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
+      D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
    
-   # architecture from
-   # http://hi.cs.waseda.ac.jp/~iizuka/projects/colorization/data/colorization_sig2016.pdf
-   #if ARCHITECTURE == 'colorarch':
-   #   import colorarch
-   #   gen_ab = colorarch.netG(L_image, BATCH_SIZE, NUM_GPU)
-   #   errD_real = colorarch.netD(ab_image, BATCH_SIZE, NUM_GPU)
-   #   errD_fake = colorarch.netD(gen_ab, BATCH_SIZE, NUM_GPU, reuse=True)
-   #if ARCHITECTURE == 'cganarch':
-   #   import cganarch
-   #   z = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 64, 64, 1))
-   #   gen_ab = cganarch.netG(L_image, z, NUM_GPU)
-   #   D_real = cganarch.netD(L_image, ab_image, NUM_GPU, LOSS_METHOD)
-   #   D_fake = cganarch.netD(L_image, gen_ab, NUM_GPU, LOSS_METHOD, reuse=True)
-
+   EPS = 1e-12
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       D_real = lrelu(D_real)
       D_fake = lrelu(D_fake)
-      errD = tf.reduce_mean(D_real - D_fake)
+      
       gen_loss_GAN = tf.reduce_mean(D_fake)
-      gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
-      errG = gen_loss_GAN+gen_loss_L1*L1_WEIGHT
+      if L1_WEIGHT > 0.0:
+         print 'Using an L1 weight of',L1_WEIGHT
+         gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
+      elif L2_WEIGHT > 0.0:
+         print 'Using an L2 weight of',L2_WEIGHT
+         gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
+         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
+      else:
+         print 'Just using GAN loss, no L1 or L2'
+         errG = gen_loss_GAN
+      errD = tf.reduce_mean(D_real - D_fake)
 
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
@@ -152,27 +158,40 @@ if __name__ == '__main__':
       # Least squares requires sigmoid activation on D
       errD_real = tf.nn.sigmoid(D_real)
       errD_fake = tf.nn.sigmoid(D_fake)
-      EPS = 1e-12
-      gan_weight = 1.0
-      L1_WEIGHT  = 100.0
-      gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
-      gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+      
+      gen_loss_GAN = tf.reduce_mean(tf.square(errD_fake - 1))
+      if L1_WEIGHT > 0.0:
+         print 'Using an L1 weight of',L1_WEIGHT
+         gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
+      elif L2_WEIGHT > 0.0:
+         print 'Using an L2 weight of',L2_WEIGHT
+         gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
+         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
+      else:
+         print 'Just using GAN loss, no L1 or L2'
+         errG = gen_loss_GAN
+
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
-      errG = tf.reduce_mean(tf.square(errD_fake - 1))
 
    if LOSS_METHOD == 'gan':
       print 'Using original GAN loss'
       D_real = tf.nn.sigmoid(D_real)
       D_fake = tf.nn.sigmoid(D_fake)
       
-      EPS = 1e-12
-      gan_weight = 1.0
-      L1_WEIGHT  = 100.0
       gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
-      gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
-      errG         = gen_loss_GAN*gan_weight + gen_loss_L1*L1_WEIGHT
+      if L1_WEIGHT > 0.0:
+         print 'Using an L1 weight of',L1_WEIGHT
+         gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
+      elif L2_WEIGHT > 0.0:
+         print 'Using an L2 weight of',L2_WEIGHT
+         gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
+         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
+      else:
+         print 'Just using GAN loss, no L1 or L2'
+         errG = gen_loss_GAN
 
-      #if ARCHITECTURE == 'pix2pix': errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
       errD = tf.reduce_mean(-(tf.log(D_real)+tf.log(1-D_fake)))
    
    # tensorboard summaries
