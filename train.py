@@ -141,7 +141,7 @@ if __name__ == '__main__':
          print 'Using an L1 weight of',L1_WEIGHT
          gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
-      elif L2_WEIGHT > 0.0:
+      if L2_WEIGHT > 0.0:
          print 'Using an L2 weight of',L2_WEIGHT
          gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
@@ -164,7 +164,7 @@ if __name__ == '__main__':
          print 'Using an L1 weight of',L1_WEIGHT
          gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
-      elif L2_WEIGHT > 0.0:
+      if L2_WEIGHT > 0.0:
          print 'Using an L2 weight of',L2_WEIGHT
          gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
@@ -184,7 +184,7 @@ if __name__ == '__main__':
          print 'Using an L1 weight of',L1_WEIGHT
          gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
-      elif L2_WEIGHT > 0.0:
+      if L2_WEIGHT > 0.0:
          print 'Using an L2 weight of',L2_WEIGHT
          gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
