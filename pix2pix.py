@@ -21,7 +21,7 @@ def netG(L_images, num_gpu):
          # encoder_1: [batch, 256, 256, in_channels] => [batch, 128, 128, ngf]
          with tf.variable_scope('g_enc1'):
             #output = conv2d(L_images, ngf, stride=2)
-            output = slim.conv2d(L_images, 64, 4, stride=2, activation_fn=None, padding='VALID')
+            output = slim.conv2d(L_images, 64, 4, stride=2, activation_fn=None)
             layers.append(output)
             print(output)
          
@@ -41,7 +41,7 @@ def netG(L_images, num_gpu):
                # [batch, in_height, in_width, in_channels] => [batch, in_height/2, in_width/2, out_channels]
                #convolved = conv2d(rectified, out_channels, stride=2)
                #output = batchnorm(convolved)
-               output = slim.conv2d(rectified, out_channels, 4, stride=2, normalizer_fn=slim.batch_norm, padding='VALID', activation_fn=None)
+               output = slim.conv2d(rectified, out_channels, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=None)
                layers.append(output)
                print output
 
