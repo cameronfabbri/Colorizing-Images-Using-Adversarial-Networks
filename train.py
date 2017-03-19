@@ -190,6 +190,7 @@ if __name__ == '__main__':
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
       if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
          print 'Just using GAN loss, no L1 or L2'
+         #errD = errD + EPS
          errG = gen_loss_GAN
 
       errD = tf.reduce_mean(-(tf.log(D_real)+tf.log(1-D_fake)))
