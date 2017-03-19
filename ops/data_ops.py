@@ -222,7 +222,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
          pf.write(data)
          pf.close()
    if dataset == 'places2_standard':
-      print 'Using places'
+      print 'Using places2 standard'
       pkl_train_file = 'files/places2_standard_train.pkl'
       pkl_test_file  = 'files/places2_standard_test.pkl'
 
@@ -246,7 +246,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
          pf.write(data)
          pf.close()
    if dataset == 'places2_challenge':
-      print 'Using places'
+      print 'Using places2 challenge'
       pkl_train_file = 'files/places2_challenge_train.pkl'
       pkl_test_file  = 'files/places2_challenge_test.pkl'
 
