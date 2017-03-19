@@ -193,7 +193,7 @@ if __name__ == '__main__':
          #errD = errD + EPS
          errG = gen_loss_GAN
 
-      errD = tf.reduce_mean(-(tf.log(D_real)+tf.log(1-D_fake)))
+      errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
    
    # tensorboard summaries
    tf.summary.scalar('d_loss', errD)
