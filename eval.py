@@ -41,8 +41,10 @@ if __name__ == '__main__':
    JITTER          = a['JITTER']
    SIZE            = a['SIZE']
    L1_WEIGHT       = a['L1_WEIGHT']
+   L2_WEIGHT       = a['L2_WEIGHT']
+   GAN_WEIGHT       = a['GAN_WEIGHT']
 
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
    
    print
@@ -54,6 +56,9 @@ if __name__ == '__main__':
    print 'DATASET:         ',DATASET
    print 'GAN_LR:          ',GAN_LR
    print 'NUM_GPU:         ',NUM_GPU
+   print 'L1_WEIGHT:       ',L1_WEIGHT
+   print 'L2_WEIGHT:       ',L2_WEIGHT
+   print 'GAN_WEIGHT:       ',GAN_WEIGHT
    print
 
    Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, train=False, SIZE=SIZE)
