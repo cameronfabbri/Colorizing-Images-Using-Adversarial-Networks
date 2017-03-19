@@ -85,7 +85,6 @@ def netG(L_images, num_gpu):
             #output = deconv(rectified, 2)
             #output = tf.tanh(output)
             output = slim.convolution2d_transpose(rectified, 2, 4, stride=2, padding='SAME', activation_fn=None)
-            output = tf.tanh(output)
             layers.append(output)
             print output
    

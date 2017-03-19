@@ -188,7 +188,7 @@ if __name__ == '__main__':
          print 'Using an L2 weight of',L2_WEIGHT
          gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
-      else:
+      if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
          print 'Just using GAN loss, no L1 or L2'
          errG = gen_loss_GAN
 
