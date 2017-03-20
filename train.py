@@ -130,13 +130,13 @@ if __name__ == '__main__':
       D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
       D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
    
-   EPS = 1e-12
+   e = 1e-12
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       D_real = lrelu(D_real)
       D_fake = lrelu(D_fake)
-      
       gen_loss_GAN = tf.reduce_mean(D_fake)
+      
       if L1_WEIGHT > 0.0:
          print 'Using an L1 weight of',L1_WEIGHT
          gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
@@ -149,9 +149,6 @@ if __name__ == '__main__':
          print 'Just using GAN loss, no L1 or L2'
          errG = gen_loss_GAN
       errD = tf.reduce_mean(D_real - D_fake)
-
-   if LOSS_METHOD == 'energy':
-      print 'Using energy loss'
 
    if LOSS_METHOD == 'least_squares':
       print 'Using least squares loss'
@@ -171,7 +168,6 @@ if __name__ == '__main__':
       else:
          print 'Just using GAN loss, no L1 or L2'
          errG = gen_loss_GAN
-
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
 
    if LOSS_METHOD == 'gan' or 'cnn':
@@ -179,7 +175,7 @@ if __name__ == '__main__':
       if LOSS_METHOD is not 'cnn':
          D_real = tf.nn.sigmoid(D_real)
          D_fake = tf.nn.sigmoid(D_fake)
-         gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
+         gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + e))
       else: gen_loss_GAN = 0.0
       if L1_WEIGHT > 0.0:
          print 'Using an L1 weight of',L1_WEIGHT
@@ -191,10 +187,12 @@ if __name__ == '__main__':
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
       if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
          print 'Just using GAN loss, no L1 or L2'
-         #errD = errD + EPS
+         #errD = errD + e
          errG = gen_loss_GAN
-
-      errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
+      errD = tf.reduce_mean(-(tf.log(D_real+e)+tf.log(1-D_fake+e)))
+   
+   if LOSS_METHOD == 'energy':
+      print 'Using energy loss'
    
    # tensorboard summaries
    try: tf.summary.scalar('d_loss', errD)
