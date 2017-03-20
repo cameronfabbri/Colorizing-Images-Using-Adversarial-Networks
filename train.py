@@ -176,10 +176,11 @@ if __name__ == '__main__':
 
    if LOSS_METHOD == 'gan':
       print 'Using original GAN loss'
-      D_real = tf.nn.sigmoid(D_real)
-      D_fake = tf.nn.sigmoid(D_fake)
-      
-      gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
+      if LOSS_METHOD is not 'cnn':
+         D_real = tf.nn.sigmoid(D_real)
+         D_fake = tf.nn.sigmoid(D_fake)
+         gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
+      else: gen_loss_GAN = 0.0
       if L1_WEIGHT > 0.0:
          print 'Using an L1 weight of',L1_WEIGHT
          gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
@@ -311,9 +312,13 @@ if __name__ == '__main__':
             if ARCHITECTURE == 'cganarch':
                D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={z:batch_z})
             else: D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+         elif LOSS_METHOD == 'cnn':
+            sess.run(G_train_op)
+            loss, summary = sess.run([errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
-         print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+         if LOSS_METHOD is not 'cnn': print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+         else: print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
          step += 1
          
          if step%500 == 0:
