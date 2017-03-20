@@ -207,10 +207,14 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
          test_paths  = pickle.load(open(pkl_test_file, 'rb'))
       else:
-         train_dir = data_dir+'train/'
-         test_dir  = data_dir+'test/'
-         train_paths = getPaths(train_dir, ext='JPEG')
-         test_paths  = getPaths(test_dir, ext='JPEG')
+         #train_dir = data_dir+'train/'
+         train_dir = data_dir
+         test_dir  = data_dir
+         #test_dir  = data_dir+'test/'
+         #train_paths = getPaths(train_dir, ext='JPEG')
+         train_paths = getPaths(train_dir,ext='png')
+         test_paths  = getPaths(test_dir,ext='png')
+         #test_paths  = getPaths(test_dir, ext='JPEG')
          random.shuffle(train_paths)
          random.shuffle(test_paths)
          pf   = open(pkl_train_file, 'wb')
@@ -298,10 +302,8 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
    if train: input_paths = train_paths
    else: input_paths = test_paths
    print len(input_paths),'training images!'
-   print input_paths[0]
-   exit()
    decode = tf.image.decode_image
-
+   
    if len(input_paths) == 0:
       raise Exception('data_dir contains no image files')
 
