@@ -15,4 +15,7 @@ print 'GAN_LR:          ',exp_info['GAN_LR']
 print 'ARCHITECTURE:    ',exp_info['ARCHITECTURE']
 print 'NUM_GPU:         ',exp_info['NUM_GPU']
 print 'PRETRAIN_LR:     ',exp_info['PRETRAIN_LR']
+print 'L1_WEIGHT:       ',exp_info['L1_WEIGHT']
+print 'L2_WEIGHT:       ',exp_info['L2_WEIGHT']
+print 'GAN_WEIGHT:      ',exp_info['GAN_WEIGHT']
 
