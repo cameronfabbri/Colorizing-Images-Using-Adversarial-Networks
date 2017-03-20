@@ -298,7 +298,8 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
    if train: input_paths = train_paths
    else: input_paths = test_paths
    print len(input_paths),'training images!'
-   
+   print input_paths[0]
+   exit()
    decode = tf.image.decode_image
 
    if len(input_paths) == 0:

@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
 
-   if LOSS_METHOD == 'gan':
+   if LOSS_METHOD == 'gan' or 'cnn':
       print 'Using original GAN loss'
       if LOSS_METHOD is not 'cnn':
          D_real = tf.nn.sigmoid(D_real)
@@ -197,8 +197,10 @@ if __name__ == '__main__':
       errD = tf.reduce_mean(-(tf.log(D_real+EPS)+tf.log(1-D_fake+EPS)))
    
    # tensorboard summaries
-   tf.summary.scalar('d_loss', errD)
-   tf.summary.scalar('g_loss', errG)
+   try: tf.summary.scalar('d_loss', errD)
+   except:pass
+   try: tf.summary.scalar('g_loss', errG)
+   except:pass
 
    # get all trainable variables, and split by network G and network D
    t_vars = tf.trainable_variables()
@@ -317,7 +319,7 @@ if __name__ == '__main__':
             loss, summary = sess.run([errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
-         if LOSS_METHOD is not 'cnn': print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+         if LOSS_METHOD != 'cnn': print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
          else: print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
          step += 1
          
