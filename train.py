@@ -28,7 +28,7 @@ if __name__ == '__main__':
    parser.add_argument('--JITTER',         required=False,type=int,default=1,help='Whether or not to add jitter')
    parser.add_argument('--NUM_CRITIC',     required=False,type=int,default=5,help='Number of critics')
    parser.add_argument('--LOSS_METHOD',    required=False,default='wasserstein',help='Loss function for GAN',
-      choices=['wasserstein','least_squares','energy','gan'])
+      choices=['wasserstein','least_squares','energy','gan','cnn'])
    parser.add_argument('--SIZE',           required=False,default=256,help='size of the image',type=int)
    parser.add_argument('--LOAD_MODEL',     required=False,help='Load a trained model')
    parser.add_argument('--L1_WEIGHT',      required=False,help='weight of L1 for combined loss',type=float,default=100.0)
