@@ -3,7 +3,7 @@ import tensorflow.contrib.slim as slim
 import sys
 
 sys.path.insert(0, 'ops/')
-from tf_ops import lrelu, conv2d, batch_norm, conv2d_transpose, relu
+from tf_ops import lrelu, conv2d, batch_norm, conv2d_transpose, relu, tanh
 
 # def conv2d(batch_input, out_channels, stride, name='conv', kernel_size=4):
 def netG(L_images, num_gpu):
@@ -35,16 +35,6 @@ def netG(L_images, num_gpu):
          print 'enc_conv7:',enc_conv7
          print 'enc_conv8:',enc_conv8
          
-         layer_specs = [
-            (64 * 8, 0.5),   # decoder_8: [batch, 1, 1, 64 * 8] => [batch, 2, 2, 64 * 8 * 2]
-            (64 * 8, 0.5),   # decoder_7: [batch, 2, 2, 64 * 8 * 2] => [batch, 4, 4, 64 * 8 * 2]
-            (64 * 8, 0.5),   # decoder_6: [batch, 4, 4, 64 * 8 * 2] => [batch, 8, 8, 64 * 8 * 2]
-            (64 * 8, 0.0),   # decoder_5: [batch, 8, 8, 64 * 8 * 2] => [batch, 16, 16, 64 * 8 * 2]
-            (64 * 4, 0.0),   # decoder_4: [batch, 16, 16, 64 * 8 * 2] => [batch, 32, 32, 64 * 4 * 2]
-            (64 * 2, 0.0),   # decoder_3: [batch, 32, 32, 64 * 4 * 2] => [batch, 64, 64, 64 * 2 * 2]
-            (64, 0.0),       # decoder_2: [batch, 64, 64, 64 * 2 * 2] => [batch, 128, 128, 64 * 2]
-         ]
-
          with tf.variable_scope('g_dec1'):
             dec_convt1 = conv2d_transpose(enc_conv8, 512, stride=2, kernel_size=4)
             dec_convt1 = batch_norm(dec_convt1)
@@ -72,55 +62,30 @@ def netG(L_images, num_gpu):
          with tf.variable_scope('g_dec5'):
             dec_convt5 = tf.concat([enc_conv4, dec_convt4], axis=3)
             print dec_convt5
-            dec_convt5 = conv2d_transpose(dec_convt5, 512, stride=2, kernel_size=4)
+            dec_convt5 = conv2d_transpose(dec_convt5, 256, stride=2, kernel_size=4)
             dec_convt5 = batch_norm(dec_convt5)
             dec_convt5 = relu(dec_convt5)
          with tf.variable_scope('g_dec6'):
             dec_convt6 = tf.concat([enc_conv3, dec_convt5], axis=3)
             print dec_convt6
-            dec_convt6 = conv2d_transpose(dec_convt6, 512, stride=2, kernel_size=4)
+            dec_convt6 = conv2d_transpose(dec_convt6, 128, stride=2, kernel_size=4)
             dec_convt6 = batch_norm(dec_convt6)
             dec_convt6 = relu(dec_convt6)
-         
-         exit()
-         
+         with tf.variable_scope('g_dec7'):
+            dec_convt7 = tf.concat([enc_conv2, dec_convt6], axis=3)
+            print dec_convt7
+            dec_convt7 = conv2d_transpose(dec_convt7, 128, stride=2, kernel_size=4)
+            dec_convt7 = batch_norm(dec_convt7)
+            dec_convt7 = relu(dec_convt7)
 
-         num_encoder_layers = len(layers)
-         for decoder_layer, (out_channels, dropout) in enumerate(layer_specs):
-            skip_layer = num_encoder_layers - decoder_layer - 1
+         # output layer - ab channels
+         with tf.variable_scope('g_dec8'):
+            dec_convt8 = conv2d_transpose(dec_convt7, 2, stride=2, kernel_size=4)
+            dec_convt8 = tanh(dec_convt8)
             
-            with tf.variable_scope('g_dec%d' % (skip_layer + 1)):
-               if decoder_layer == 0:
-                  # first decoder layer doesn't have skip connections
-                  # since it is directly connected to the skip_layer
-                  input = layers[-1]
-               else:
-                  input = tf.concat([layers[-1], layers[skip_layer]], axis=3)
-
-               print input
-               rectified = tf.nn.relu(input)
-               # [batch, in_height, in_width, in_channels] => [batch, in_height*2, in_width*2, out_channels]
-               output = deconv(rectified, out_channels)
-               output = batchnorm(output)
-               #output = slim.convolution2d_transpose(rectified, out_channels, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity)
-
-               if dropout > 0.0: output = tf.nn.dropout(output, keep_prob=1 - dropout)
-               
-               layers.append(output)
+         print dec_convt8
          
-         # decoder_1: [batch, 128, 128, 64 * 2] => [batch, 256, 256, generator_outputs_channels]
-         with tf.variable_scope('g_dec1'):
-            input = tf.concat([layers[-1], layers[0]], axis=3)
-            rectified = tf.nn.relu(input)
-            output = deconv(rectified, 2)
-            output = tf.tanh(output)
-            #output = slim.convolution2d_transpose(rectified, 2, 4, stride=2, padding='SAME', activation_fn=tf.identity)
-            #output = tf.tanh(output)
-            layers.append(output)
-            print output
-   
-   return layers[-1]
-
+   return dec_convt8
 
 
 def netD(L_images, ab_images, num_gpu, reuse=False):
@@ -162,7 +127,7 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
                   out_channels = ndf * min(2**(i+1), 8)
                   stride = 1 if i == n_layers - 1 else 2  # last layer here has stride 1
                   convolved = conv2d(layers[-1], out_channels, stride=stride)
-                  normalized = batchnorm(convolved)
+                  normalized = batch_norm(convolved)
                   #normalized = slim.conv2d(layers[-1], out_channels, 4, stride=stride, normalizer_fn=slim.batch_norm, activation_fn=tf.identity)
                   rectified = lrelu(normalized, 0.2)
                   layers.append(rectified)

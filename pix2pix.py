@@ -13,7 +13,6 @@ def netG(L_images, num_gpu):
    elif num_gpu == 3: gpus = ['/gpu:0', '/gpu:1', '/gpu:2']
    elif num_gpu == 4: gpus = ['/gpu:0', '/gpu:1', '/gpu:2', '/gpu:3']
 
-   64 = 64
    layers = []
       
    for d in gpus:
@@ -39,7 +38,7 @@ def netG(L_images, num_gpu):
                rectified = lrelu(layers[-1], 0.2)
                # [batch, in_height, in_width, in_channels] => [batch, in_height/2, in_width/2, out_channels]
                convolved = conv2d(rectified, out_channels, stride=2)
-               output = batchnorm(convolved)
+               output = batch_norm(convolved)
                #output = slim.conv2d(rectified, out_channels, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity)
                layers.append(output)
                print output
@@ -57,7 +56,7 @@ def netG(L_images, num_gpu):
          num_encoder_layers = len(layers)
          for decoder_layer, (out_channels, dropout) in enumerate(layer_specs):
             skip_layer = num_encoder_layers - decoder_layer - 1
-            
+            print 'skip_layer:',skip_layer
             with tf.variable_scope('g_dec%d' % (skip_layer + 1)):
                if decoder_layer == 0:
                   # first decoder layer doesn't have skip connections
@@ -69,8 +68,8 @@ def netG(L_images, num_gpu):
                print input
                rectified = tf.nn.relu(input)
                # [batch, in_height, in_width, in_channels] => [batch, in_height*2, in_width*2, out_channels]
-               output = deconv(rectified, out_channels)
-               output = batchnorm(output)
+               output = conv2d_transpose(rectified, out_channels)
+               output = batch_norm(output)
                #output = slim.convolution2d_transpose(rectified, out_channels, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity)
 
                if dropout > 0.0: output = tf.nn.dropout(output, keep_prob=1 - dropout)
@@ -81,13 +80,12 @@ def netG(L_images, num_gpu):
          with tf.variable_scope('g_dec1'):
             input = tf.concat([layers[-1], layers[0]], axis=3)
             rectified = tf.nn.relu(input)
-            output = deconv(rectified, 2)
+            output = conv2d_transpose(rectified, 2)
             output = tf.tanh(output)
             #output = slim.convolution2d_transpose(rectified, 2, 4, stride=2, padding='SAME', activation_fn=tf.identity)
             #output = tf.tanh(output)
             layers.append(output)
             print output
-   
    return layers[-1]
 
 
@@ -131,7 +129,7 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
                   out_channels = ndf * min(2**(i+1), 8)
                   stride = 1 if i == n_layers - 1 else 2  # last layer here has stride 1
                   convolved = conv2d(layers[-1], out_channels, stride=stride)
-                  normalized = batchnorm(convolved)
+                  normalized = batch_norm(convolved)
                   #normalized = slim.conv2d(layers[-1], out_channels, 4, stride=stride, normalizer_fn=slim.batch_norm, activation_fn=tf.identity)
                   rectified = lrelu(normalized, 0.2)
                   layers.append(rectified)

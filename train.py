@@ -125,8 +125,8 @@ if __name__ == '__main__':
    
    # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
    if ARCHITECTURE == 'pix2pix':
-      #import pix2pix
-      import pix2pix_ as pix2pix
+      import pix2pix
+      #import pix2pix_ as pix2pix
       gen_ab = pix2pix.netG(L_image, NUM_GPU)
       D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
       D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
