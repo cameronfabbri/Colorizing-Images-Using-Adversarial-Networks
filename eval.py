@@ -70,7 +70,7 @@ if __name__ == '__main__':
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
    if ARCHITECTURE == 'pix2pix':
-      import pix2pix
+      import pix2pix_ as pix2pix
       predict_ab = pix2pix.netG(test_L, 0)
    if ARCHITECTURE == 'colorarch':
       import colorarch
