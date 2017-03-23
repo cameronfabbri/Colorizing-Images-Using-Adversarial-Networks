@@ -105,42 +105,16 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
       for d in gpus:
          with tf.device(d):
 
-            # 2x [batch, height, width, in_channels] => [batch, height, width, in_channels * 2]
-            input = tf.concat([L_images, ab_images], axis=3)
-            print 'L_images:',L_images
-            print 'ab_images:',ab_images
-            print 'input:',input
-            # layer_1: [batch, 256, 256, in_channels * 2] => [batch, 128, 128, ndf]
-            with tf.variable_scope('d_1'):
-               convolved = conv2d(input, ndf, stride=2)
-               #convolved = slim.conv2d(input, ndf, 4, stride=2, activation_fn=tf.identity)
-               rectified = lrelu(convolved, 0.2)
-               layers.append(rectified)
-               print rectified
-               tf.add_to_collection('vars',rectified)
+            input_images = tf.concat([L_images, ab_images], axis=3)
 
-            # layer_2: [batch, 128, 128, ndf] => [batch, 64, 64, ndf * 2]
-            # layer_3: [batch, 64, 64, ndf * 2] => [batch, 32, 32, ndf * 4]
-            # layer_4: [batch, 32, 32, ndf * 4] => [batch, 31, 31, ndf * 8]
-            for i in range(n_layers):
-               with tf.variable_scope('d_%d' % (len(layers) + 1)):
-                  out_channels = ndf * min(2**(i+1), 8)
-                  stride = 1 if i == n_layers - 1 else 2  # last layer here has stride 1
-                  convolved = conv2d(layers[-1], out_channels, stride=stride)
-                  normalized = batch_norm(convolved)
-                  #normalized = slim.conv2d(layers[-1], out_channels, 4, stride=stride, normalizer_fn=slim.batch_norm, activation_fn=tf.identity)
-                  rectified = lrelu(normalized, 0.2)
-                  layers.append(rectified)
-                  print rectified
-                  tf.add_to_collection('vars',rectified)
+            # trying the pixel gan architecture
+            with tf.variable_scope('d_conv1'): conv1 = lrelu(conv2d(input_images, 64, stride=1, kernel_size=1))
+            with tf.variable_scope('d_conv2'): conv2 = lrelu(batch_norm(conv2d(conv1, 128, stride=1, kernel_size=1)))
+            with tf.variable_scope('d_conv3'): conv3 = conv2d(conv1, 1, stride=1, kernel_size=1)
 
-            # layer_5: [batch, 31, 31, ndf * 8] => [batch, 30, 30, 1]
-            with tf.variable_scope('d_%d' % (len(layers) + 1)):
-               output = conv2d(rectified, out_channels=1, stride=1)
-               #output = slim.conv2d(rectified, 1, 4, stride=1, activation_fn=tf.identity)
-               layers.append(output)
+            print conv1
+            print conv2
+            print conv3
 
-            tf.add_to_collection('vars',output)
-            print output
-            return layers[-1]
+            return conv3
 
