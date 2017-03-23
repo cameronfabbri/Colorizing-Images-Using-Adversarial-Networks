@@ -125,7 +125,8 @@ if __name__ == '__main__':
    
    # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
    if ARCHITECTURE == 'pix2pix':
-      import pix2pix
+      #import pix2pix
+      import pix2pix_ as pix2pix
       gen_ab = pix2pix.netG(L_image, NUM_GPU)
       D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
       D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
@@ -317,8 +318,9 @@ if __name__ == '__main__':
             loss, summary = sess.run([errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
-         if LOSS_METHOD != 'cnn': print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
-         else: print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
+         if LOSS_METHOD != 'cnn' and step%50==0: print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+         else:
+            if step%50==0:print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
          step += 1
          
          if step%500 == 0:

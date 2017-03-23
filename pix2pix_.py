@@ -3,8 +3,9 @@ import tensorflow.contrib.slim as slim
 import sys
 
 sys.path.insert(0, 'ops/')
-from tf_ops import *
+from tf_ops import lrelu, conv2d, batch_norm, conv2d_transpose, relu
 
+# def conv2d(batch_input, out_channels, stride, name='conv', kernel_size=4):
 def netG(L_images, num_gpu):
    
    if num_gpu == 0: gpus = ['/cpu:0']
@@ -13,37 +14,27 @@ def netG(L_images, num_gpu):
    elif num_gpu == 3: gpus = ['/gpu:0', '/gpu:1', '/gpu:2']
    elif num_gpu == 4: gpus = ['/gpu:0', '/gpu:1', '/gpu:2', '/gpu:3']
 
-   64 = 64
-   layers = []
-      
    for d in gpus:
       with tf.device(d):
-         # encoder_1: [batch, 256, 256, in_channels] => [batch, 128, 128, 64]
-         with tf.variable_scope('g_enc1'):
-            output = conv2d(L_images, 64, stride=2)
-            layers.append(output)
-            print(output)
+
+         with tf.variable_scope('g_enc1'): enc_conv1 = lrelu(conv2d(L_images, 64, stride=2))
+         with tf.variable_scope('g_enc2'): enc_conv2 = lrelu(batch_norm(conv2d(enc_conv1, 128, stride=2, kernel_size=4)))
+         with tf.variable_scope('g_enc3'): enc_conv3 = lrelu(batch_norm(conv2d(enc_conv2, 256, stride=2, kernel_size=4)))
+         with tf.variable_scope('g_enc4'): enc_conv4 = lrelu(batch_norm(conv2d(enc_conv3, 512, stride=2, kernel_size=4)))
+         with tf.variable_scope('g_enc5'): enc_conv5 = lrelu(batch_norm(conv2d(enc_conv4, 512, stride=2, kernel_size=4)))
+         with tf.variable_scope('g_enc6'): enc_conv6 = lrelu(batch_norm(conv2d(enc_conv5, 512, stride=2, kernel_size=4)))
+         with tf.variable_scope('g_enc7'): enc_conv7 = lrelu(batch_norm(conv2d(enc_conv6, 512, stride=2, kernel_size=4)))
+         with tf.variable_scope('g_enc8'): enc_conv8 = lrelu(batch_norm(conv2d(enc_conv7, 512, stride=2, kernel_size=4)))
+
+         print 'enc_conv1:',enc_conv1
+         print 'enc_conv2:',enc_conv2
+         print 'enc_conv3:',enc_conv3
+         print 'enc_conv4:',enc_conv4
+         print 'enc_conv5:',enc_conv5
+         print 'enc_conv6:',enc_conv6
+         print 'enc_conv7:',enc_conv7
+         print 'enc_conv8:',enc_conv8
          
-         layer_specs = [
-            64 * 2, # encoder_2: [batch, 128, 128, 64] => [batch, 64, 64, 64 * 2]
-            64 * 4, # encoder_3: [batch, 64, 64, 64 * 2] => [batch, 32, 32, 64 * 4]
-            64 * 8, # encoder_4: [batch, 32, 32, 64 * 4] => [batch, 16, 16, 64 * 8]
-            64 * 8, # encoder_5: [batch, 16, 16, 64 * 8] => [batch, 8, 8, 64 * 8]
-            64 * 8, # encoder_6: [batch, 8, 8, 64 * 8] => [batch, 4, 4, 64 * 8]
-            64 * 8, # encoder_7: [batch, 4, 4, 64 * 8] => [batch, 2, 2, 64 * 8]
-            64 * 8, # encoder_8: [batch, 2, 2, 64 * 8] => [batch, 1, 1, 64 * 8]
-         ]
-
-         for out_channels in layer_specs:
-            with tf.variable_scope('g_enc%d' % (len(layers) + 1)):
-               rectified = lrelu(layers[-1], 0.2)
-               # [batch, in_height, in_width, in_channels] => [batch, in_height/2, in_width/2, out_channels]
-               convolved = conv2d(rectified, out_channels, stride=2)
-               output = batchnorm(convolved)
-               #output = slim.conv2d(rectified, out_channels, 4, stride=2, normalizer_fn=slim.batch_norm, activation_fn=tf.identity)
-               layers.append(output)
-               print output
-
          layer_specs = [
             (64 * 8, 0.5),   # decoder_8: [batch, 1, 1, 64 * 8] => [batch, 2, 2, 64 * 8 * 2]
             (64 * 8, 0.5),   # decoder_7: [batch, 2, 2, 64 * 8 * 2] => [batch, 4, 4, 64 * 8 * 2]
@@ -53,6 +44,40 @@ def netG(L_images, num_gpu):
             (64 * 2, 0.0),   # decoder_3: [batch, 32, 32, 64 * 4 * 2] => [batch, 64, 64, 64 * 2 * 2]
             (64, 0.0),       # decoder_2: [batch, 64, 64, 64 * 2 * 2] => [batch, 128, 128, 64 * 2]
          ]
+
+         with tf.variable_scope('g_dec1'):
+            dec_convt1 = conv2d_transpose(enc_conv8, 512, stride=2, kernel_size=4)
+            dec_convt1 = batch_norm(dec_convt1)
+            dec_convt1 = relu(dec_convt1)
+            dec_convt1 = tf.nn.dropout(dec_convt1, keep_prob=0.5)
+            print dec_convt1
+         with tf.variable_scope('g_dec2'):
+            dec_convt2 = tf.concat([dec_convt1, enc_conv7], axis=3)
+            print dec_convt2
+            dec_convt2 = conv2d_transpose(dec_convt2, 512, stride=2, kernel_size=4)
+            dec_convt2 = batch_norm(dec_convt2)
+            dec_convt2 = relu(dec_convt2)
+         with tf.variable_scope('g_dec3'):
+            dec_convt3 = tf.concat([enc_conv6, dec_convt2], axis=3)
+            print dec_convt3
+            dec_convt3 = conv2d_transpose(dec_convt3, 512, stride=2, kernel_size=4)
+            dec_convt3 = batch_norm(dec_convt3)
+            dec_convt3 = relu(dec_convt3)
+         with tf.variable_scope('g_dec4'):
+            dec_convt4 = tf.concat([enc_conv5, dec_convt3], axis=3)
+            print dec_convt4
+            dec_convt4 = conv2d_transpose(dec_convt4, 512, stride=2, kernel_size=4)
+            dec_convt4 = batch_norm(dec_convt4)
+            dec_convt4 = relu(dec_convt4)
+         with tf.variable_scope('g_dec5'):
+            dec_convt5 = tf.concat([enc_conv4, dec_convt4], axis=3)
+            print dec_convt5
+            dec_convt5 = conv2d_transpose(dec_convt5, 512, stride=2, kernel_size=4)
+            dec_convt5 = batch_norm(dec_convt5)
+            dec_convt5 = relu(dec_convt5)
+         
+         exit()
+         
 
          num_encoder_layers = len(layers)
          for decoder_layer, (out_channels, dropout) in enumerate(layer_specs):
