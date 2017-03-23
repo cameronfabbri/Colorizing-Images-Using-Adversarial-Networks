@@ -75,6 +75,12 @@ def netG(L_images, num_gpu):
             dec_convt5 = conv2d_transpose(dec_convt5, 512, stride=2, kernel_size=4)
             dec_convt5 = batch_norm(dec_convt5)
             dec_convt5 = relu(dec_convt5)
+         with tf.variable_scope('g_dec6'):
+            dec_convt6 = tf.concat([enc_conv3, dec_convt5], axis=3)
+            print dec_convt6
+            dec_convt6 = conv2d_transpose(dec_convt6, 512, stride=2, kernel_size=4)
+            dec_convt6 = batch_norm(dec_convt6)
+            dec_convt6 = relu(dec_convt6)
          
          exit()
          
