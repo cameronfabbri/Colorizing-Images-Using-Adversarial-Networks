@@ -71,6 +71,7 @@ if __name__ == '__main__':
    
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
+
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
       predict_ab = pix2pix.netG(test_L, 0, UPCONVS)
@@ -109,9 +110,6 @@ if __name__ == '__main__':
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess, coord=coord)
 
-   #batch_z = np.random.normal(-1.0, 1.0, size=[BATCH_SIZE, 64, 64, 1]).astype(np.float32)
-   # get predictions and true images
-   #colored = sess.run(prediction, feed_dict={z:batch_z})
    colored = sess.run(prediction)
    true_   = sess.run(true_image)
    
@@ -119,14 +117,10 @@ if __name__ == '__main__':
 
    # save out both
    i = 0
-   for c in colored:
+   for c,p in zip(colored, true_):
       misc.imsave(IMAGES_DIR+str(step)+'_'+str(i)+'_col.png', c)
+      misc.imsave(IMAGES_DIR+str(step)+'_'+str(i)+'_true.png', p)
+      exit()
       if i == 10: break
       i += 1
-   i = 0
-   #for t in true_:
-   #   misc.imsave(IMAGES_DIR+str(step)+'_'+str(i)+'_true.png', t)
-   #   #if i == 3: break
-   #   i += 1
-
    exit()
