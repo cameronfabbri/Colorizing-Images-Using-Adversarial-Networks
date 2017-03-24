@@ -87,7 +87,7 @@ if __name__ == '__main__':
    exp_info['L1_WEIGHT']       = L1_WEIGHT
    exp_info['L2_WEIGHT']       = L2_WEIGHT
    exp_info['GAN_WEIGHT']      = GAN_WEIGHT
-   exp_info['UPCONV']          = UPCONV
+   exp_info['UPCONV']          = UPCONVS
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
