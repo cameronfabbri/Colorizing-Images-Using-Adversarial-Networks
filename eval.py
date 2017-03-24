@@ -42,9 +42,10 @@ if __name__ == '__main__':
    SIZE            = a['SIZE']
    L1_WEIGHT       = a['L1_WEIGHT']
    L2_WEIGHT       = a['L2_WEIGHT']
-   GAN_WEIGHT       = a['GAN_WEIGHT']
+   GAN_WEIGHT      = a['GAN_WEIGHT']
+   UPCONVS         = a['UPCONVS'] 
 
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'_'+str(UPCONVS)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
    
    print
@@ -58,7 +59,8 @@ if __name__ == '__main__':
    print 'NUM_GPU:         ',NUM_GPU
    print 'L1_WEIGHT:       ',L1_WEIGHT
    print 'L2_WEIGHT:       ',L2_WEIGHT
-   print 'GAN_WEIGHT:       ',GAN_WEIGHT
+   print 'GAN_WEIGHT:      ',GAN_WEIGHT
+   print 'UPCONVS:         ',UPCONVS
    print
 
    Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, train=False, SIZE=SIZE)
@@ -70,7 +72,7 @@ if __name__ == '__main__':
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
    if ARCHITECTURE == 'pix2pix':
-      import pix2pix_ as pix2pix
+      import pix2pix
       predict_ab = pix2pix.netG(test_L, 0)
    if ARCHITECTURE == 'colorarch':
       import colorarch
