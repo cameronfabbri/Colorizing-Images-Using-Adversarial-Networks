@@ -34,6 +34,7 @@ if __name__ == '__main__':
    parser.add_argument('--L1_WEIGHT',      required=False,help='weight of L1 for combined loss',type=float,default=100.0)
    parser.add_argument('--L2_WEIGHT',      required=False,help='weight of L2 for combined loss',type=float,default=0.0)
    parser.add_argument('--GAN_WEIGHT',     required=False,help='weight of GAN for combined loss',type=float,default=1.0)
+   parser.add_argument('--UPCONVS',        required=False,help='flag for using upconvs or not',type=int,default=1)
    a = parser.parse_args()
 
    PRETRAIN_EPOCHS = a.PRETRAIN_EPOCHS
@@ -53,8 +54,9 @@ if __name__ == '__main__':
    L1_WEIGHT       = a.L1_WEIGHT
    L2_WEIGHT       = a.L2_WEIGHT
    GAN_WEIGHT      = a.GAN_WEIGHT
+   UPCONVS         = a.UPCONVS
    
-   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'/'
+   EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'_'+str(UPCONVS)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
 
    print
@@ -85,6 +87,7 @@ if __name__ == '__main__':
    exp_info['L1_WEIGHT']       = L1_WEIGHT
    exp_info['L2_WEIGHT']       = L2_WEIGHT
    exp_info['GAN_WEIGHT']      = GAN_WEIGHT
+   exp_info['UPCONV']          = UPCONV
    exp_pkl = open(EXPERIMENT_DIR+'info.pkl', 'wb')
    data = pickle.dumps(exp_info)
    exp_pkl.write(data)
@@ -127,7 +130,7 @@ if __name__ == '__main__':
    if ARCHITECTURE == 'pix2pix':
       #import pix2pix
       import pix2pix_ as pix2pix
-      gen_ab = pix2pix.netG(L_image, NUM_GPU)
+      gen_ab = pix2pix.netG(L_image, NUM_GPU, UPCONVS)
       D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
       D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
    
