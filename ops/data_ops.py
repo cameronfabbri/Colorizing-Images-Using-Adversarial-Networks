@@ -302,7 +302,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
    if train: input_paths = train_paths
    else:
       random.shuffle(test_paths)
-      input_paths = test_paths[:4]
+      input_paths = test_paths[123:127]
    print len(input_paths),'training images!'
    decode = tf.image.decode_image
    
