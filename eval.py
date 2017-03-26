@@ -121,6 +121,6 @@ if __name__ == '__main__':
    #for c in colored:
       misc.imsave(IMAGES_DIR+str(step)+'_'+str(i)+'_col.png', c)
       misc.imsave(IMAGES_DIR+str(step)+'_'+str(i)+'_true.png', p)
-      if i == 10: break
+      #if i == 10: break
       i += 1
    exit()
