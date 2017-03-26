@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+
+\begin{document}
+
+\centerline{\sc \large Project Report}
+\vspace{.5pc}
+\centerline{\sc Team Name: Yet Another Layer [YAL]}
+\centerline{\sc Team Members: Cameron Fabbri, MD Jahidul Islam}
+\centerline{\sc 3/27/2017}
+\vspace{2pc}
+
+\centerline{\sc \large Generative Adversarial Networks for Automatic Image Colorization }
+
+\section{Objectives}
+Our objectives given in the project proposal are stated below. 
+
+\noindent (1) Implement the state of the art[1] for image colorization. \newline
+\noindent (2) Implement Deep Convolutional Generative Adversarial Networks (DCGANs)[3]. \newline
+\noindent (3) Implement Energy-Based Generative Adversarial Networks (EBGANs).[2] \newline
+\noindent (4) Explore methods to pretrain the model used in 1 and fine tune it as a generator in 2 and 3.
+\newline
+\noindent (5) Time permitting, develop our own GAN architecture for comparison. \newline
+
+\noindent Jahidul: 1, 4, 5 \newline
+\noindent Cameron: 2, 3, 5 \newline
+
+\noindent Cameron has implemented an adversarial network similar to the architecture used in [6]. Our model
+is capable of using a combination of multiple loss functions. These include the typical L1 and L2 losses,
+as well as various types of adversarial losses, such as the Wasserstein GAN [7] and the Least Squares GAN
+[8]. 
+
+\section{To Do}
+Pretrain the generator
+Add the colorization loss function
+Train on multiple classes
+
+\section{References}
+[1] Zhang, Richard, Phillip Isola, and Alexei A. Efros. "Colorful image colorization." 
+European Conference on Computer Vision. Springer International Publishing, 2016.
+\vspace{2pt}
+
+\noindent [2] J. Zhao, M. Mathieu, and Y. LeCun.  Energy-based Generative Adversarial 
+Network. ArXiv e-prints, September 2016.
+\vspace{2pt}
+
+\noindent [3] Radford, Alec, Luke Metz, and Soumith Chintala. "Unsupervised representation learning with deep
+convolutional generative adversarial networks." arXiv preprint arXiv:1511.06434 (2015).
+
+\noindent [4] Goodfellow, Ian, et al. "Generative adversarial nets." Advances in neural information processing systems. 2014.
+
+\noindent [5] Liu, Ziwei, et al. "Deep learning face attributes in the wild." Proceedings of the IEEE International Conference on Computer Vision. 2015.
+
+\noindent [6] Isola, Phillip, et al. "Image-to-image translation with conditional adversarial networks." arXiv preprint arXiv:1611.07004 (2016).
+
+\noindent [7] Arjovsky, Martin, Soumith Chintala, and Léon Bottou. "Wasserstein gan." arXiv preprint arXiv:1701.07875 (2017).
+
+\noindent [8] Mao, Xudong, et al. "Least Squares Generative Adversarial Networks." arXiv preprint arXiv:1611.04076 (2016).
+
+\end{document}
