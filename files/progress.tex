@@ -3,7 +3,7 @@
 
 \begin{document}
 
-\centerline{\sc \large Project Report}
+\centerline{\sc \large Project Progress Report}
 \vspace{.5pc}
 \centerline{\sc Team Name: Yet Another Layer [YAL]}
 \centerline{\sc Team Members: Cameron Fabbri, MD Jahidul Islam}
@@ -29,11 +29,19 @@ Our objectives given in the project proposal are stated below.
 is capable of using a combination of multiple loss functions. These include the typical L1 and L2 losses,
 as well as various types of adversarial losses, such as the Wasserstein GAN [7] and the Least Squares GAN
 [8]. 
+\vspace{1pc}
+
+\noindent Jahidul has implemented the network shown in [1], but using L2 and L1 as a loss function, as
+opposed to the one used in the paper. These two will serve as a good comparison when that loss function is
+fully implemented.
+\vspace{1pc}
+
+\noindent Both of these have been trained and tested on the CelebA dataset [5]. Samples are shown below.
 
 \section{To Do}
-Pretrain the generator
-Add the colorization loss function
-Train on multiple classes
+We still have a number of things to test, such as pretraining the generator, implementing Energy-Based GANs,
+combining the loss function in [1] with GAN loss, and training on multiple classes. While some of our results
+show good performance on one class, we are uncertain how this will scale to multiple classes.
 
 \section{References}
 [1] Zhang, Richard, Phillip Isola, and Alexei A. Efros. "Colorful image colorization." 
