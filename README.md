@@ -9,7 +9,7 @@ There will only be one train file, and will take in a configuration file definin
 and what architecture to use.
 
 ### To-Do
-Be able to load up a pretrained model when starting.
+Get imagenet working
 
 #### Project Ideas/Goals
 * Implement the [state of the art](http://richzhang.github.io/colorization/) for colorizing grayscale photos.

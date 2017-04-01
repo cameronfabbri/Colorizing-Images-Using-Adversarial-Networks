@@ -30,13 +30,17 @@ Our objectives given in the project proposal are stated below.
 \noindent Cameron has implemented an adversarial network similar to the architecture used in [6]. Our model
 is capable of using a combination of multiple loss functions. These include the typical L1 and L2 losses,
 as well as various types of adversarial losses, such as the Wasserstein GAN [7] and the Least Squares GAN
-[8]. 
+[8].
 \vspace{1pc}
 
 \noindent Jahidul has implemented the Colorful Colorization network shown in [1] using L2 and L1 loss function. The original paper also implemented their own loss function, which is a major contribution to their work. Jahidul is currently implementing that loss function. We expect an improved colorization performance of the model using their customized loss function. 
 \vspace{3mm}
 
 \noindent Both of these have been trained and tested on the CelebA dataset [5]. Samples are shown below.
+The different type of GAN Methods shown are as follows. GAN follows the loss as described in [4],
+Wasserstein follows the loss as described in [7], and Least Squares follows the loss described in [8]. The
+final loss for each model is informally $(GAN Weight \times GAN Method) + (L1 Weight \times L1 Loss) +
+(L2 Weight \times L2 Loss)$
 
 \begin{figure*}[t]
 \vspace{-10mm}
@@ -61,7 +65,17 @@ as well as various types of adversarial losses, such as the Wasserstein GAN [7] 
 \begin{figure*}[t]
 \vspace{-10mm}
 \hspace{-20mm}
-\includegraphics [scale=0.35]{3.pdf}
+\includegraphics [scale=0.34]{3.pdf}
+\vspace{-16mm}
+\caption{Results for colorization with different models (contd.)}
+%\vspace{-5mm}
+\label{fig:2}
+\end{figure*}
+
+\begin{figure*}[t]
+\vspace{-10mm}
+\hspace{-20mm}
+\includegraphics [scale=0.35]{4.pdf}
 \vspace{-18mm}
 \caption{Results for colorization with different models (contd.)}
 %\vspace{-5mm}
@@ -72,7 +86,10 @@ as well as various types of adversarial losses, such as the Wasserstein GAN [7] 
 \section{To Do}
 We still have a number of things to test, such as pretraining the generator, implementing Energy-Based GANs,
 combining the loss function in [1] with GAN loss, and training on multiple classes. While some of our results
-show good performance on one class, we are uncertain how this will scale to multiple classes.
+show good performance on one class, we are uncertain how this will scale to multiple classes. Another
+idea we are considering is, given the number of different combinations of L1 and L2 weights that can be
+used with the GAN loss, we are thinking that given a perfect discrimator, the weights of L1 and L2 can be
+treated as trainable parameters, and optimized in order to fool the discriminator.
 
 
 
@@ -97,5 +114,6 @@ convolutional generative adversarial networks." arXiv preprint arXiv:1511.06434 
 \noindent [7] Arjovsky, Martin, Soumith Chintala, and Léon Bottou. "Wasserstein gan." arXiv preprint arXiv:1701.07875 (2017).
 
 \noindent [8] Mao, Xudong, et al. "Least Squares Generative Adversarial Networks." arXiv preprint arXiv:1611.04076 (2016).
+
 
 \end{document}
