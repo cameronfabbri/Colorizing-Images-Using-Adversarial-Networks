@@ -13,7 +13,7 @@ import sys
 import os
 import time
 
-sys.path.insert(0, 'ops/')
+sys.path.insert(0, '../ops/')
 sys.path.insert(0, 'config/')
 
 import data_ops
@@ -108,23 +108,25 @@ if __name__ == '__main__':
          gen_img = basic_ARCH.netG(L_image, BATCH_SIZE, NUM_GPU)
    if ARCHITECTURE == 'ColCol':
          print 'Basic Architecture'
-         gen_img = ColCol_ARCH.netG(L_image, BATCH_SIZE, NUM_GPU)
+         gen_img = ColCol_ARCH.netG(L_image, NUM_GPU)
     
    
    pred = data_ops.augment(gen_img, L_image)
+   trueI = data_ops.augment(ab_image, L_image)
  
       
       
    if LOSS_METHOD == 'L2':
          print 'Using L2 loss'
          #gen_loss_mse = tf.reduce_mean(2 * tf.nn.l2_loss(gen_img - ab_image)) / (IMAGE_SIZE_ * IMAGE_SIZE_ * 100 * 100)
-         gen_loss = tf.reduce_mean(tf.nn.l2_loss(gen_img - ab_image))
+	 #gen_loss = tf.reduce_mean(tf.pow(trueI-pred, 2))
+         gen_loss = tf.reduce_mean(tf.nn.l2_loss(ab_image - gen_img))
          tf.summary.scalar('L2', gen_loss)
          tf.summary.image('gen. images', pred, max_outputs=8)
       
    if LOSS_METHOD == 'L1':
          # Least squares requires sigmoid activation on D    
-         gen_loss  = tf.reduce_mean(tf.abs(ab_image-gen_img))
+         gen_loss  = tf.reduce_mean(tf.abs(ab_image-gen_img) * (IMAGE_SIZE_ * IMAGE_SIZE_) )
          tf.summary.scalar('L1', gen_loss)
          tf.summary.image('gen. images', pred, max_outputs=8)
       

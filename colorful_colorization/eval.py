@@ -11,7 +11,7 @@ import time
 from scipy import misc
 from skimage import color
 
-sys.path.insert(0, 'ops/')
+sys.path.insert(0, '../ops/')
 sys.path.insert(0, 'config/')
 
 import data_ops
@@ -48,7 +48,7 @@ if __name__ == '__main__':
    print 'NUM_GPU:         ',NUM_GPU
    print
 
-   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, train=False, SIZE=SIZE)
+   Data = data_ops.loadData(DATA_DIR, DATASET, BATCH_SIZE, train=False, SIZE=256)
    num_train = Data.count
    
    # The gray 'lightness' channel in range [-1, 1]
@@ -60,6 +60,9 @@ if __name__ == '__main__':
    if ARCHITECTURE == 'ColCol':
       import ColCol_ARCH
       predict_ab = ColCol_ARCH.netG(test_L, 0)
+   if ARCHITECTURE == 'basic':
+      import basic_ARCH
+      predict_ab = basic_ARCH.netG(test_L, 0)
 
 
    # reconstruct prediction image from test_L and predict_ab

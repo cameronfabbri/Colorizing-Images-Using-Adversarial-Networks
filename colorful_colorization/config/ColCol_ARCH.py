@@ -40,7 +40,7 @@ def conv2d_transpose(x, out_channels, stride=2, kernel_size=4):
       return conv
 
 
-def netG(L_image, batch_size, num_gpu):
+def netG(L_image, num_gpu):
    if   num_gpu == 0: Machines = ['/cpu:0']
    elif num_gpu == 1: Machines = ['/gpu:0']
    elif num_gpu == 2: Machines = ['/gpu:0', '/gpu:1']
