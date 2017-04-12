@@ -148,7 +148,7 @@ if __name__ == '__main__':
          print 'Using an L2 weight of',L2_WEIGHT
          gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
-      else:
+      if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
          print 'Just using GAN loss, no L1 or L2'
          errG = gen_loss_GAN
       errD = tf.reduce_mean(D_real - D_fake)
@@ -168,12 +168,15 @@ if __name__ == '__main__':
          print 'Using an L2 weight of',L2_WEIGHT
          gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
-      else:
+      elif L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
+         print L1_WEIGHT
+         print L2_WEIGHT
+         exit()
          print 'Just using GAN loss, no L1 or L2'
          errG = gen_loss_GAN
       errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
 
-   if LOSS_METHOD == 'gan' or 'cnn':
+   if LOSS_METHOD == 'gan' or LOSS_METHOD == 'cnn':
       print 'Using original GAN loss'
       if LOSS_METHOD is not 'cnn':
          D_real = tf.nn.sigmoid(D_real)
@@ -305,16 +308,9 @@ if __name__ == '__main__':
             D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
 
          elif LOSS_METHOD == 'gan':
-            if ARCHITECTURE == 'cganarch':
-               batch_z = np.random.normal(-1.0, 1.0, size=[BATCH_SIZE, 64, 64, 1]).astype(np.float32)
-               sess.run(D_train_op, feed_dict={z:batch_z})
-               sess.run(G_train_op, feed_dict={z:batch_z})
-            else:
-               sess.run(D_train_op)
-               sess.run(G_train_op)
-            if ARCHITECTURE == 'cganarch':
-               D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op], feed_dict={z:batch_z})
-            else: D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+            sess.run(D_train_op)
+            sess.run(G_train_op)
+            D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
          elif LOSS_METHOD == 'cnn':
             sess.run(G_train_op)
             loss, summary = sess.run([errG, merged_summary_op])
