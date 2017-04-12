@@ -167,6 +167,7 @@ def getPaths(data_dir, ext='jpg'):
    return image_paths
 
 
+# TODO add in files to exclude (gray ones)
 def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
    
    if data_dir is None or not os.path.exists(data_dir):
