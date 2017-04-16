@@ -335,7 +335,7 @@ if __name__ == '__main__':
          summary_writer.add_summary(summary, step)
          if LOSS_METHOD != 'cnn' and step%50==0: print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
          else:
-            if step%50==0:print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
+            if step%10==0:print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
          step += 1
          
          if step%500 == 0:
