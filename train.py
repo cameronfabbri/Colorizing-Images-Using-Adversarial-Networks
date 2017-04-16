@@ -130,9 +130,13 @@ if __name__ == '__main__':
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
       gen_ab = pix2pix.netG(L_image, NUM_GPU, UPCONVS)
-      D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
-      D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
-   
+      if LOSS_METHOD == 'energy':
+         D_real, embeddings_real, decoded_real = pix2pix.energyNetD(L_image, ab_image, BATCH_SIZE)
+         D_fake, embeddings_fake, decoded_fake = pix2pix.energyNetD(L_image, gen_ab, BATCH_SIZE, reuse=True)
+      else:
+         D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
+         D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
+
    e = 1e-12
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
@@ -199,11 +203,26 @@ if __name__ == '__main__':
    
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
-   
+      if LOSS_METHOD is not 'cnn':
+         margin = 80
+         gen_loss_GAN = D_fake
+      if L1_WEIGHT > 0.0:
+         print 'Using an L1 weight of',L1_WEIGHT
+         gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
+      if L2_WEIGHT > 0.0:
+         print 'Using an L2 weight of',L2_WEIGHT
+         gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
+         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
+      if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
+         print 'Just using GAN loss, no L1 or L2'
+         errG = gen_loss_GAN
+      errD = margin - D_fake+D_real
+
    # tensorboard summaries
-   try: tf.summary.scalar('d_loss', errD)
+   try: tf.summary.scalar('d_loss', tf.reduce_mean(errD))
    except:pass
-   try: tf.summary.scalar('g_loss', errG)
+   try: tf.summary.scalar('g_loss', tf.reduce_mean(errG))
    except:pass
 
    # get all trainable variables, and split by network G and network D
@@ -303,11 +322,9 @@ if __name__ == '__main__':
          
          elif LOSS_METHOD == 'least_squares':
             sess.run(D_train_op)
-            #for i in range(10):
             sess.run(G_train_op)
             D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
-
-         elif LOSS_METHOD == 'gan':
+         elif LOSS_METHOD == 'gan'or LOSS_METHOD == 'energy':
             sess.run(D_train_op)
             sess.run(G_train_op)
             D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
