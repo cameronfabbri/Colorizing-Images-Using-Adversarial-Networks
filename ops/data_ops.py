@@ -157,19 +157,23 @@ def lab_to_rgb(lab):
 
         return tf.reshape(srgb_pixels, tf.shape(lab))
 
-def getPaths(data_dir, ext='jpg'):
+def getPaths(data_dir, gray_images=None, ext='jpg'):
    pattern   = '*.'+ext
    image_paths = []
    for d, s, fList in os.walk(data_dir):
       for filename in fList:
          if fnmatch.fnmatch(filename, pattern):
-            image_paths.append(os.path.join(d,filename))
+            fname_ = os.path.join(d,filename)
+            if gray_images is not None:
+               if fname_ in gray_images:
+                  continue
+            image_paths.append(fname_)
    return image_paths
 
 
 # TODO add in files to exclude (gray ones)
 def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
-   
+
    if data_dir is None or not os.path.exists(data_dir):
       raise Exception('data_dir does not exist')
 
@@ -227,6 +231,11 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
          pf.write(data)
          pf.close()
    if dataset == 'places2_standard':
+      gray_images = []
+      with open('files/gray_images_standard.txt','r') as f:
+         for line in f:
+            line = line.rstrip()
+            gray_images.append(line)
       print 'Using places2 standard'
       pkl_train_file = 'files/places2_standard_train.pkl'
       pkl_test_file  = 'files/places2_standard_test.pkl'
@@ -238,8 +247,8 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
       else:
          train_dir = data_dir+'train_256/'
          test_dir  = data_dir+'test_256/'
-         train_paths = getPaths(train_dir)
-         test_paths  = getPaths(test_dir)
+         train_paths = getPaths(train_dir, gray_images=gray_images)
+         test_paths  = getPaths(test_dir, gray_images=gray_images)
          random.shuffle(train_paths)
          random.shuffle(test_paths)
          pf   = open(pkl_train_file, 'wb')

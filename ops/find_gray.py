@@ -11,7 +11,7 @@ import fnmatch
 import sys
 import os
 
-f = open('gray_images.txt', 'a')
+f = open('gray_images_standard.txt', 'a')
 
 if __name__ == '__main__':
 
@@ -31,4 +31,4 @@ if __name__ == '__main__':
 
       if shape < 3:
          print image
-         f.write(image)
+         f.write(image+'\n')

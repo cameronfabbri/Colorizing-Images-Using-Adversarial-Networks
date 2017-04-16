@@ -1,1 +1,1 @@
-python train.py --ARCHITECTURE=pix2pix --GAN_EPOCHS=4 --DATASET=celeba --DATA_DIR=/ --BATCH_SIZE=4 --NUM_GPU=1 --JITTER=0 --LOSS_METHOD=gan --SIZE=256 --GAN_LR=1e-4 --L1_WEIGHT=100.0 --L2_WEIGHT=0.0
+python train.py --ARCHITECTURE=pix2pix --DATASET=places2_challenge --DATA_DIR=/mnt/data2/images/places2_challenge/ --BATCH_SIZE=4 --GAN_LR=1e-4 --JITTER=0 --LOSS_METHOD=gan --SIZE=256 --L1_WEIGHT=100.0 --L2_WEIGHT=0.0 --GAN_WEIGHT=1.0 --UPCONVS=0 --GAN_EPOCHS=8
