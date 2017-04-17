@@ -1,0 +1,122 @@
+%\documentclass{winnower}
+\documentclass{article}
+\begin{document}
+
+\title{Generative Adversarial Networks}
+
+\author{Cameron Fabbri}
+%\affil{Computer Science and Engineering, University of Minnesota}
+\date{4/24/2017}
+
+\maketitle
+
+\begin{abstract}
+We provide an overview of Generative Adversarial Networks as a class of generative models for
+image generation, and discuss how they can be applied towards the task of automatic image colorization. 
+We first give a brief overview of Deep Learning and the recent advances in generative models.
+We then discuss several varients of Generative Adversarial Networks, the problems they pose during training,
+and theoretical methods towards stabalizing training.
+\end{abstract}
+
+
+%-------------------------------------------------%
+\section{Introduction}
+%-------------------------------------------------%
+Deep learning has recently shown impressive results towards various problems in multiple domains such as speech recognition,
+image classification, image segmentation, and reinforcement learning []. Until recently, much of the focus was towards
+discriminative models, which aims to map a high-dimensional input, such as an image, to a class label. Deep generative models,
+such as Deep Botlzmann Machines and Deep Belief Networks, have not had the same level of success.
+Generative Adversarial Networks (GANs)[1] are a class of generative models that have shown great success in generatig realistic
+images. Despite their success, they are known to be very difficult to train, and are extremely sensitive to modifications.
+For this reason it is not yet straightforward to directly apply them towards a different problem.
+
+Since their introduction in 2014, there have been several large contributions made towards stabalizing and understanding
+the training process of GANs. We discuss and compare four different objective functions used for training GANs:
+
+\begin{itemize}
+   \item Classification loss
+   \item Least Squares loss
+   \item Energy loss
+   \item Wasserstein
+\end{itemize}
+
+\noindent We provide a background on deep learning in Section 2, and in Section 3 discuss the varients of GANs mentioned above.
+Section 4 demonstrates these varients on the task of automatically colorizing grayscale images. The Appendix provides further
+results from our experiments.
+
+%-------------------------------------------------%
+\section{Background}
+%-------------------------------------------------%
+This section provides a brief overview of deep learning (Goodfellow, et al., 2016).
+
+%-------------------------------------------------%
+\subsection{Deep Learning}
+%-------------------------------------------------%
+Deep learning is a class of machine learning algorithms that use one or more \textit{hidden layers} between the input and output
+to automatically learn a heirarchy of concepts.
+
+%-------------------------------------------------%
+\subsection{Convolutional Neural Networks}
+%-------------------------------------------------%
+
+
+%-------------------------------------------------%
+\subsection{Generative Models}
+%-------------------------------------------------%
+Much of the early success in deep learning was geared towards discriminative models.
+
+
+
+%-------------------------------------------------%
+\section{Generative Adversarial Networks}
+%-------------------------------------------------%
+
+
+%-------------------------------------------------%
+\subsection{Deep Convolutional GANs}
+%-------------------------------------------------%
+
+
+%-------------------------------------------------%
+\subsection{Conditional Generative Adversarial Networks}
+%-------------------------------------------------%
+
+
+%-------------------------------------------------%
+\subsection{Least Squares GANs}
+%-------------------------------------------------%
+
+
+%-------------------------------------------------%
+\subsection{Energy-Based GANs}
+%-------------------------------------------------%	 
+
+
+%-------------------------------------------------%
+\subsection{Wasserstein GANs}
+%-------------------------------------------------%
+
+
+%-------------------------------------------------%
+\section{Colorization}
+%-------------------------------------------------%
+We now show how adversarial networks can be used for generating a plausible color version of a grayscale image.
+The problem is set up as a cGAN, where the generator and descriminator are both conditioned on the grayscale image.
+
+
+
+
+
+
+\bibliographystyle{abbrvnat}
+[1] Graves, Alex, and Navdeep Jaitly. "Towards End-To-End Speech Recognition with Recurrent Neural Networks." ICML. Vol. 14. 2014.
+[2] Goodfellow, Ian, Yoshua Bengio, and Aaron Courville. Deep learning. MIT Press, 2016.
+\bibliography{winnower_template}
+
+\appendix
+
+\section{Appendix}
+Here we show 
+
+
+\end{document}
