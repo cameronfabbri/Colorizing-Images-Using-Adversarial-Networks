@@ -4,6 +4,7 @@ from scipy import misc
 import numpy as np
 import argparse
 import ntpath
+import pix2pix
 import sys
 import os
 import time
@@ -125,17 +126,17 @@ if __name__ == '__main__':
    
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
-   
-   # using the architecture from https://arxiv.org/pdf/1611.07004v1.pdf
-   if ARCHITECTURE == 'pix2pix':
-      import pix2pix
-      gen_ab = pix2pix.netG(L_image, NUM_GPU, UPCONVS)
-      if LOSS_METHOD == 'energy':
-         D_real, embeddings_real, decoded_real = pix2pix.energyNetD(L_image, ab_image, BATCH_SIZE)
-         D_fake, embeddings_fake, decoded_fake = pix2pix.energyNetD(L_image, gen_ab, BATCH_SIZE, reuse=True)
-      else:
-         D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
-         D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
+
+   # generated ab values from generator
+   gen_ab = pix2pix.netG(L_image, NUM_GPU, UPCONVS)
+
+   # D's decision on real images and fake images
+   if LOSS_METHOD == 'energy':
+      D_real, embeddings_real, decoded_real = pix2pix.energyNetD(L_image, ab_image, BATCH_SIZE)
+      D_fake, embeddings_fake, decoded_fake = pix2pix.energyNetD(L_image, gen_ab, BATCH_SIZE, reuse=True)
+   else:
+      D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
+      D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
 
    e = 1e-12
    if LOSS_METHOD == 'wasserstein':
@@ -203,19 +204,19 @@ if __name__ == '__main__':
    
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
-      if LOSS_METHOD is not 'cnn':
-         margin = 80
-         gen_loss_GAN = D_fake
+      margin = 160
+      gen_loss_GAN = D_fake
+      
       if L1_WEIGHT > 0.0:
          print 'Using an L1 weight of',L1_WEIGHT
-         gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
-         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
+         gen_loss_L1 = tf.reduce_mean(tf.abs(ab_image-gen_ab))
+         errG        = gen_loss_GAN*GAN_WEIGHT + gen_loss_L1*L1_WEIGHT
       if L2_WEIGHT > 0.0:
          print 'Using an L2 weight of',L2_WEIGHT
-         gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
-         errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
+         gen_loss_L2 = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
+         errG        = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
       if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
-         print 'Just using GAN loss, no L1 or L2'
+         print 'Just using energy loss, no L1 or L2'
          errG = gen_loss_GAN
       errD = margin - D_fake+D_real
 
@@ -333,9 +334,9 @@ if __name__ == '__main__':
             loss, summary = sess.run([errG, merged_summary_op])
 
          summary_writer.add_summary(summary, step)
-         if LOSS_METHOD != 'cnn' and step%50==0: print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,' time:',time.time()-s
+         if LOSS_METHOD != 'cnn' and step%10==0: print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,'time:',time.time()-s
          else:
-            if step%10==0:print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
+            if step%50==0:print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
          step += 1
          
          if step%500 == 0:

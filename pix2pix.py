@@ -148,14 +148,12 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
 
 '''
 '''
-def energyEncoder(L_images, ab_images, reuse=False):
+def energyEncoder(ab_images, reuse=False):
    print 'DISCRIMINATOR' 
    sc = tf.get_variable_scope()
    with tf.variable_scope(sc, reuse=reuse):
-      input_images = tf.concat([L_images, ab_images], axis=3)
 
-      print 'input images:',input_images
-      conv1 = layers.conv2d(input_images, 64, 4, stride=2, activation_fn=None, scope='d_conv1')
+      conv1 = layers.conv2d(ab_images, 64, 4, stride=2, activation_fn=None, scope='d_conv1')
       conv1 = lrelu(conv1)
       print 'conv1:',conv1
 
@@ -183,7 +181,7 @@ def energyDecoder(encoded, reuse=False):
    with tf.variable_scope(sc, reuse=reuse):
       
       conv5 = layers.conv2d_transpose(encoded, 256, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv5')
-      conv5 = lrelu(conv4)
+      conv5 = lrelu(conv5)
 
       conv6 = layers.conv2d_transpose(conv5, 128, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv6')
       conv6 = lrelu(conv6)
@@ -191,7 +189,7 @@ def energyDecoder(encoded, reuse=False):
       conv7 = layers.conv2d_transpose(conv6, 64, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv7')
       conv7 = lrelu(conv7)
 
-      conv8 = layers.conv2d_transpose(conv7, 3, 4, stride=2, activation_fn=tf.nn.tanh, scope='d_conv8')
+      conv8 = layers.conv2d_transpose(conv7, 2, 4, stride=2, activation_fn=tf.nn.tanh, scope='d_conv8')
 
       print 'encoded:',encoded
       print 'conv5:',conv5
@@ -207,11 +205,21 @@ def energyDecoder(encoded, reuse=False):
       return conv8
 
 
+'''
+   Only encoding and decoding the ab values, then concatenating onto the
+   lightness channel and taking the mse
+'''
 def energyNetD(L_images, ab_images, batch_size, reuse=False):
+   # concat lightness channel with ab values
    input_images = tf.concat([L_images, ab_images], axis=3)
-   encoded = energyEncoder(L_images, ab_images, reuse=reuse)
+
+   # encode the ab values
+   encoded = energyEncoder(ab_images, reuse=reuse)
+
+   # decode ab values
    decoded = energyDecoder(encoded, reuse=reuse)
-   return mse(decoded, input_images, batch_size), encoded, decoded
+   decoded_images = tf.concat([L_images, decoded], axis=3)
+   return mse(decoded_images, input_images, batch_size), encoded, decoded
 
 def mse(pred, real, batch_size):
    return tf.sqrt(2*tf.nn.l2_loss(pred-real))/batch_size
