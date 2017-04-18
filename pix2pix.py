@@ -131,7 +131,6 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
 
             input_images = tf.concat([L_images, ab_images], axis=3)
 
-            # trying the pixel gan architecture
             with tf.variable_scope('d_conv1'): conv1 = lrelu(conv2d(input_images, 64, kernel_size=4, stride=2))
             with tf.variable_scope('d_conv2'): conv2 = lrelu(batch_norm(conv2d(conv1, 128, kernel_size=4, stride=2)))
             with tf.variable_scope('d_conv3'): conv3 = lrelu(batch_norm(conv2d(conv2, 256, kernel_size=4, stride=2)))

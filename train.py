@@ -204,7 +204,7 @@ if __name__ == '__main__':
    
    if LOSS_METHOD == 'energy':
       print 'Using energy loss'
-      margin = 160
+      margin = 80
       gen_loss_GAN = D_fake
       
       if L1_WEIGHT > 0.0:
