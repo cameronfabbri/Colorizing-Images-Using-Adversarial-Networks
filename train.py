@@ -240,15 +240,18 @@ if __name__ == '__main__':
    if PRETRAIN_EPOCHS > 0:
       print 'Pretraining generator for',PRETRAIN_EPOCHS,'epochs...'
       mse_loss = tf.reduce_mean((ab_image-gen_ab)**2)
-      mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR,beta1=0.5).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      #mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR,beta1=0.5).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       tf.add_to_collection('vars', mse_train_op)
       tf.summary.scalar('mse_loss', mse_loss)
    if LOSS_METHOD == 'wasserstein':
       G_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR, decay=0.9).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       D_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR, decay=0.9).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
    else:
-      G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR,beta1=0.5).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-      D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR,beta1=0.5).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
+      #G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR,beta1=0.5).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      #D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR,beta1=0.5).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
+      G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+      D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
 
    saver = tf.train.Saver(max_to_keep=1)
    
