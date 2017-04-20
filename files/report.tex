@@ -220,11 +220,42 @@ One important thing to note is the extreme diversity seen in the results, showin
 %-------------------------------------------------%
 \subsection{Energy-Based GANs}
 %-------------------------------------------------%	 
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=4in]{ebgan_results}
+      \end{array}$
+   \end{center}
+   \caption{Results from training EBGAN on faces from the CelebA dataset.}
+\end{figure}
 
 
 %-------------------------------------------------%
 \subsection{Wasserstein GANs}
 %-------------------------------------------------%
+Wasserstein GANs (WGAN)
+
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=4in]{wgan_results}
+      \end{array}$
+   \end{center}
+   \caption{Results from training WGAN on faces from the CelebA dataset.}
+\end{figure}
+
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=3in]{dcgan_errG}
+         \includegraphics[width=3in]{dcgan_errD} \\
+         \includegraphics[width=3in]{wgan_errG}
+         \includegraphics[width=3in]{wgan_errD}
+      \end{array}$
+   \end{center}
+   \caption{Top Row: Generator and Discriminator losses, respectively for DCGANs for the results shown in Figure 2. Bottom Row: Generator and Discriminator loss for WGAN for the. 
+   results shown in Figure 7. While visual quality is increasing in both models, the WGAN loss clearly shows convergence that correlates with visual quality, while the loss for DCGANs stays constant.}
+\end{figure}
 
 
 %-------------------------------------------------%
