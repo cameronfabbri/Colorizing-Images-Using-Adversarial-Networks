@@ -1,50 +1,40 @@
 %\documentclass{winnower}
 \documentclass{article}
+\usepackage{amssymb}
 \usepackage{graphicx}
+\graphicspath{{images/}}
 \usepackage[margin=0.9in]{geometry}
 \begin{document}
 
-\title{A Comparative Study of Generative Adversarial Networks}
+\title{A Comparative Study of Generative Adversarial Networks Towards Automatic Image Colorization}
 
 \author{Cameron Fabbri}
-%\affil{Computer Science and Engineering, University of Minnesota}
 \date{4/24/2017}
 
 \maketitle
-
-\begin{abstract}
-We provide an overview of Generative Adversarial Networks as a class of generative models for
-image generation, and discuss how they can be applied towards the task of automatic image colorization. 
-We first give a brief overview of Deep Learning and the recent advances in generative models.
-We then discuss several varients of Generative Adversarial Networks, the problems they pose during training,
-and theoretical methods towards stabalizing training.
-\end{abstract}
-
 
 %-------------------------------------------------%
 \section{Introduction}
 %-------------------------------------------------%
 Deep learning has recently shown impressive results towards various problems in multiple domains such as speech recognition,
 image classification, image segmentation, and reinforcement learning []. Until recently, much of the focus was towards
-discriminative models, which aims to map a high-dimensional input, such as an image, to a class label. Deep generative models,
-such as Deep Botlzmann Machines and Deep Belief Networks, have not had the same level of success.
+discriminative models, which aim to map a high-dimensional input, such as an image, to a class label. Deep generative models,
+such as Deep Botlzmann Machines, Deep Belief Networks, and Autoencoders have not had the same level of success.
 Generative Adversarial Networks (GANs)[1] are a class of generative models that have shown great success in generatig realistic
 images. Despite their success, they are known to be very difficult to train, and are extremely sensitive to modifications.
-For this reason it is not yet straightforward to directly apply them towards a different problem.\newline
+For this reason it is not yet straightforward to directly apply them towards different problems or problems of a different domain.\newline
 
 \noindent Since their introduction in 2014, there have been several large contributions made towards stabalizing and understanding
-the training process of GANs. We discuss and compare four different objective functions used for training GANs:
-
-\begin{itemize}
-   \item Classification loss
-   \item Least Squares loss
-   \item Energy loss
-   \item Wasserstein
-\end{itemize}
-
-\noindent We provide a background on deep learning in Section 2, and in Section 3 discuss the varients of GANs mentioned above.
-Section 4 demonstrates these varients on the task of automatically colorizing grayscale images. The Appendix provides further
-results from our experiments.
+the training process of GANs. I will be focusing on implementing and comparing four different methods used for training GANs towards
+the original problem of image generation. With these implemented, I apply their methods towards our goal to automatically
+colorize grayscale images. The four different variants of GANs I will be focusing on are the original GAN formulation [1], Least Squares
+GANs (LSGANs) [6], Energy-Based GANs (EBGANs) [4], and Wasserstein GAN (WGAN) [5]. The papers I will be discussing are [1,2,3,4,5,6], with additional
+references to others not listed here. The original GANs paper [1] provides a novel method towards generating images with the use of an
+adversarial loss, where both the generator and discriminator networks are multilayer perceptrons. Deep Convolutional GANs (DCGANs) [2]
+bridge the gap between recent advances in deep learning and GANs by introducing deep convolutional generative adversarial networks. The architechture they contribute
+is used in "pix2pix" [3], which approaches the problem of translating images from one domain to the other, in [4] which views the discriminator
+as an energy function, in [5] which proposes to minimize an approximation of the Earth Mover distance, and in [6], which adopt the
+least squares loss function in attepmt to overcome the vanishing gradient problem commonly seen with GANs.
 
 %-------------------------------------------------%
 \section{Background and Related Work}
@@ -89,43 +79,183 @@ design principles as shown in [inception paper]. An example CNN architecture is 
 \noindent Much focus has been put on CNNs as a discriminative model, learning a function to map some input data to some desired output label. In other words,
 they learn the conditional distribution $P(y|x)$. The rest of this paper is focused on \textit{generative} models, which instead learn the joint
 probability of the input data and labels. They attempt to model the data directly by learning $P(x,y)$. Autoencoders, Deep Boltzmann Machines, and
-Deep Belief Nets are some examples of these class of models.
+Deep Belief Nets are some examples of these class of models. Generative models are usually based on some generator network $G$, that takes as input
+a random variable $z$ sampled from some distribution, e.g $z \sim \mathcal{N}(0,1)$, and outputs a sample $x$. \newline
+
+\noindent Generative models, as the name suggest, attempt to generate new data similar to existing data. Generative models have been shown to perform
+well on many tasks such as inpainting, image denoising, and video generation. Autoencoders have been a popular form of generative model because of their
+ability to approximate some distribution of observed data, such as imagery. A simple autoencoder setup may be to learn an encoding $z$ over a set of images,
+$\mathcal{X}$, with $z$ being of a much lower dimension than that of $X \in{\mathcal{X}}$. A training procedure for a setup such as this is as follows.
+An image $X \in{\mathbb{R}^{m\times n}}$ is encoded through an encoder CNN to some latent variable $z \in{\mathbb{R}^{d}}$, which is then used as input to a
+decoder CNN to produce $X' \in{\mathbb{R}^{m\times n}}$. A loss function, such as $L_2$ is then used to compare the two, and the error is propogated back through
+the networks. To produce a new sample, a random variable $z' \sim \mathcal{N}$ can be used as input to the generator network in place of an encoded $z$. 
+An open research problem is to determine an appropriate loss function. $L_2$ and $L_1$ often result in blurry images, and may not be a correct metric for
+visual quality. A recent class of generative models proposes to instead use an \textit{adversarial} loss in place of existing loss functions in the form of
+a network.
+
 
 \begin{figure}[!htb]
    \begin{center}$
       \begin{array}{cccc}
-         \includegraphics[width=5in]{cnn}
+         \includegraphics[width=3in]{cnn}
       \end{array}$
    \end{center}
    \caption{An example of a Convolutional Neural Network}
 \end{figure}
 
+\pagebreak
+
 %-------------------------------------------------%
 \section{Generative Adversarial Networks}
 %-------------------------------------------------%
-\noindent Generative Adversarial Networks (GANs) 
+\noindent Generative Adversarial Networks (GANs) [1] are a recent class of generative models that are based on a game theory scenario in which a generator
+network is competing against an adversary. The goal is to train a generator network to generate samples that are indistinguishable from the true data, $p_{data}$,
+by mapping a random input variable $z \sim p_z$ to some some $\textbf{\textit{x}}$. This mapping can be represented as $G(z;\theta_g)$, where $G$ is a MLP with weights $\theta_g$, and $z$ is a random
+variable sampled from some distribution, e.g $z \sim \mathcal{N}(0,1)$. The discriminator, $D(\textbf{\textit{x}}; \theta_d)$ is represented by a second MLP with weights
+$\theta_d$, and outputs a scalar representing the probability that a sample $\textbf{\textit{x}}$ came from $p_{data}$ rather than from $G$. The two networks are trained
+simultaneously, with $D$ being trained to maximize the probability of correctly distinguishing whether or not a sample came from $p_{data}$ or from $G$, and $G$ being 
+trained to fool $D$ by minimizing $log(1-D(G(z)))$. This can be represented by the following objective function:
 
-%-------------------------------------------------%
-\subsection{Conditional Generative Adversarial Networks}
-%-------------------------------------------------%
+\[\min\limits_{G}\max\limits_{D} \mathbb{E}_{x \sim p_{data(x)}} [logD(\textbf{\textit{x}})] + \mathbb{E}_{z \sim p_z(z)}[log(1 - D(G(z)))]\]
+
+%\noindent GANs have been shown to optimize the Jensen-Shannon divergence (JSD)[1,7]. 
+\noindent In practice however, $D$ will be able to discriminate between real and generate samples with
+ease early in learning, due to the fact that generated images will clearly look very different than those from the training set upon initialization. As extensively shown in [7],
+as $D$ gets better, the gradient begins to vanish. This means early in learning when $D$ is often perfect, it provides little or no gradients to $G$, so $G$ cannot improve.
+To help avoid this issue, $G$ is trained to maximize $logD(G(z))$, rather than minimize $log(1-D(G(z)))$, which is able to provide much stronger gradients. To validate the
+results in [1], I trained adversarial networks on the MNIST dataset. The two networks were simple MLP. Full details can be found in the appendix. Figure 2 shows some non-cherry
+picked samples from the model. \newline
+
+\noindent Conditional GANs (cGANs) introduce a simple method to condition image generation on some extra information $y$ (e.g a class label). This is done by simply feeding
+$y$ to the generator and discriminator networks. The new objective function then becomes:
+
+\[\min\limits_{G}\max\limits_{D} \mathbb{E}_{x \sim p_{data(x)}} [logD(\textbf{\textit{x}}|y)] + \mathbb{E}_{z \sim p_z(z)}[log(1 - D(G(z|y)))]\]
+
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=3in]{gan_results}
+      \end{array}$
+   \end{center}
+   \caption{Results from training a GAN on MNIST after about 65 epochs.}
+\end{figure}
+
 
 %-------------------------------------------------%
 \subsection{Deep Convolutional GANs}
 %-------------------------------------------------%
+I now turn towards Deep Convolutional GANs (DCGANs) [2], and discuss their success in bridging the gap between CNNs and GANs. Three modifications are demonstrated throughout
+their network architecture. The first is the replacement of downsampling layers such as max or average pooling with strided convolutions. While both perform downsampling, the
+all convnet architecture allows the network to learn its own downsampling, as opposed to a harsh cut such as max pooling. The second modification is the elimination of fully
+connected layers on top of convolutional layers, as often seen in models designed for classification. The final modification is the use of Batch Normalization [9], which normalizes
+the input to each node to have zero mean and unit variance. This showed to help prevent the generator from collapsing to generate a single sample. Batch normalization is \textit{not}
+applied to the generator output and the discriminator input, as they resulted in model instability. As opposed to the \textit{maxout} [10] activation used for the discriminator in
+[1], DCGANs use a LeakyReLU activation for all layers. As for the generator, the ReLU [11] activation is used in all layers except the output layer, which uses $tanh$ to match
+with the input range of $z$, $[-1,1]$. \newline
+
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=3in]{dcgan_results}
+      \end{array}$
+   \end{center}
+   \caption{Results from training DCGANs on MNIST after only 3 epochs.}
+\end{figure}
+
+
+
+\noindent The experiments provided show that their model acts as a very powerful generator for images in several domains. They evaluate their model on the LSUN bedrooms dataset,
+as well as human faces. To show the capabilities of their model beyond image generation, they successfully used it as a feature extractor for classification. Their DCGAN model
+was trained on Imagenet-1k [12], and the features are then used for classification on CIFAR-10 images, achieving an accuracy of 82.8\%. A very impressive result is shown by modifying
+the latent vector $z$. Figure 3 shows how modifications in the latent space affect the generated images. This is further explored in [13], which combines
+cGANs with an autoencoder to control the attributes contained in generated images in a more explicit manner. To compare with the results I obtained from [1], I trained a DCGAN on MNIST.
+Results can be seen in Figure 3, and cleary contain much less noise \footnote{Code for GAN and DCGAN results can be found at https://github.com/cameronfabbri/DCGANs-Tensorflow}.
+    
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=3in]{faces}
+      \end{array}$
+   \end{center}
+   \caption{Modifications to the latent vectors $z$. For each column, the $z$ vector
+   used to generate the samples are averaged to produce the bottom image. Vector arithmetic
+   is then performed to produce a $z$ that is used to generate the center image on the right.
+   The extra images are the results of small modifications made to $z$ in the form of noise.
+   This image comes directly from [2].}
+\end{figure}
+
 
 %-------------------------------------------------%
 \subsection{Least Squares GANs}
 %-------------------------------------------------%
+Least Squares GANs (LSGANs) attempt to overcome the problem of the vanishing gradient seen in the original GAN formulation by using the least squares loss function for the
+discriminator. This is motivated by the idea that because [1] uses a cross entropy loss function for the discriminator, it is possible that generated samples on the correct side of the
+decision boundry may still be far from the true data. The least squares loss is able to penalize samples that lie far from the decision boundry, and pull fake samples towards the
+true data. The objective function for $D$ and $G$ are defined as:
+
+\[\min\limits_{D} \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(\textbf{\textit{x}})-b)^2] + \frac{1}{2} \mathbb{E}_{z \sim p_z(z)}[(D(G(z)) - a)^2]\]
+\[\min\limits_{G} \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(G(\textbf{\textit{x}}))-c)^2] \]
+
+\noindent where $a=0$ to denote the fake data, $b=1$ to denote the true data, and $c=1$ in order to try and fool $D$. The authors note that other values
+may be used, such as setting $c=b$ in order to push $G$ to generate samples as real as possible, or by setting $b-c=1$ and $b-a=2$ to minimize the Pearson
+$\mathcal{X}^2$ divergence between $p_{data}+p_g$ and $2p_g$, as opposed to minimizing the Jensen-Shannon divergence (JSD) as seen in the original GAN
+formulation. In practice however, all show similar performance. \newline
+
+\noindent Their experiments show sharp images generated at size $128\times128$, as opposed to the $64\times64$ images generated in [2]. Despite doubling
+the resolution, the images are much clearer. Evaluations were done on multiple classes from the LSUN dataset. The architecture for both the discriminator
+and generator are very similar to those used in DCGANs. Layers were added to account for the difference in resolution. I trained LSGANs on the churches
+class of LSUN. Results can be seen in Figure 5. \footnote{More results on other LSUN classes and code can be found at https://github.com/cameronfabbri/LSGANs-Tensorflow}
+One important thing to note is the extreme diversity seen in the results, showing that LSGANs are able to avoid mode collapse for the generator.
+
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=3in]{least_squares_results}
+      \end{array}$
+   \end{center}
+   \caption{Results from training LSGANs on churches from the LSUN dataset.}
+\end{figure}
 
 
 %-------------------------------------------------%
 \subsection{Energy-Based GANs}
 %-------------------------------------------------%	 
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=4in]{ebgan_results}
+      \end{array}$
+   \end{center}
+   \caption{Results from training EBGAN on faces from the CelebA dataset.}
+\end{figure}
 
 
 %-------------------------------------------------%
 \subsection{Wasserstein GANs}
 %-------------------------------------------------%
+Wasserstein GANs (WGAN)
+
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=4in]{wgan_results}
+      \end{array}$
+   \end{center}
+   \caption{Results from training WGAN on faces from the CelebA dataset.}
+\end{figure}
+
+\begin{figure}[!htb]
+   \begin{center}$
+      \begin{array}{cccc}
+         \includegraphics[width=3in]{dcgan_errG}
+         \includegraphics[width=3in]{dcgan_errD} \\
+         \includegraphics[width=3in]{wgan_errG}
+         \includegraphics[width=3in]{wgan_errD}
+      \end{array}$
+   \end{center}
+   \caption{Top Row: Generator and Discriminator losses, respectively for DCGANs for the results shown in Figure 2. Bottom Row: Generator and Discriminator loss for WGAN for the. 
+   results shown in Figure 7. While visual quality is increasing in both models, the WGAN loss clearly shows convergence that correlates with visual quality, while the loss for DCGANs stays constant.}
+\end{figure}
 
 
 %-------------------------------------------------%
@@ -140,8 +270,19 @@ The problem is set up as a cGAN, where the generator and descriminator are both 
 
 
 \bibliographystyle{abbrvnat}
-[1] Graves, Alex, and Navdeep Jaitly. "Towards End-To-End Speech Recognition with Recurrent Neural Networks." ICML. Vol. 14. 2014.
-[2] Goodfellow, Ian, Yoshua Bengio, and Aaron Courville. Deep learning. MIT Press, 2016.
+\noindent [1] Goodfellow, Ian, Yoshua Bengio, and Aaron Courville. Deep learning. MIT Press, 2016. \newline
+\noindent [2] Radford, Alec, Luke Metz, and Soumith Chintala. "Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks." ICLR (2016): https://arxiv.org/abs/1511.06434. \newline
+\noindent [3] Isola, Phillip, Zhoe, Efros. "Image-to-image translation with conditional adversarial networks." arXiv preprint arXiv:1611.07004 (2016). \newline
+\noindent [4] Zhao, Junbo, Michael Mathieu, and Yann LeCun. "Energy-based generative adversarial network." arXiv preprint arXiv:1609.03126 (2016). \newline
+\noindent [5] Arjovsky, Martin, Soumith Chintala, and Léon Bottou. "Wasserstein gan." arXiv preprint arXiv:1701.07875 (2017). \newline
+\noindent [6] Mao, Xudong, et al. "Least squares generative adversarial networks." arXiv preprint ArXiv:1611.04076 (2016). \newline
+\noindent [7] Arjovsky, Martin, and Léon Bottou. "Towards principled methods for training generative adversarial networks." NIPS 2016 Workshop on Adversarial Training. In review for ICLR. Vol. 2016. 2017. \newline
+\noindent [8] Graves, Alex, and Navdeep Jaitly. "Towards End-To-End Speech Recognition with Recurrent Neural Networks." ICML. Vol. 14. 2014. \newline
+\noindent [9] Ioffe, Sergey, and Christian Szegedy. "Batch normalization: Accelerating deep network training by reducing internal covariate shift." arXiv preprint arXiv:1502.03167 (2015). \newline
+\noindent [10] Goodfellow, Ian J., et al. "Maxout Networks." ICML (3) 28 (2013): 1319-1327. \newline
+\noindent [11] Nair, Vinod, and Geoffrey E. Hinton. "Rectified linear units improve restricted boltzmann machines." Proceedings of the 27th international conference on machine learning (ICML-10). 2010. \newline
+\noindent [12] Deng, Jia, et al. "Imagenet: A large-scale hierarchical image database." Computer Vision and Pattern Recognition, 2009. CVPR 2009. IEEE Conference on. IEEE, 2009. \newline
+\noindent [13] Perarnau, Guim, et al. "Invertible Conditional GANs for image editing." arXiv preprint arXiv:1611.06355 (2016). \newline
 \bibliography{winnower_template}
 
 \appendix
