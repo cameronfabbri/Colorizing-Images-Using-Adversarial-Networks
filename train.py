@@ -164,7 +164,8 @@ if __name__ == '__main__':
       errD_real = tf.nn.sigmoid(D_real)
       errD_fake = tf.nn.sigmoid(D_fake)
       
-      gen_loss_GAN = tf.reduce_mean(tf.square(errD_fake - 1))
+      #gen_loss_GAN = tf.reduce_mean(tf.square(errD_fake - 1))
+      gen_loss_GAN = 0.5*(tf.reduce_mean(tf.square(errD_fake - 1)))
       if L1_WEIGHT > 0.0:
          print 'Using an L1 weight of',L1_WEIGHT
          gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
@@ -174,12 +175,10 @@ if __name__ == '__main__':
          gen_loss_L2  = tf.reduce_mean(tf.nn.l2_loss(ab_image-gen_ab))
          errG         = gen_loss_GAN*GAN_WEIGHT + gen_loss_L2*L2_WEIGHT
       elif L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
-         print L1_WEIGHT
-         print L2_WEIGHT
-         exit()
          print 'Just using GAN loss, no L1 or L2'
          errG = gen_loss_GAN
-      errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
+      #errD = tf.reduce_mean(tf.square(errD_real - 1) + tf.square(errD_fake))
+      errD = tf.reduce_mean(0.5*(tf.square(errD_real - 1)) + 0.5*(tf.square(errD_fake)))
 
    if LOSS_METHOD == 'gan' or LOSS_METHOD == 'cnn':
       print 'Using original GAN loss'
@@ -206,7 +205,9 @@ if __name__ == '__main__':
       print 'Using energy loss'
       margin = 80
       gen_loss_GAN = D_fake
-      
+
+      zero = tf.zeros_like(margin-errD_fake)
+
       if L1_WEIGHT > 0.0:
          print 'Using an L1 weight of',L1_WEIGHT
          gen_loss_L1 = tf.reduce_mean(tf.abs(ab_image-gen_ab))
@@ -218,7 +219,7 @@ if __name__ == '__main__':
       if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
          print 'Just using energy loss, no L1 or L2'
          errG = gen_loss_GAN
-      errD = margin - D_fake+D_real
+      errD = errD_real + tf.maximum(zero, margin-errD_fake)
 
    # tensorboard summaries
    try: tf.summary.scalar('d_loss', tf.reduce_mean(errD))
