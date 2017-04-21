@@ -268,7 +268,22 @@ between the JSD and the Earth Mover (EM) distance. In it's original formulation,
 \[JSD(\mathbb{P}_r||\mathbb{P}_g) = \frac{1}{2} KL(\mathbb{P}_r || \mathbb{P}_A) + \frac{1}{2}KL(\mathbb{P}_g || \mathbb{P}_A)\]
 
 \noindent where $\mathbb{P}_A = \frac{1}{2}(\mathbb{P}_r + \mathbb{P}_g)$, and $KL$ is the Kullback-Leibler divergence. As discussed thouroughly in [7] and shown through a simple example
-in [5], this distance metric suffers from the vanishing gradient problem, 
+in [5], this distance metric when used in sequences of probability distributions suffers from the vanishing gradient problem, where as the EM distance does not. The EM distance or
+\textit{Wasserstein} is defined as:
+
+\[ W(\mathbb{P}_r, \mathbb{P}_g) = inf_{\gamma \in \prod (\mathbb{P}_r, \mathbb{P}_g)} \mathbb{E}_{({x,y})\sim \gamma} [ || x - y || ] \]
+
+\noindent where $\prod (\mathbb{P}_r, \mathbb{P}_g)$ denotes the set of joint distributions $\gamma (x,y)$ whose marginals $\mathbb{P}_r$ and $\mathbb{P}_g$, respectively [5]. Because
+the infimum is very troublesome, they instead propose to approximate $W$ given a set of $K$-Lipschitz functions $f$ by solving the following:
+
+\[ \max\limits_{w \in W} \mathbb{E}_{x \sim \mathbb{P}_r}[f_w(x)] - \mathbb{E}_{z \sim p(z)}[f_w(G_{\theta}(z))]\]
+
+\noindent Not surprisingly, such a function $f$ can be found by training a neural network with weights $w \in W$. To ensure this function is $K$-Lipshitz, the weights are clamped to some range.
+Unlike in [1] where updates get consistently worse as the discriminator gets better, because the EM distance is continuous and differentiable, the WGAN discriminator (which is called the critic
+because it is no longer a classifier) is trained to optimality. In their experiments, they performed one update on the generator for every five updates on the critic. This results in far better
+gradients for the generator at the expense of very slow training. Furthermore, it was found that a very small learning rate must be used ($\alpha = 5e-5$) in order to avoid model divergence,
+slowing training further. Figure 7 shows results from a WGAN I trained on the CelebA dataset \footnote{Code for WGAN results can be found at: https://github.com/cameronfabbri/Wasserstein-GAN-Tensorflow}.
+Although the samples are visually similar to the EBGAN results, training took several days, as opposed to several hours for EBGAN. \newline
 
 \begin{figure}[!htb]
    \begin{center}$
@@ -278,6 +293,11 @@ in [5], this distance metric suffers from the vanishing gradient problem,
    \end{center}
    \caption{Results from training WGAN on faces from the CelebA dataset.}
 \end{figure}
+
+\noindent One very nice property of the WGAN that is not seen in the other GAN varients mentioned is a meaningful loss function that directly correlates with image quality. Figure 8 shows
+the generator and discriminator losses for the DCGAN trained for generating the MNIST images in Figure 3 compared with the generator and critic losses for the WGAN trained for CelebaA results
+in Figure 7. While visual quality improves in both models, only the WGAN losses appear to converge, while the DCGAN losses remain stable, making it impossible to gauge how well the model is performing.
+Plotting the losses for LSGANs and EBGANs gives a similar result to that of DCGANs, providing little to no information on convergence $^{2,3}$.
 
 \begin{figure}[!htb]
    \begin{center}$
@@ -289,21 +309,35 @@ in [5], this distance metric suffers from the vanishing gradient problem,
       \end{array}$
    \end{center}
    \caption{Top Row: \textit{Generator and Discriminator losses, respectively for DCGANs.} Bottom Row: \textit{Generator and Discriminator losses, respectively for WGAN.
-   While visual quality is increasing in both models, the WGAN loss clearly shows convergence that correlates with visual quality, while the loss for DCGANs stays constant.}}
+   While visual quality is increasing in both models, the WGAN loss clearly shows convergence that correlates with visual quality, while the loss for DCGANs stays constant.
+   Graphs generated with Tensorboard [16].}}
 \end{figure}
 
 
 %-------------------------------------------------%
 \section{Colorization}
 %-------------------------------------------------%
-I now show how adversarial networks can be used for generating a plausible color version of a grayscale image.
-The problem is set up as a cGAN, where the generator and descriminator are both conditioned on the grayscale image.
+I now show how adversarial networks can be used for generating a plausible color version of a grayscale image. The problem is set up as a cGAN, where the generator and descriminator
+are both conditioned on the grayscale image. "Pix2pix" [3] presented a general approach towards translating an image from one domain to another. One such domain transformation was that of
+grayscale to color. Their approach made use of combining an adversarial loss with $L_1$, which is a more traditional loss. This gives the model some sense of ground truth without it
+being the only explicit form of loss. This combination turns out to be very helpful because it is well know that in practice $L_1$ and $L_2$ produce blurry images. In theory, blurry
+images should be rejected by the discriminator, thus pushing the generator to generate a sharp image while still being close to ground truth. \newline
+
+\noindent Many deep learning architectures are designed around tasks that map a high dimensional input (such as an image) to a low dimensional output (such as a label). Early layers in
+the network are able to learn low level features such as edges and corners, which are used in subsequent layers to learn higher level features. As a result, these low level features are
+somewhat lost as you progress through the network, which for problems such as classification is okay, given the output of the network is ultimately a label. For tasks such as
+image-to-image translation, where the network output is visually very similar to the input, these low level features are important. For example, in the case of colorization, the
+output color image has the same edges and corners as the input grayscale image. It is for this reason that [3] chooses to use skip connections in their network, which concatenates the
+activations from layer $i$ to layer $n-i$, where $n$ is the total number of layers. Their generator architecture is set up as an encoder-decoder, with the discriminator set up as a PatchGAN,
+which instead of classifying an image as real or fake, classifies a $N \times N$ patch in the image. This allows for a texture style loss given by the discriminator, which when combined with
+the $L_1$ loss that enforces correctness at low level frequencies, works very well. Their experiments were performed on a number of different styles of image-to-image translation, showing
+the generalizability of their architecture. Some of these included map to aerial photo, grayscale to color, and day to night (all reversable). \newline
+
+\noindent I adopted their model architecture for the task of colorizing grayscale images, and 
 
 
 
-
-
-
+\pagebreak
 \bibliographystyle{abbrvnat}
 \noindent [1] Goodfellow, Ian, Yoshua Bengio, and Aaron Courville. Deep learning. MIT Press, 2016. \newline
 \noindent [2] Radford, Alec, Luke Metz, and Soumith Chintala. "Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks." ICLR (2016): https://arxiv.org/abs/1511.06434. \newline
@@ -320,6 +354,7 @@ The problem is set up as a cGAN, where the generator and descriminator are both 
 \noindent [13] Perarnau, Guim, et al. "Invertible Conditional GANs for image editing." arXiv preprint arXiv:1611.06355 (2016). \newline
 \noindent [14] LeCun, Yann, et al. "A tutorial on energy-based learning." Predicting structured data 1 (2006): 0 \newline
 \noindent [15] Denton, Emily L., Soumith Chintala, and Rob Fergus. "Deep Generative Image Models using a￼ Laplacian Pyramid of Adversarial Networks." Advances in neural information processing systems. 2015. \newline
+\noindent [16] Abadi, Martín, et al. "Tensorflow: Large-scale machine learning on heterogeneous distributed systems." arXiv preprint arXiv:1603.04467 (2016).
 
 \bibliography{winnower_template}
 
