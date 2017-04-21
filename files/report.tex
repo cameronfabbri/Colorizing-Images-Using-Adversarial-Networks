@@ -84,7 +84,7 @@ a random variable $z$ sampled from some distribution, e.g $z \sim \mathcal{N}(0,
 
 \noindent Generative models, as the name suggest, attempt to generate new data similar to existing data. Generative models have been shown to perform
 well on many tasks such as inpainting, image denoising, and video generation. Autoencoders have been a popular form of generative model because of their
-ability to approximate some distribution of observed data, such as imagery. A simple autoencoder setup may be to learn an encoding $z$ over a set of images,
+ability to approximate some distribution of observed data, such as imagery. A simple auto-encoder setup may be to learn an encoding $z$ over a set of images,
 $\mathcal{X}$, with $z$ being of a much lower dimension than that of $X \in{\mathcal{X}}$. A training procedure for a setup such as this is as follows.
 An image $X \in{\mathbb{R}^{m\times n}}$ is encoded through an encoder CNN to some latent variable $z \in{\mathbb{R}^{d}}$, which is then used as input to a
 decoder CNN to produce $X' \in{\mathbb{R}^{m\times n}}$. A loss function, such as $L_2$ is then used to compare the two, and the error is propogated back through
@@ -92,7 +92,6 @@ the networks. To produce a new sample, a random variable $z' \sim \mathcal{N}$ c
 An open research problem is to determine an appropriate loss function. $L_2$ and $L_1$ often result in blurry images, and may not be a correct metric for
 visual quality. A recent class of generative models proposes to instead use an \textit{adversarial} loss in place of existing loss functions in the form of
 a network.
-
 
 \begin{figure}[!htb]
    \begin{center}$
@@ -168,7 +167,7 @@ with the input range of $z$, $[-1,1]$. \newline
 as well as human faces. To show the capabilities of their model beyond image generation, they successfully used it as a feature extractor for classification. Their DCGAN model
 was trained on Imagenet-1k [12], and the features are then used for classification on CIFAR-10 images, achieving an accuracy of 82.8\%. A very impressive result is shown by modifying
 the latent vector $z$. Figure 3 shows how modifications in the latent space affect the generated images. This is further explored in [13], which combines
-cGANs with an autoencoder to control the attributes contained in generated images in a more explicit manner. To compare with the results I obtained from [1], I trained a DCGAN on MNIST.
+cGANs with an auto-encoder to control the attributes contained in generated images in a more explicit manner. To compare with the results I obtained from [1], I trained a DCGAN on MNIST.
 Results can be seen in Figure 3, and cleary contain much less noise \footnote{Code for GAN and DCGAN results can be found at https://github.com/cameronfabbri/DCGANs-Tensorflow}.
     
 \begin{figure}[!htb]
@@ -191,7 +190,7 @@ Results can be seen in Figure 3, and cleary contain much less noise \footnote{Co
 Least Squares GANs (LSGANs) attempt to overcome the problem of the vanishing gradient seen in the original GAN formulation by using the least squares loss function for the
 discriminator. This is motivated by the idea that because [1] uses a cross entropy loss function for the discriminator, it is possible that generated samples on the correct side of the
 decision boundry may still be far from the true data. The least squares loss is able to penalize samples that lie far from the decision boundry, and pull fake samples towards the
-true data. The objective function for $D$ and $G$ are defined as:
+true data. The objective functions for $D$ and $G$ are defined as:
 
 \[\min\limits_{D} \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(\textbf{\textit{x}})-b)^2] + \frac{1}{2} \mathbb{E}_{z \sim p_z(z)}[(D(G(z)) - a)^2]\]
 \[\min\limits_{G} \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(G(\textbf{\textit{x}}))-c)^2] \]
@@ -203,7 +202,7 @@ formulation. In practice however, all show similar performance. \newline
 
 \noindent Their experiments show sharp images generated at size $128\times128$, as opposed to the $64\times64$ images generated in [2]. Despite doubling
 the resolution, the images are much clearer. Evaluations were done on multiple classes from the LSUN dataset. The architecture for both the discriminator
-and generator are very similar to those used in DCGANs. Layers were added to account for the difference in resolution. I trained LSGANs on the churches
+and generator are very similar to those used in DCGANs, with layers added to account for the increase in resolution. I trained LSGANs on the churches
 class of LSUN. Results can be seen in Figure 5. \footnote{More results on other LSUN classes and code can be found at https://github.com/cameronfabbri/LSGANs-Tensorflow}
 One important thing to note is the extreme diversity seen in the results, showing that LSGANs are able to avoid mode collapse for the generator.
 
@@ -219,11 +218,41 @@ One important thing to note is the extreme diversity seen in the results, showin
 
 %-------------------------------------------------%
 \subsection{Energy-Based GANs}
-%-------------------------------------------------%	 
+%-------------------------------------------------%
+
+Energy-Based GANs (EBGANs) [4] differ by treating the discriminator as an energy function that attributes low energies to the true samples and high energies
+to generated samples. The generator is trained to generate samples with low energies. Attributing an energy to the discriminator allows for the possibility
+of different loss functions in place of or combined with the usual cross entropy used in [1].  This paper chooses to use a margin loss, but point out that other
+choices are available as shown in [14]. The loss for the generator $\mathcal{L}_G$ and discriminator $\mathcal{L}_D$ are formally defined as:
+
+\[ \mathcal{L}_D(x,z) = D(x) + max(0, (m - D(G(z))) \]
+\[ \mathcal{L}_G(z) = D(G(z)) \]
+
+\noindent where $m$ is a positive margin. The authors claim that modeling the discriminator as an energy function offers higher stability when training
+and leads to higher quality samples. The discriminator is structured as an auto-encoder with a mean squared error loss. The authors argue this for two
+reasons. First, the reconstruction within the auto-encoder offers a more diverse set of targets for the discriminator rather than the binary outputs used
+in [1]. Second, auto-encoders have the ability to learn an energy manifold \textit{without} supervision. For example, given only real images, a discriminator
+modeled as an auto-encoder will be able to learn the data manifold on its own, which is in contrast to a discriminator trained for binary classification,
+which doesn't make sense if given only one class. \newline
+
+\noindent A common problem that often occurs during the training of GANs is the generator collapsing towards producing the same sample. To avoid this,
+a pullaway term (PT) is introduced in order to decrease the samples visual similarity. The PT term aims to decrease the magnitude of the cosine similarity
+between samples. The PT loss is used in the generator loss, but not the discriminator. Formally, with $S \in \mathbb{R}^{s\times N}$ representing a batch of images, it is defined as:
+
+\[ PT(B) = \frac{1}{N(N-1)} \sum_i{\sum_{j\neq i}{(\frac{S^T_iS_j}{||S_i||||S_j||})^2}}\]
+
+\noindent With this added PT loss, the loss for the generator becomes:
+
+\[ \mathcal{L}_G(z) = D(G(z)) + \lambda PT \]
+
+\noindent where $\lambda$ is a scaling term. In the paper, $\lambda$ was chose to be 0.1. Similar to DCGANs and LSGANs, experiments were done on the LSUN and CelebA dataset.
+Models were trained with and with out the PT loss, denoting the model as EBGAN-PT when the PT term is added. I trained an EBGAN on the CelebA dataset.
+Results can be seen in Figure 6, and visually match those presented in the paper.
+
 \begin{figure}[!htb]
    \begin{center}$
       \begin{array}{cccc}
-         \includegraphics[width=4in]{ebgan_results}
+         \includegraphics[width=4in]{ebgan0_results}
       \end{array}$
    \end{center}
    \caption{Results from training EBGAN on faces from the CelebA dataset.}
@@ -283,6 +312,9 @@ The problem is set up as a cGAN, where the generator and descriminator are both 
 \noindent [11] Nair, Vinod, and Geoffrey E. Hinton. "Rectified linear units improve restricted boltzmann machines." Proceedings of the 27th international conference on machine learning (ICML-10). 2010. \newline
 \noindent [12] Deng, Jia, et al. "Imagenet: A large-scale hierarchical image database." Computer Vision and Pattern Recognition, 2009. CVPR 2009. IEEE Conference on. IEEE, 2009. \newline
 \noindent [13] Perarnau, Guim, et al. "Invertible Conditional GANs for image editing." arXiv preprint arXiv:1611.06355 (2016). \newline
+\noindent [14] LeCun, Yann, et al. "A tutorial on energy-based learning." Predicting structured data 1 (2006): 0 \newline
+\noindent [15] Denton, Emily L., Soumith Chintala, and Rob Fergus. "Deep Generative Image Models using a￼ Laplacian Pyramid of Adversarial Networks." Advances in neural information processing systems. 2015. \newline
+
 \bibliography{winnower_template}
 
 \appendix
