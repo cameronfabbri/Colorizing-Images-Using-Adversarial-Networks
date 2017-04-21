@@ -166,7 +166,7 @@ with the input range of $z$, $[-1,1]$. \newline
 \noindent The experiments provided show that their model acts as a very powerful generator for images in several domains. They evaluate their model on the LSUN bedrooms dataset,
 as well as human faces. To show the capabilities of their model beyond image generation, they successfully used it as a feature extractor for classification. Their DCGAN model
 was trained on Imagenet-1k [12], and the features are then used for classification on CIFAR-10 images, achieving an accuracy of 82.8\%. A very impressive result is shown by modifying
-the latent vector $z$. Figure 3 shows how modifications in the latent space affect the generated images. This is further explored in [13], which combines
+the latent vector $z$. Figure 4 shows how modifications in the latent space affect the generated images. This is further explored in [13], which combines
 cGANs with an auto-encoder to control the attributes contained in generated images in a more explicit manner. To compare with the results I obtained from [1], I trained a DCGAN on MNIST.
 Results can be seen in Figure 3, and cleary contain much less noise \footnote{Code for GAN and DCGAN results can be found at https://github.com/cameronfabbri/DCGANs-Tensorflow}.
     
@@ -247,7 +247,7 @@ between samples. The PT loss is used in the generator loss, but not the discrimi
 
 \noindent where $\lambda$ is a scaling term. In the paper, $\lambda$ was chose to be 0.1. Similar to DCGANs and LSGANs, experiments were done on the LSUN and CelebA dataset.
 Models were trained with and with out the PT loss, denoting the model as EBGAN-PT when the PT term is added. I trained an EBGAN on the CelebA dataset.
-Results can be seen in Figure 6, and visually match those presented in the paper.
+Results can be seen in Figure 6, and visually match those presented in the paper \footnote{Code for EBGAN results can be found at: https://github.com/cameronfabbri/EBGAN-Tensorflow}.
 
 \begin{figure}[!htb]
    \begin{center}$
@@ -262,7 +262,13 @@ Results can be seen in Figure 6, and visually match those presented in the paper
 %-------------------------------------------------%
 \subsection{Wasserstein GANs}
 %-------------------------------------------------%
-Wasserstein GANs (WGAN)
+Wasserstein GANs (WGAN) [5] explore several types of distance metrics between two distributions. In particular, they highlight the differences
+between the JSD and the Earth Mover (EM) distance. In it's original formulation, GANs have been shown to optimize the JSD, defined as:
+
+\[JSD(\mathbb{P}_r||\mathbb{P}_g) = \frac{1}{2} KL(\mathbb{P}_r || \mathbb{P}_A) + \frac{1}{2}KL(\mathbb{P}_g || \mathbb{P}_A)\]
+
+\noindent where $\mathbb{P}_A = \frac{1}{2}(\mathbb{P}_r + \mathbb{P}_g)$, and $KL$ is the Kullback-Leibler divergence. As discussed thouroughly in [7] and shown through a simple example
+in [5], this distance metric suffers from the vanishing gradient problem, 
 
 \begin{figure}[!htb]
    \begin{center}$
@@ -282,15 +288,15 @@ Wasserstein GANs (WGAN)
          \includegraphics[width=3in]{wgan_errD}
       \end{array}$
    \end{center}
-   \caption{Top Row: Generator and Discriminator losses, respectively for DCGANs for the results shown in Figure 2. Bottom Row: Generator and Discriminator loss for WGAN for the. 
-   results shown in Figure 7. While visual quality is increasing in both models, the WGAN loss clearly shows convergence that correlates with visual quality, while the loss for DCGANs stays constant.}
+   \caption{Top Row: \textit{Generator and Discriminator losses, respectively for DCGANs.} Bottom Row: \textit{Generator and Discriminator losses, respectively for WGAN.
+   While visual quality is increasing in both models, the WGAN loss clearly shows convergence that correlates with visual quality, while the loss for DCGANs stays constant.}}
 \end{figure}
 
 
 %-------------------------------------------------%
 \section{Colorization}
 %-------------------------------------------------%
-We now show how adversarial networks can be used for generating a plausible color version of a grayscale image.
+I now show how adversarial networks can be used for generating a plausible color version of a grayscale image.
 The problem is set up as a cGAN, where the generator and descriminator are both conditioned on the grayscale image.
 
 
