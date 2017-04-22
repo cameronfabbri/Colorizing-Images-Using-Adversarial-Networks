@@ -176,8 +176,31 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
 
    if data_dir is None or not os.path.exists(data_dir):
       raise Exception('data_dir does not exist')
+   
+   if dataset == 'stl10':
+      print 'Using stl10'
+      pkl_train_file = 'files/stl10_train.pkl'
+      pkl_test_file  = 'files/stl10_test.pkl'
 
-   # get train/test sets
+      if os.path.isfile(pkl_train_file) and os.path.isfile(pkl_test_file):
+         print 'Found pickle file'
+         train_paths = pickle.load(open(pkl_train_file, 'rb'))
+         test_paths  = pickle.load(open(pkl_test_file, 'rb'))
+      else:
+         train_dir = data_dir+'train/'
+         test_dir  = data_dir+'test/'
+         train_paths = getPaths(train_dir, gray_images=None)
+         test_paths  = getPaths(test_dir, gray_images=None)
+         random.shuffle(train_paths)
+         random.shuffle(test_paths)
+         pf   = open(pkl_train_file, 'wb')
+         data = pickle.dumps(train_paths)
+         pf.write(data)
+         pf.close()
+         pf   = open(pkl_test_file, 'wb')
+         data = pickle.dumps(test_paths)
+         pf.write(data)
+         pf.close()
    if dataset == 'celeba':
       print 'Using celeba'
       pkl_train_file = 'files/celeba_train.pkl'
@@ -187,6 +210,8 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
          print 'Found pickle file'
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
          test_paths  = pickle.load(open(pkl_test_file, 'rb'))
+         # ADDED FOR TESTING ONLY
+         test_paths = test_paths[:4]
       else:
          image_paths = getPaths(data_dir)
          random.shuffle(image_paths)
