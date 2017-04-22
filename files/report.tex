@@ -3,7 +3,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \graphicspath{{images/}}
-\usepackage[margin=0.9in]{geometry}
+\usepackage[margin=0.6in]{geometry}
 \begin{document}
 
 \title{A Comparative Study of Generative Adversarial Networks Towards Automatic Image Colorization}
@@ -17,7 +17,7 @@
 \section{Introduction}
 %-------------------------------------------------%
 Deep learning has recently shown impressive results towards various problems in multiple domains such as speech recognition,
-image classification, image segmentation, and reinforcement learning []. Until recently, much of the focus was towards
+image classification, image segmentation, and reinforcement learning. Until recently, much of the focus was towards
 discriminative models, which aim to map a high-dimensional input, such as an image, to a class label. Deep generative models,
 such as Deep Botlzmann Machines, Deep Belief Networks, and Autoencoders have not had the same level of success.
 Generative Adversarial Networks (GANs)[1] are a class of generative models that have shown great success in generatig realistic
@@ -102,7 +102,6 @@ a network.
    \caption{An example of a Convolutional Neural Network}
 \end{figure}
 
-\pagebreak
 
 %-------------------------------------------------%
 \section{Generative Adversarial Networks}
@@ -122,7 +121,7 @@ trained to fool $D$ by minimizing $log(1-D(G(z)))$. This can be represented by t
 ease early in learning, due to the fact that generated images will clearly look very different than those from the training set upon initialization. As extensively shown in [7],
 as $D$ gets better, the gradient begins to vanish. This means early in learning when $D$ is often perfect, it provides little or no gradients to $G$, so $G$ cannot improve.
 To help avoid this issue, $G$ is trained to maximize $logD(G(z))$, rather than minimize $log(1-D(G(z)))$, which is able to provide much stronger gradients. To validate the
-results in [1], I trained adversarial networks on the MNIST dataset. The two networks were simple MLP. Full details can be found in the appendix. Figure 2 shows some non-cherry
+results in [1], I implemented and trained adversarial networks on the MNIST dataset$^1$. The two networks were simple MLP. Figure 2 shows some non-cherry
 picked samples from the model. \newline
 
 \noindent Conditional GANs (cGANs) introduce a simple method to condition image generation on some extra information $y$ (e.g a class label). This is done by simply feeding
@@ -167,7 +166,7 @@ with the input range of $z$, $[-1,1]$. \newline
 as well as human faces. To show the capabilities of their model beyond image generation, they successfully used it as a feature extractor for classification. Their DCGAN model
 was trained on Imagenet-1k [12], and the features are then used for classification on CIFAR-10 images, achieving an accuracy of 82.8\%. A very impressive result is shown by modifying
 the latent vector $z$. Figure 4 shows how modifications in the latent space affect the generated images. This is further explored in [13], which combines
-cGANs with an auto-encoder to control the attributes contained in generated images in a more explicit manner. To compare with the results I obtained from [1], I trained a DCGAN on MNIST.
+cGANs with an auto-encoder to control the attributes contained in generated images in a more explicit manner. To compare with the results I obtained from [1], I implemented and trained a DCGAN on MNIST.
 Results can be seen in Figure 3, and cleary contain much less noise \footnote{Code for GAN and DCGAN results can be found at https://github.com/cameronfabbri/DCGANs-Tensorflow}.
     
 \begin{figure}[!htb]
@@ -202,8 +201,8 @@ formulation. In practice however, all show similar performance. \newline
 
 \noindent Their experiments show sharp images generated at size $128\times128$, as opposed to the $64\times64$ images generated in [2]. Despite doubling
 the resolution, the images are much clearer. Evaluations were done on multiple classes from the LSUN dataset. The architecture for both the discriminator
-and generator are very similar to those used in DCGANs, with layers added to account for the increase in resolution. I trained LSGANs on the churches
-class of LSUN. Results can be seen in Figure 5. \footnote{More results on other LSUN classes and code can be found at https://github.com/cameronfabbri/LSGANs-Tensorflow}
+and generator are very similar to those used in DCGANs, with layers added to account for the increase in resolution. I implemented and trained LSGANs on the churches
+class of LSUN. Results can be seen in Figure 5. \footnote{Code for LSGANs and more results on other LSUN classes can be found at https://github.com/cameronfabbri/LSGANs-Tensorflow}
 One important thing to note is the extreme diversity seen in the results, showing that LSGANs are able to avoid mode collapse for the generator.
 
 \begin{figure}[!htb]
@@ -212,7 +211,7 @@ One important thing to note is the extreme diversity seen in the results, showin
          \includegraphics[width=3in]{least_squares_results}
       \end{array}$
    \end{center}
-   \caption{Results from training LSGANs on churches from the LSUN dataset.}
+   \caption{Results from training LSGANs on churches from the LSUN dataset. Note these are 128x128 images.}
 \end{figure}
 
 
@@ -246,7 +245,7 @@ between samples. The PT loss is used in the generator loss, but not the discrimi
 \[ \mathcal{L}_G(z) = D(G(z)) + \lambda PT \]
 
 \noindent where $\lambda$ is a scaling term. In the paper, $\lambda$ was chose to be 0.1. Similar to DCGANs and LSGANs, experiments were done on the LSUN and CelebA dataset.
-Models were trained with and with out the PT loss, denoting the model as EBGAN-PT when the PT term is added. I trained an EBGAN on the CelebA dataset.
+Models were trained with and with out the PT loss, denoting the model as EBGAN-PT when the PT term is added. I implemented and trained an EBGAN on the CelebA dataset.
 Results can be seen in Figure 6, and visually match those presented in the paper \footnote{Code for EBGAN results can be found at: https://github.com/cameronfabbri/EBGAN-Tensorflow}.
 
 \begin{figure}[!htb]
@@ -278,11 +277,12 @@ the infimum is very troublesome, they instead propose to approximate $W$ given a
 
 \[ \max\limits_{w \in W} \mathbb{E}_{x \sim \mathbb{P}_r}[f_w(x)] - \mathbb{E}_{z \sim p(z)}[f_w(G_{\theta}(z))]\]
 
-\noindent Not surprisingly, such a function $f$ can be found by training a neural network with weights $w \in W$. To ensure this function is $K$-Lipshitz, the weights are clamped to some range.
+\noindent Not surprisingly, such a function $f_w$ can be found by training a neural network with weights $w \in W$. To ensure this function is $K$-Lipshitz, the weights are clamped to some range.
 Unlike in [1] where updates get consistently worse as the discriminator gets better, because the EM distance is continuous and differentiable, the WGAN discriminator (which is called the critic
 because it is no longer a classifier) is trained to optimality. In their experiments, they performed one update on the generator for every five updates on the critic. This results in far better
 gradients for the generator at the expense of very slow training. Furthermore, it was found that a very small learning rate must be used ($\alpha = 5e-5$) in order to avoid model divergence,
-slowing training further. Figure 7 shows results from a WGAN I trained on the CelebA dataset \footnote{Code for WGAN results can be found at: https://github.com/cameronfabbri/Wasserstein-GAN-Tensorflow}.
+slowing training further. I implemented and trained a WGAN on the CelebA dataset, for which results can be seen in Figure 7 \footnote{Code for WGAN results can be found at:
+https://github.com/cameronfabbri/Wasserstein-GAN-Tensorflow}.
 Although the samples are visually similar to the EBGAN results, training took several days, as opposed to several hours for EBGAN. \newline
 
 \begin{figure}[!htb]
@@ -333,8 +333,18 @@ which instead of classifying an image as real or fake, classifies a $N \times N$
 the $L_1$ loss that enforces correctness at low level frequencies, works very well. Their experiments were performed on a number of different styles of image-to-image translation, showing
 the generalizability of their architecture. Some of these included map to aerial photo, grayscale to color, and day to night (all reversable). \newline
 
-\noindent I adopted their model architecture for the task of colorizing grayscale images, and 
+\noindent I adopted their model architecture for the task of colorizing grayscale images, and experimented with the several variations of GANs discussed earlier. I used the $LAB$ colorspace
+in place of $RGB$, as the Euclidean distances between colors better model that of human vision. The input to the generator is the lightness channel $L$, and the output is a $(n \times m \times 2)$
+$ab$ matrix representing the $ab$ channels of the image. The lightness channel is then concatenated in order to form the final generated image. The discriminator is shown both true images and
+generated images (seperately). I experimented on the CelebA dataset, as well as the multiclass STL-10 dataset [17]. Results can be seen in Figures 9 and 10. Most surprising was the EBGAN not being
+able to generate hardly any color output. My thoughts are that the autoencoder was not strong enough, and therefore upon reconstruction the reconstructed fake images and reconstructed real images were
+too similar visually. WGAN variations were not as thoroughly explored due to the extremely long training time. The other GAN variations took a little over 2 days to train the 200,000 images from CelebA
+on a GTX 1080. The original GAN performed well, although LSGANs gave the best performance. I believe this is due to the fact that the discriminator has a very difficult job due to the structural similarity
+between the real and generated images in comparison to the classical adversarial setup of testing the discriminator against images generated from noise. In LSGANs, even though the discriminator may be
+fooled, the image may not be close to the true data distribution, which the loss function takes account for. \textit{More here as well as some figures with colorizations}
 
+\section{Conclusion}
+I can do this later.
 
 
 \pagebreak
@@ -354,14 +364,11 @@ the generalizability of their architecture. Some of these included map to aerial
 \noindent [13] Perarnau, Guim, et al. "Invertible Conditional GANs for image editing." arXiv preprint arXiv:1611.06355 (2016). \newline
 \noindent [14] LeCun, Yann, et al. "A tutorial on energy-based learning." Predicting structured data 1 (2006): 0 \newline
 \noindent [15] Denton, Emily L., Soumith Chintala, and Rob Fergus. "Deep Generative Image Models using a￼ Laplacian Pyramid of Adversarial Networks." Advances in neural information processing systems. 2015. \newline
-\noindent [16] Abadi, Martín, et al. "Tensorflow: Large-scale machine learning on heterogeneous distributed systems." arXiv preprint arXiv:1603.04467 (2016).
+\noindent [16] Abadi, Martín, et al. "Tensorflow: Large-scale machine learning on heterogeneous distributed systems." arXiv preprint arXiv:1603.04467 (2016). \newline
+\noindent [17] Adam Coates, Honglak Lee, Andrew Y. Ng An Analysis of Single Layer Networks in Unsupervised Feature Learning AISTATS, 2011.
 
 \bibliography{winnower_template}
 
 \appendix
-
-\section{Appendix}
-Here we show 
-
 
 \end{document}
