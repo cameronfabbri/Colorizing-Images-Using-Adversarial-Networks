@@ -176,7 +176,11 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
 
    if data_dir is None or not os.path.exists(data_dir):
       raise Exception('data_dir does not exist')
-   
+
+   if dataset == 'true_gray':
+      train_paths = []
+      test_paths  = pickle.load(open('/home/fabbric/Research/colorgans/files/true_gray/true_gray.pkl', 'rb'))
+
    if dataset == 'stl10':
       print 'Using stl10'
       pkl_train_file = 'files/stl10_train.pkl'
@@ -340,7 +344,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
       #random.shuffle(test_paths)
       #input_paths = test_paths[123:127]
       input_paths = test_paths
-   print len(input_paths),'training images!'
+   print len(input_paths),'images!'
    decode = tf.image.decode_image
    
    if len(input_paths) == 0:
