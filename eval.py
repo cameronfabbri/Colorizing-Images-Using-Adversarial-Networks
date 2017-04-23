@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
    EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'_'+str(UPCONVS)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
-   
+   DATASET = 'true_gray'
    print
    print 'PRETRAIN_EPOCHS: ',PRETRAIN_EPOCHS
    print 'GAN_EPOCHS:      ',GAN_EPOCHS
