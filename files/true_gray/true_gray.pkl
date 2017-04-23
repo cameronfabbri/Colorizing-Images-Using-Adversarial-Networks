@@ -1,0 +1,10 @@
+(lp1
+S'/home/fabbric/Research/colorgans/files/true_gray/gray_crop/jfk_gray_crop.png'
+p2
+aS'/home/fabbric/Research/colorgans/files/true_gray/gray_crop/henry_gray_crop.png'
+p3
+aS'/home/fabbric/Research/colorgans/files/true_gray/gray_crop/turing_gray_crop.png'
+p4
+aS'/home/fabbric/Research/colorgans/files/true_gray/gray_crop/lincoln_gray_crop.png'
+p5
+a.
