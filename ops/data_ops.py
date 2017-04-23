@@ -211,7 +211,8 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
          test_paths  = pickle.load(open(pkl_test_file, 'rb'))
          # ADDED FOR TESTING ONLY
-         test_paths = test_paths[:4]
+         #test_paths = test_paths[444:448]
+         test_paths = test_paths[654:658]
       else:
          image_paths = getPaths(data_dir)
          random.shuffle(image_paths)
