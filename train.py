@@ -8,6 +8,7 @@ import pix2pix
 import sys
 import os
 import time
+import ColColGAN
 
 sys.path.insert(0, 'ops/')
 sys.path.insert(0, 'config/')
@@ -127,16 +128,23 @@ if __name__ == '__main__':
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
 
-   # generated ab values from generator
-   gen_ab = pix2pix.netG(L_image, NUM_GPU, UPCONVS)
+   if ARCHITECTURE == 'pix2pix':
+      # generated ab values from generator
+      gen_ab = pix2pix.netG(L_image, NUM_GPU, UPCONVS)
+   elif ARCHITECTURE == 'colcolgan':
+      gen_ab = ColColGAN.netG(L_image, NUM_GPU)
 
    # D's decision on real images and fake images
    if LOSS_METHOD == 'energy':
       D_real, embeddings_real, decoded_real = pix2pix.energyNetD(L_image, ab_image, BATCH_SIZE)
       D_fake, embeddings_fake, decoded_fake = pix2pix.energyNetD(L_image, gen_ab, BATCH_SIZE, reuse=True)
    else:
-      D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
-      D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
+      if ARCHITECTURE == 'pix2pix':
+         D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
+         D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
+      elif ARCHITECTURE == 'colcolgan':
+         D_real = ColColGAN.netD(L_image, ab_image, NUM_GPU)
+         D_fake = ColColGAN.netD(L_image, gen_ab, NUM_GPU, reuse=True)
 
    e = 1e-12
    if LOSS_METHOD == 'wasserstein':
@@ -206,7 +214,7 @@ if __name__ == '__main__':
       margin = 80
       gen_loss_GAN = D_fake
 
-      zero = tf.zeros_like(margin-errD_fake)
+      zero = tf.zeros_like(margin-D_fake)
 
       if L1_WEIGHT > 0.0:
          print 'Using an L1 weight of',L1_WEIGHT
@@ -219,7 +227,7 @@ if __name__ == '__main__':
       if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
          print 'Just using energy loss, no L1 or L2'
          errG = gen_loss_GAN
-      errD = errD_real + tf.maximum(zero, margin-errD_fake)
+      errD = D_real + tf.maximum(zero, margin-D_fake)
 
    # tensorboard summaries
    try: tf.summary.scalar('d_loss', tf.reduce_mean(errD))
