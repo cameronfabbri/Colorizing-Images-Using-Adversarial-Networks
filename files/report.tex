@@ -72,7 +72,7 @@ layers, which provide a form of nonlinear downsampling. Subsampling is performed
 the height and width of the resulting feature maps are dependent on the size and stride of the kernel. The number of feature maps or \textit{depth} of the
 resulting layer (which corresponds to the \textit{width} of the network as a whole) however, is arbitrary. Clearly, there are many different opitions to be chosen,
 such as the size and stride of the kernel, and the number of feature maps to use. When designing a CNN, many rely on heuristics, as well as theorectical
-design principles as shown in [18]. An example CNN architecture is shown in Figure 1. \newline
+design principles as shown in [17]. An example CNN architecture is shown in Figure 1. \newline
 
 %-------------------------------------------------%
 \subsection{Deep Generative Models}
@@ -122,7 +122,7 @@ trained to fool $D$ by minimizing $log(1-D(G(z)))$. This can be represented by t
 ease early in learning, due to the fact that generated images will clearly look very different than those from the training set upon initialization. As extensively shown in [7],
 as $D$ gets better, the gradient begins to vanish. This means early in learning when $D$ is often perfect, it provides little or no gradients to $G$, so $G$ cannot improve.
 To help avoid this issue, $G$ is trained to maximize $logD(G(z))$, rather than minimize $log(1-D(G(z)))$, which is able to provide much stronger gradients. To validate the
-results in [1], I implemented and trained adversarial networks on the MNIST dataset [19] $^1$. The two networks were simple MLP. Figure 2 shows some non-cherry
+results in [1], I implemented and trained adversarial networks on the MNIST dataset [18] $^1$. The two networks were simple MLP. Figure 2 shows some non-cherry
 picked samples from the model. \footnote{Code for GAN and DCGAN results can be found at https://github.com/cameronfabbri/DCGANs-Tensorflow}. \newline
 
 \noindent Conditional GANs (cGANs) introduce a simple method to condition image generation on some extra information $y$ (e.g a class label). This is done by simply feeding
@@ -335,26 +335,70 @@ which instead of classifying an image as real or fake, classifies a $N \times N$
 the $L_1$ loss that enforces correctness at low level frequencies, works very well. Their experiments were performed on a number of different styles of image-to-image translation, showing
 the generalizability of their architecture. Some of these included map to aerial photo, grayscale to color, and day to night (all reversible). \newline
 
-\noindent I adopted their model architecture for the task of colorizing grayscale images, and experimented with the several variations of GANs discussed earlier. I used the $LAB$ colorspace
-in place of $RGB$, as the Euclidean distances between colors better model that of human vision. The input to the generator is the lightness channel $L$, and the output is a $(n \times m \times 2)$
-$ab$ matrix representing the $ab$ channels of the image. The lightness channel is then concatenated in order to form the final generated image. The discriminator is shown both true images and
-generated images (separately). I experimented on the CelebA dataset, as well as the multiclass STL-10 dataset [17]. Results can be seen in Figures 9 and 10. Most surprising was the EBGAN not being
-able to generate hardly any color output. My thoughts are that the autoencoder was not strong enough, and therefore upon reconstruction the reconstructed fake images and reconstructed real images were
-too similar visually. WGAN variations were not as thoroughly explored due to the extremely long training time. The other GAN variations took a little over 2 days to train on the 200,000 images from CelebA
-on a GTX 1080 (8 epochs). The original GAN performed well, although LSGANs gave the best performance. I believe this is due to the fact that the discriminator has a very difficult job due to the structural similarity
-between the real and generated images in comparison to the classical adversarial setup of testing the discriminator against images generated from noise. In LSGANs, even though the discriminator may be
-fooled, the image may not be close to the true data distribution, which the loss function takes account for. \newline
+\noindent I adopted their model architecture for the task of colorizing grayscale images, and experimented with the several variations of GANs discussed earlier. Along with combining $L_1$, I also
+experimented with $L_2$ as well. I used the $LAB$ colorspace in place of $RGB$, as the Euclidean distances between colors better model that of human vision. The input to the generator is the lightness channel $L$,
+and the output is a $(n \times m \times 2)$ matrix representing the $ab$ channels of the image. The lightness channel is then concatenated in order to form the final generated image. The discriminator is shown both
+true images and generated images (separately). I experimented on the CelebA dataset, for which results can be seen in Figure 9\footnote{Code for colorization results can be found at:
+https://github.com/cameronfabbri/Colorizing-Images-Using-Adversarial-Networks}. Most surprising was the EBGAN not being able to generate hardly any color output. My thoughts are that the autoencoder was not strong enough,
+and therefore upon reconstruction the reconstructed fake images and reconstructed real images were too similar visually. WGAN variations were not as thoroughly explored due to the extremely long training time.
+The other GAN variations took a little over 2 days to train on the 200,000 images from CelebA on a GTX 1080 (8 epochs). The original GAN performed well, although LSGANs gave the best performance. I believe this is due to
+the fact that the discriminator has a very difficult job due to the structural similarity between the real and generated images in comparison to the classical adversarial setup of testing the discriminator against images
+generated from noise. In LSGANs, even though the discriminator may be fooled, the image may not be close to the true data distribution, which the loss function takes account for. \newline
 
 \begin{figure}[!htb]
    \begin{center}$
       \begin{array}{cccc}
+      \includegraphics[width=0.75in]{1_gray}
+      \includegraphics[width=0.75in]{1_gan_100_0_col}
+      \includegraphics[width=0.75in]{1_gan_0_1_col}
+      %\includegraphics[width=0.75in]{1_lsgan_100_0_col}
+      \includegraphics[width=0.75in]{1_lsgan_0_1_col}
+      %\includegraphics[width=0.75in]{1_ebgan_100_0_col}
+      %\includegraphics[width=0.75in]{1_ebgan_0_1_col}
+      %\includegraphics[width=0.75in]{1_wgan_100_0_col}
+      %\includegraphics[width=0.75in]{1_wgan_0_1_col} \\
+      \includegraphics[width=0.75in]{1_true}
+      \\
+      \includegraphics[width=0.75in]{2_gray}
+      \includegraphics[width=0.75in]{2_gan_100_0_col}
+      \includegraphics[width=0.75in]{2_gan_0_1_col}
+      %\includegraphics[width=0.75in]{2_lsgan_100_0_col}
+      \includegraphics[width=0.75in]{2_lsgan_0_1_col}
+      %\includegraphics[width=0.75in]{2_ebgan_100_0_col}
+      %\includegraphics[width=0.75in]{2_ebgan_0_1_col}
+      %\includegraphics[width=0.75in]{2_wgan_100_0_col}
+      %\includegraphics[width=0.75in]{2_wgan_0_1_col} \\
+      \includegraphics[width=0.75in]{2_true}
+      \\
+      \includegraphics[width=0.75in]{3_gray}
+      \includegraphics[width=0.75in]{3_gan_100_0_col}
+      \includegraphics[width=0.75in]{3_gan_0_1_col}
+      %\includegraphics[width=0.75in]{3_lsgan_100_0_col}
+      \includegraphics[width=0.75in]{3_lsgan_0_1_col}
+      %\includegraphics[width=0.75in]{3_ebgan_100_0_col}
+      %\includegraphics[width=0.75in]{3_ebgan_0_1_col}
+      %\includegraphics[width=0.75in]{3_wgan_100_0_col}
+      %\includegraphics[width=0.75in]{3_wgan_0_1_col} \\
+      \includegraphics[width=0.75in]{3_true}
+      \\
+      \includegraphics[width=0.75in]{4_gray}
+      \includegraphics[width=0.75in]{4_gan_100_0_col}
+      \includegraphics[width=0.75in]{4_gan_0_1_col}
+      %\includegraphics[width=0.75in]{4_lsgan_100_0_col}
+      \includegraphics[width=0.75in]{4_lsgan_0_1_col}
+      %\includegraphics[width=0.75in]{4_ebgan_100_0_col}
+      %\includegraphics[width=0.75in]{4_ebgan_0_1_col}
+      %\includegraphics[width=0.75in]{4_wgan_100_0_col}
+      %\includegraphics[width=0.75in]{4_wgan_0_1_col} \\
+      \includegraphics[width=0.75in]{4_true}
+
 
       \end{array}$
    \end{center}
    \caption{Examples}
 \end{figure}
 
-\noindent It is important to note that what is being learned is the mapping from the function used to convert these images to grayscale back to color, and these are not "true" grayscale images. To
+\noindent It is important to note that because these are not "true" grayscale images, what is being learned is the mapping from the function used to convert these images to grayscale back to color. To
 compare, I also tested on a true grayscale image of John F. Kennedy, seen in Figure 10.
 
 \begin{figure}[!htb]
@@ -367,7 +411,7 @@ compare, I also tested on a true grayscale image of John F. Kennedy, seen in Fig
          \includegraphics[width=1in]{col_jfk_w_100_0_1}
       \end{array}$
    \end{center}
-   \caption{Examples of colorizing a true black and white photo. Results from left to right: Input image, GAN, LSGAN, EBGAN, WGAN}
+   \caption{Colorizing a true black and white photo. From left to right: Input image, GAN, LSGAN, EBGAN, WGAN}
 \end{figure}
 
 
@@ -376,7 +420,6 @@ I explored various approaches towards training adversarial networks for image ge
 a grayscale image. The combination of fine hyperparameter tuning and long turnaround time for results poses an inherent challenge. The training of GANs is highly unstable, and even the smallest of
 changes may lead to inadequate results. For example, a typo while training DCGANs that set the learning rate to $\alpha = 0.0001$ instead of $\alpha = 0.0002$ caused the output from the generator to lack
 any structure similar to MNIST. Future work involves exploring these variations, as well as tackling the multiclass colorization problem.
-
 
 
 \pagebreak
@@ -398,9 +441,9 @@ any structure similar to MNIST. Future work involves exploring these variations,
 \noindent [14] LeCun, Yann, et al. "A tutorial on energy-based learning." Predicting structured data 1 (2006): 0 \newline
 \noindent [15] Denton, Emily L., Soumith Chintala, and Rob Fergus. "Deep Generative Image Models using a￼ Laplacian Pyramid of Adversarial Networks." Advances in neural information processing systems. 2015. \newline
 \noindent [16] Abadi, Martín, et al. "Tensorflow: Large-scale machine learning on heterogeneous distributed systems." arXiv preprint arXiv:1603.04467 (2016). \newline
-\noindent [17] Adam Coates, Honglak Lee, Andrew Y. Ng An Analysis of Single Layer Networks in Unsupervised Feature Learning AISTATS, 2011.
-\noindent [18] Szegedy, Christian, et al. "Rethinking the inception architecture for computer vision." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2016. \newline
-\noindent [19] LeCun, Yann, Corinna Cortes, and Christopher JC Burges. "The MNIST database of handwritten digits." (1998). \newline
+\noindent [17] Szegedy, Christian, et al. "Rethinking the inception architecture for computer vision." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2016. \newline
+\noindent [18] LeCun, Yann, Corinna Cortes, and Christopher JC Burges. "The MNIST database of handwritten digits." (1998). \newline
+\noindent [19] Liu, Ziwei, et al. "Deep learning face attributes in the wild." Proceedings of the IEEE International Conference on Computer Vision. 2015. \newline
 
 \bibliography{winnower_template}
 
