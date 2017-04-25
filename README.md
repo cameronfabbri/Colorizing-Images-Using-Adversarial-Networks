@@ -2,34 +2,17 @@
 This is a project comparing multiple variations of Generative Adversarial Networks (GANs)
 towards automatic image colorization.
 
-
-![jfkgray](http://i.imgur.com/0syARFb.png)
-![jfkcol](http://i.imgur.com/LJ9Kkfk.png)
-
-![aligray](http://i.imgur.com/B9S7FwL.png)
-![alicol](http://i.imgur.com/7PaEtUd.png)
-
-
 ### GAN Variations
 * [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 * [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
 * [Least Squares GANs](https://arxiv.org/pdf/1611.04076v2.pdf)
 * [Wasserstein GAN](https://arxiv.org/pdf/1701.07875.pdf)
 
+![jfkgray](http://i.imgur.com/0syARFb.png)
+![jfkcol](http://i.imgur.com/LJ9Kkfk.png)
 
-#### Things to compare
-* State of the art colorization mentioned above.
-* One or more state of the art general models (Alexnet, Inception, ResNet, etc)
-* Energy-Based GANs
-* Wasserstein GANs
-* DCGANs
-* Pretrained versions of the generator for the different GANs
-
-Need to think about how the generator will actually work. [This](http://richzhang.github.io/colorization/)
-work explains why just taking the L2 norm between true and generated images produces
-less saturated and more brown/green (averaged) images. Could use their approach for
-the generator. I would also like to try generating color channels individually
-and see what that yields.
+![aligray](http://i.imgur.com/B9S7FwL.png)
+![alicol](http://i.imgur.com/7PaEtUd.png)
 
 
 #### Useful links:
@@ -42,11 +25,6 @@ and see what that yields.
 
 [Automatic Colorization of Grayscale Images](http://cs229.stanford.edu/proj2013/KabirzadehSousaBlaes-AutomaticColorizationOfGrayscaleImages.pdf)
 
-
-
-First paper on GANs
-
-[Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 ___
 
 
