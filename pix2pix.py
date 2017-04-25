@@ -108,7 +108,7 @@ def netG(L_images, num_gpu, UPCONVS):
             dec_convt8 = tanh(dec_convt8)
             
          print dec_convt8
-   
+
    return dec_convt8
 
 
@@ -143,6 +143,40 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
             print conv4
             print conv5
             return conv5
+
+
+def netD_ab(ab_images, num_gpu, reuse=False):
+   ndf = 64
+   n_layers = 3
+   layers = []
+   print
+   print 'netD'
+   sc = tf.get_variable_scope()
+   with tf.variable_scope(sc, reuse=reuse):
+      if num_gpu == 0: gpus = ['/cpu:0']
+      elif num_gpu == 1: gpus = ['/gpu:0']
+      elif num_gpu == 2: gpus = ['/gpu:0', '/gpu:1']
+      elif num_gpu == 3: gpus = ['/gpu:0', '/gpu:1', '/gpu:2']
+      elif num_gpu == 4: gpus = ['/gpu:0', '/gpu:1', '/gpu:2', '/gpu:3']
+
+      for d in gpus:
+         with tf.device(d):
+
+            input_images = ab_images
+
+            with tf.variable_scope('d_ab_conv1'): conv1 = lrelu(conv2d(input_images, 64, kernel_size=4, stride=2))
+            with tf.variable_scope('d_ab_conv2'): conv2 = lrelu(batch_norm(conv2d(conv1, 128, kernel_size=4, stride=2)))
+            with tf.variable_scope('d_ab_conv3'): conv3 = lrelu(batch_norm(conv2d(conv2, 256, kernel_size=4, stride=2)))
+            with tf.variable_scope('d_ab_conv4'): conv4 = lrelu(batch_norm(conv2d(conv3, 512, kernel_size=4, stride=1)))
+            with tf.variable_scope('d_ab_conv5'): conv5 = conv2d(conv4, 1, stride=1)
+
+            print conv1
+            print conv2
+            print conv3
+            print conv4
+            print conv5
+            return conv5
+
 
 
 '''
