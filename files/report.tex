@@ -69,7 +69,7 @@ in successive layers throughout the network to learn high-level features. The th
 layers, which provide a form of nonlinear downsampling. Subsampling is performed to reduce the dimensionality of the internal representation. \newline
 
 \noindent While the size of the output in a MLP is independent of the size of its input, in a CNN
-the height and width of the resulting feature maps are dependent on the size and stride of the kernel. The number of feature maps or \textit{depth} of the
+the height and width of the resulting feature maps are dependent on the input as well as the size and stride of the kernel. The number of feature maps or \textit{depth} of the
 resulting layer (which corresponds to the \textit{width} of the network as a whole) however, is arbitrary. Clearly, there are many different options to be chosen,
 such as the size and stride of the kernel, and the number of feature maps to use. When designing a CNN, many rely on heuristics, as well as theorectical
 design principles as shown in [17]. \newline%An example CNN architecture is shown in Figure 1. \newline
@@ -118,7 +118,7 @@ trained to fool $D$ by minimizing $log(1-D(G(z)))$. This can be represented by t
 \[\min\limits_{G}\max\limits_{D} \mathbb{E}_{x \sim p_{data(x)}} [logD(\textbf{\textit{x}})] + \mathbb{E}_{z \sim p_z(z)}[log(1 - D(G(z)))]\]
 
 %\noindent GANs have been shown to optimize the Jensen-Shannon divergence (JSD)[1,7]. 
-\noindent In practice however, $D$ will be able to discriminate between real and generate samples with
+\noindent In practice however, $D$ will be able to discriminate between real and generated samples with
 ease early in learning, due to the fact that generated images will clearly look very different than those from the training set upon initialization. As extensively shown in [7],
 as $D$ gets better, the gradient begins to vanish. This means early in learning when $D$ is often perfect, it provides little or no gradients to $G$, so $G$ cannot improve.
 To help avoid this issue, in practice $G$ is trained to maximize $logD(G(z))$, rather than minimize $log(1-D(G(z)))$, which is able to provide much stronger gradients. To validate the
@@ -164,11 +164,11 @@ with the input range of $z$, $[-1,1]$. \newline
 
 
 
-\noindent The experiments provided show that their model acts as a very powerful generator for images in several domains. They evaluate their model on the LSUN bedrooms dataset,
+\noindent The experiments provided show that their model acts as a very powerful generator for images in several domains. They evaluate their model on MNIST, the LSUN bedrooms dataset,
 as well as human faces. To show the capabilities of their model beyond image generation, they successfully used it as a feature extractor for classification. Their DCGAN model
 was trained on Imagenet-1k [12], and the features are then used for classification on CIFAR-10 images, achieving an accuracy of 82.8\%. A very impressive result is shown by modifying
 the latent vector $z$ in order to manipulate the output of the generator. This is further explored in [13], which combines cGANs with an auto-encoder to control the attributes contained in generated
-images in a more explicit manner. To compare with the results I obtained from [1], I implemented and trained a DCGAN on MNIST. Results can be seen compared to my implementation of GANs using a MLP in Figure 3,
+images in a more explicit manner. To compare with the results I obtained from [1], I implemented and trained a DCGAN on MNIST. Results can be seen compared to my implementation of GANs using a MLP in Figure 1,
 and clearly contain much less noise$^1$.
     
 %\begin{figure}[!htb]
@@ -204,7 +204,8 @@ formulation. In practice however, all show similar performance. \newline
 \noindent Their experiments show sharp images generated at size $128\times128$, as opposed to the $64\times64$ images generated in [2]. Despite doubling
 the resolution, the images are much clearer. Evaluations were done on multiple classes from the LSUN dataset. The architecture for both the discriminator
 and generator are very similar to those used in DCGANs, with layers added to account for the increase in resolution. I implemented and trained LSGANs on the churches
-class of LSUN. Results can be seen in Figure 5\footnote{Code for LSGANs and more results on other LSUN classes can be found at https://github.com/cameronfabbri/LSGANs-Tensorflow}.
+class of LSUN \footnote{Code for LSGANs and more results on other LSUN classes can be found at https://github.com/cameronfabbri/LSGANs-Tensorflow}.
+Results can be seen in Figure 2.
 One important thing to note is the extreme diversity seen in the results, showing that LSGANs are able to avoid mode collapse for the generator.
 
 \begin{figure}[!htb]
@@ -240,7 +241,7 @@ which doesn't make sense if given only one class. \newline
 a pullaway term (PT) is introduced in order to decrease the samples visual similarity. The PT term aims to decrease the magnitude of the cosine similarity
 between samples. The PT loss is used in the generator loss, but not the discriminator. Formally, with $S \in \mathbb{R}^{s\times N}$ representing a batch of images, it is defined as:
 
-\[ PT(B) = \frac{1}{N(N-1)} \sum_i{\sum_{j\neq i}{(\frac{S^T_iS_j}{||S_i||||S_j||})^2}}\]
+\[ PT(S) = \frac{1}{N(N-1)} \sum_i{\sum_{j\neq i}{(\frac{S^T_iS_j}{||S_i||||S_j||})^2}}\]
 
 \noindent With this added PT loss, the loss for the generator becomes:
 
@@ -248,7 +249,7 @@ between samples. The PT loss is used in the generator loss, but not the discrimi
 
 \noindent where $\lambda$ is a scaling term. In the paper, $\lambda$ was chose to be 0.1. Similar to DCGANs and LSGANs, experiments were done on the LSUN and CelebA dataset.
 Models were trained with and with out the PT loss, denoting the model as EBGAN-PT when the PT term is added. I implemented and trained an EBGAN on the CelebA dataset.
-Results can be seen in Figure 6, and visually match those presented in the paper\footnote{Code for EBGAN results can be found at: https://github.com/cameronfabbri/EBGAN-Tensorflow}.
+Results can be seen in Figure 3, and visually match those presented in the paper\footnote{Code for EBGAN results can be found at: https://github.com/cameronfabbri/EBGAN-Tensorflow}.
 
 \begin{figure}[!htb]
    \begin{center}$
@@ -274,7 +275,7 @@ in [5], this distance metric when used in sequences of probability distributions
 
 \[ W(\mathbb{P}_r, \mathbb{P}_g) = inf_{\gamma \in \prod (\mathbb{P}_r, \mathbb{P}_g)} \mathbb{E}_{({x,y})\sim \gamma} [ || x - y || ] \]
 
-\noindent where $\prod (\mathbb{P}_r, \mathbb{P}_g)$ denotes the set of joint distributions $\gamma (x,y)$ whose marginals $\mathbb{P}_r$ and $\mathbb{P}_g$, respectively [5]. Because
+\noindent where $\prod (\mathbb{P}_r, \mathbb{P}_g)$ denotes the set of joint distributions $\gamma (x,y)$ whose marginals are $\mathbb{P}_r$ and $\mathbb{P}_g$, respectively [5]. Because
 the infimum is very troublesome, they instead propose to approximate $W$ given a set of $K$-Lipschitz functions $f$ by solving the following:
 
 \[ \max\limits_{w \in W} \mathbb{E}_{x \sim \mathbb{P}_r}[f_w(x)] - \mathbb{E}_{z \sim p(z)}[f_w(G_{\theta}(z))]\]
@@ -284,7 +285,7 @@ are clamped to $[-0.1, 0.1]$, however I found a range of $[-0.05, 0.05]$ to prod
 Unlike in [1] where updates get consistently worse as the discriminator gets better, because the EM distance is continuous and differentiable, the WGAN discriminator (which is called the critic
 because it is no longer a classifier) is trained to optimality. In their experiments, they performed one update on the generator for every five updates on the critic. This results in far better
 gradients for the generator at the expense of very slow training. Furthermore, it was found that a very small learning rate must be used ($\alpha = 5e-5$) in order to avoid model divergence,
-slowing training further. I implemented and trained a WGAN on the CelebA dataset, for which results can be seen in Figure 7 \footnote{Code for WGAN results can be found at:
+slowing training further. I implemented and trained a WGAN on the CelebA dataset, for which results can be seen in Figure 4 \footnote{Code for WGAN results can be found at:
 https://github.com/cameronfabbri/Wasserstein-GAN-Tensorflow}.
 Although the samples are visually similar to the EBGAN results, training took several days, as opposed to several hours for EBGAN. \newline
 
@@ -297,9 +298,9 @@ Although the samples are visually similar to the EBGAN results, training took se
    \caption{\textit{Results from training WGAN on faces from the CelebA dataset.}}
 \end{figure}
 
-\noindent One very nice property of the WGAN that is not seen in the other GAN variants mentioned is a meaningful loss function that directly correlates with image quality. Figure 8 shows
-the generator and discriminator losses for the DCGAN trained for generating the MNIST images in Figure 3 compared with the generator and critic losses for the WGAN trained for CelebaA results
-in Figure 7. While visual quality improves in both models, only the WGAN losses appear to converge, while the DCGAN losses remain stable, making it impossible to gauge how well the model is performing.
+\noindent One very nice property of the WGAN that is not seen in the other GAN variants mentioned is a meaningful loss function that directly correlates with image quality. Figure 5 shows
+the generator and discriminator losses for the DCGAN trained for generating the MNIST images in Figure 1 compared with the generator and critic losses for the WGAN trained for CelebaA results
+in Figure 4. While visual quality improves in both models, only the WGAN losses appear to converge, while the DCGAN losses remain stable, making it impossible to gauge how well the model is performing.
 Plotting the losses for LSGANs and EBGANs gives a similar result to that of DCGANs, providing little to no information on convergence $^{2,3}$.
 
 \begin{figure}[!htb]
@@ -322,7 +323,7 @@ Plotting the losses for LSGANs and EBGANs gives a similar result to that of DCGA
 I now show how adversarial networks can be used for generating a plausible color version of a grayscale image. The problem is set up as a cGAN, where the generator and discriminator
 are both conditioned on the grayscale image. "Pix2pix" [3] presented a general approach towards translating an image from one domain to another. One such domain transformation was that of
 grayscale to color. Their approach made use of combining an adversarial loss with $L_1$, which is a more traditional loss. This gives the model some sense of ground truth without it
-being the only explicit form of loss. This combination turns out to be very helpful because it is well know that in practice $L_1$ and $L_2$ produce blurry images. In theory, blurry
+being the only explicit form of loss. This combination turns out to be very helpful because in practice $L_1$ and $L_2$ produce blurry images. In theory, blurry
 images should be rejected by the discriminator, thus pushing the generator to generate a sharp image while still being close to ground truth. \newline
 
 \noindent Many deep learning architectures are designed around tasks that map a high dimensional input (such as an image) to a low dimensional output (such as a label). Early layers in
@@ -362,7 +363,7 @@ noise. For LSGANs, even though the discriminator may be fooled, the image may no
       \includegraphics[width=0.70in]{1_lsgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{1_ebgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{1_ebgan_0_1_col} \hspace{1mm}
-      %\includegraphics[width=0.70in]{1_wgan_100_0_col} \hspace{1mm}
+      \includegraphics[width=0.70in]{1_wgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{1_wgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{1_true}
       \\
@@ -373,7 +374,7 @@ noise. For LSGANs, even though the discriminator may be fooled, the image may no
       \includegraphics[width=0.70in]{2_lsgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{2_ebgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{2_ebgan_0_1_col} \hspace{1mm}
-      %\includegraphics[width=0.70in]{2_wgan_100_0_col} \hspace{1mm}
+      \includegraphics[width=0.70in]{2_wgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{2_wgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{2_true}
       \\
@@ -384,7 +385,7 @@ noise. For LSGANs, even though the discriminator may be fooled, the image may no
       \includegraphics[width=0.70in]{3_lsgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{3_ebgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{3_ebgan_0_1_col} \hspace{1mm}
-      %\includegraphics[width=0.70in]{3_wgan_100_0_col} \hspace{1mm}
+      \includegraphics[width=0.70in]{3_wgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{3_wgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{3_true}
       \\
@@ -395,18 +396,18 @@ noise. For LSGANs, even though the discriminator may be fooled, the image may no
       \includegraphics[width=0.70in]{4_lsgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{4_ebgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{4_ebgan_0_1_col} \hspace{1mm}
-      %\includegraphics[width=0.70in]{4_wgan_100_0_col} \hspace{1mm}
+      \includegraphics[width=0.70in]{4_wgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{4_wgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{4_true}
       \end{array}$
    \end{center}
-   \caption{\textit{Variations from different models. L1 and L2 here refer to the $\lambda$ values in the objective function. From left to right: Input Image, GAN $L_1=100$ $L_2=0$, GAN $L_1=0$ $L_2=1$, 
+   \caption{\textit{Variations from different models. $L_1$ and $L_2$ here refer to their respective $\lambda$ values in the objective function. From left to right: Input Image, GAN $L_1=100$ $L_2=0$, GAN $L_1=0$ $L_2=1$, 
    LSGAN $L_1=100$ $L_2=0$, LSGAN $L_1=0$ $L_2=1$,  EBGAN $L_1=100$ $L_2=0$,
-      EBGAN $L_1=0$ $L_2=1$, WGAN $L_1=100$ $L_2=0$, WGAN $L_1=0$ $L_2=1$, True Image}}
+      EBGAN $L_1=0$ $L_2=1$, WGAN $L_1=100$ $L_2=0$, WGAN $L_1=0$ $L_2=1$, True Image.}}
 \end{figure}
 
-\noindent It is important to note that because these are not "true" grayscale images, what is being learned is the mapping from the function used to convert these images to grayscale back to color. To
-compare, I also tested on a true grayscale image of John F. Kennedy, seen in Figure 10. Note this image not only wasn't trained on, but is completely outside of our dataset.
+\noindent It is important to note that because these are not "true" black and white images, what is being learned is the mapping from the function used to convert these images to grayscale back to color. To
+compare, I also tested on true black and white images of John F. Kennedy and Muhammad Ali, seen in Figure 10. Note these images not only weren't trained on, but are completely outside of our dataset.
 
 \begin{figure}[!htb]
    \begin{center}$
@@ -427,7 +428,7 @@ compare, I also tested on a true grayscale image of John F. Kennedy, seen in Fig
          \includegraphics[width=0.75in]{ali_ls_0_1} \hspace{1mm}
          \includegraphics[width=0.75in]{ali_e_100_0} \hspace{1mm}
          \includegraphics[width=0.75in]{ali_e_0_1} \hspace{1mm}
-         %\includegraphics[width=0.75in]{ali_w_100_0} \hspace{1mm}
+         \includegraphics[width=0.75in]{ali_w_100_0} \hspace{1mm}
          \includegraphics[width=0.75in]{ali_w_0_1}
 
       \end{array}$
