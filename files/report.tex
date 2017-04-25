@@ -346,8 +346,7 @@ is the lightness channel $L$,
 and the output is a $(n \times m \times 2)$ matrix representing the $ab$ channels of the image. The lightness channel is then concatenated in order to form the final generated image. The discriminator is shown both
 true images and generated images (separately). I experimented on the CelebA dataset, for which results can be seen in Figure 9\footnote{Code for colorization results can be found at:
 https://github.com/cameronfabbri/Colorizing-Images-Using-Adversarial-Networks}. Most surprising was the EBGAN with $L_1$ being able to generate hardly any color output. 
-%All GAN variations besides WGAN took a little over 2 days to train on the 200,000 images from CelebA on a GTX 1080 (8 epochs).
-WGAN did not finish training for 8 epochs due to its extensive training time compared to the other methods.
+WGAN did not finish training for 8 epochs due to its extensive training time compared to the other methods, but still produced reasonable results.
 Although highly objective, I think that LSGANs performed the best, taking into account the end goal is not to recover true color, but a \textit{plausible} color. %My thoughts are that the fact that
 The discriminator has a very difficult job due to the structural similarity between the real and generated images in comparison to the classical adversarial setup of testing the discriminator against images generated from
 noise. For LSGANs, even though the discriminator may be fooled, the image may not be close to the true data distribution, which the loss function takes account for. \newline
@@ -364,7 +363,7 @@ noise. For LSGANs, even though the discriminator may be fooled, the image may no
       \includegraphics[width=0.70in]{1_ebgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{1_ebgan_0_1_col} \hspace{1mm}
       %\includegraphics[width=0.70in]{1_wgan_100_0_col} \hspace{1mm}
-      %\includegraphics[width=0.70in]{1_wgan_0_1_col} \hspace{1mm}
+      \includegraphics[width=0.70in]{1_wgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{1_true}
       \\
       \includegraphics[width=0.70in]{2_gray} \hspace{1mm}
@@ -375,7 +374,7 @@ noise. For LSGANs, even though the discriminator may be fooled, the image may no
       \includegraphics[width=0.70in]{2_ebgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{2_ebgan_0_1_col} \hspace{1mm}
       %\includegraphics[width=0.70in]{2_wgan_100_0_col} \hspace{1mm}
-      %\includegraphics[width=0.70in]{2_wgan_0_1_col} \hspace{1mm}
+      \includegraphics[width=0.70in]{2_wgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{2_true}
       \\
       \includegraphics[width=0.70in]{3_gray} \hspace{1mm}
@@ -386,7 +385,7 @@ noise. For LSGANs, even though the discriminator may be fooled, the image may no
       \includegraphics[width=0.70in]{3_ebgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{3_ebgan_0_1_col} \hspace{1mm}
       %\includegraphics[width=0.70in]{3_wgan_100_0_col} \hspace{1mm}
-      %\includegraphics[width=0.70in]{3_wgan_0_1_col} \hspace{1mm}
+      \includegraphics[width=0.70in]{3_wgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{3_true}
       \\
       \includegraphics[width=0.70in]{4_gray} \hspace{1mm}
@@ -397,11 +396,12 @@ noise. For LSGANs, even though the discriminator may be fooled, the image may no
       \includegraphics[width=0.70in]{4_ebgan_100_0_col} \hspace{1mm}
       \includegraphics[width=0.70in]{4_ebgan_0_1_col} \hspace{1mm}
       %\includegraphics[width=0.70in]{4_wgan_100_0_col} \hspace{1mm}
-      %\includegraphics[width=0.70in]{4_wgan_0_1_col} \hspace{1mm}
+      \includegraphics[width=0.70in]{4_wgan_0_1_col} \hspace{1mm}
       \includegraphics[width=0.70in]{4_true}
       \end{array}$
    \end{center}
-   \caption{\textit{Variations from different models. From left to right: Input Image, GAN $L_1=100$ $L_2=0$, GAN $L_1=0$ $L_2=1$,  LSGAN $L_1=100$ $L_2=0$, LSGAN $L_1=0$ $L_2=1$,  EBGAN $L_1=100$ $L_2=0$,
+   \caption{\textit{Variations from different models. L1 and L2 here refer to the $\lambda$ values in the objective function. From left to right: Input Image, GAN $L_1=100$ $L_2=0$, GAN $L_1=0$ $L_2=1$, 
+   LSGAN $L_1=100$ $L_2=0$, LSGAN $L_1=0$ $L_2=1$,  EBGAN $L_1=100$ $L_2=0$,
       EBGAN $L_1=0$ $L_2=1$, WGAN $L_1=100$ $L_2=0$, WGAN $L_1=0$ $L_2=1$, True Image}}
 \end{figure}
 
