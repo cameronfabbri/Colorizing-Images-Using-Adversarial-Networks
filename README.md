@@ -14,7 +14,7 @@ towards automatic image colorization.
 ![aligray](http://i.imgur.com/B9S7FwL.png)
 ![alicol](http://i.imgur.com/7PaEtUd.png)
 
-I used a combination of L1 and L2 along with the different GAN variations. I trained on the CelebA dataset, below shows some
+I used a combination of L1 and L2 loss along with the different GAN variations. I trained on the CelebA dataset, below shows some
 results on the test set. From left to right: Input Image, GAN L1=100 L2=0, GAN L1=0 L2=1, LSGAN L1=100 L2=0, LSGAN L1=0 L2=1, EBGAN L1=100 L2=0,
 EBGAN L1=0 L2=1, WGAN L1=100 L2=0, WGAN L1=0 L2=1, True Image.
 
