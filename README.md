@@ -13,6 +13,9 @@ towards automatic image colorization.
 ### GAN Variations
 * [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 * [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
+* [Least Squares GANs](https://arxiv.org/pdf/1611.04076v2.pdf)
+* [Wasserstein GAN](https://arxiv.org/pdf/1701.07875.pdf)
+
 
 #### Things to compare
 * State of the art colorization mentioned above.
