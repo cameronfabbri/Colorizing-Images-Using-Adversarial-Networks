@@ -97,10 +97,6 @@ def netG(L_image, num_gpu):
 	  with tf.variable_scope('g_conv9_2'):
 	        conv9_2 = conv2d_transpose(conv9_1, 2, stride=2, kernel_size=4)
 	        conv9_2 = tf.nn.relu(conv9_2)
-	  #with tf.variable_scope('conv9_3'):
-	  #      conv9_3 = conv2d_transpose(conv9_2, 2, stride=2, kernel_size=4)
-	  #      conv9_3 = tf.nn.relu(conv9_3)
-	  #      conv9_3 = batch_norm(conv9_3)
 	        
       return conv9_2
 
@@ -141,83 +137,4 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
             print conv4
             print conv5
             return conv5
-
-
-'''
-'''
-def energyEncoder(ab_images, reuse=False):
-   print 'DISCRIMINATOR' 
-   sc = tf.get_variable_scope()
-   with tf.variable_scope(sc, reuse=reuse):
-
-      conv1 = layers.conv2d(ab_images, 64, 4, stride=2, activation_fn=None, scope='d_conv1')
-      conv1 = lrelu(conv1)
-      print 'conv1:',conv1
-
-      conv2 = layers.conv2d(conv1, 128, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv2')
-      conv2 = lrelu(conv2)
-      print 'conv2:',conv2
-      
-      conv3 = layers.conv2d(conv2, 256, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv3')
-      conv3 = lrelu(conv3)
-      print 'conv3:',conv3
-      
-      conv4 = layers.conv2d(conv3, 512, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv4')
-      conv4 = lrelu(conv4)
-      print 'conv4:',conv4
-      
-      tf.add_to_collection('vars', conv1)
-      tf.add_to_collection('vars', conv2)
-      tf.add_to_collection('vars', conv3)
-      tf.add_to_collection('vars', conv4)
-
-      return conv4
-
-def energyDecoder(encoded, reuse=False):
-   sc = tf.get_variable_scope()
-   with tf.variable_scope(sc, reuse=reuse):
-      
-      conv5 = layers.conv2d_transpose(encoded, 256, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv5')
-      conv5 = lrelu(conv5)
-
-      conv6 = layers.conv2d_transpose(conv5, 128, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv6')
-      conv6 = lrelu(conv6)
-      
-      conv7 = layers.conv2d_transpose(conv6, 64, 4, stride=2, normalizer_fn=layers.batch_norm, activation_fn=None, scope='d_conv7')
-      conv7 = lrelu(conv7)
-
-      conv8 = layers.conv2d_transpose(conv7, 2, 4, stride=2, activation_fn=tf.nn.tanh, scope='d_conv8')
-
-      print 'encoded:',encoded
-      print 'conv5:',conv5
-      print 'conv6:',conv6
-      print 'conv7:',conv7
-      print 'conv8:',conv8
-      
-      print 'END D\n'
-      tf.add_to_collection('vars', conv5)
-      tf.add_to_collection('vars', conv6)
-      tf.add_to_collection('vars', conv7)
-      tf.add_to_collection('vars', conv8)
-      return conv8
-
-
-'''
-   Only encoding and decoding the ab values, then concatenating onto the
-   lightness channel and taking the mse
-'''
-def energyNetD(L_images, ab_images, batch_size, reuse=False):
-   # concat lightness channel with ab values
-   input_images = tf.concat([L_images, ab_images], axis=3)
-
-   # encode the ab values
-   encoded = energyEncoder(ab_images, reuse=reuse)
-
-   # decode ab values
-   decoded = energyDecoder(encoded, reuse=reuse)
-   decoded_images = tf.concat([L_images, decoded], axis=3)
-   return mse(decoded_images, input_images, batch_size), encoded, decoded
-
-def mse(pred, real, batch_size):
-   return tf.sqrt(2*tf.nn.l2_loss(pred-real))/batch_size
 
