@@ -1,6 +1,6 @@
 # Colorizing-Images-Using-Adversarial-Networks
 This is a project comparing multiple variations of Generative Adversarial Networks (GANs)
-towards automatic image colorization.
+towards automatic image colorization, currently [in progress](http://irvlab.dl.umn.edu/projects/adversarial-image-colorization)
 
 ### GAN Variations
 * [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
