@@ -25,6 +25,7 @@ LSGAN L1=100 L2=0, LSGAN L1=0 L2=1, EBGAN L1=100 L2=0, EBGAN L1=0 L2=1, WGAN L1=
 
 ![allali](http://i.imgur.com/zhD5gsn.png)
 
+Currently training on Imagenet to see how it works on that.
 
 
 #### Useful links:
