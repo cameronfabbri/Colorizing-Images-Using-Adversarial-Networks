@@ -4,10 +4,11 @@ Grayscale images could contain various degrees and intensities of colors, making
 problem. Therefore, we would not like to recover the ground truth colors, but rather generate plausible
 colors.
 
-![jfkgray](http://i.imgur.com/0syARFb.png)
+
+![jfkgray](http://i.imgur.com/0syARFb.png) ->
 ![jfkcol](http://i.imgur.com/LJ9Kkfk.png)
 
-![aligray](http://i.imgur.com/hVf5hkp.png)
+![aligray](http://i.imgur.com/B9S7FwL.png) ->
 ![alicol](http://i.imgur.com/7PaEtUd.png)
 
 
