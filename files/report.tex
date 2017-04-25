@@ -210,7 +210,7 @@ One important thing to note is the extreme diversity seen in the results, showin
 \begin{figure}[!htb]
    \begin{center}$
       \begin{array}{cccc}
-         \includegraphics[width=3in]{least_squares_results}
+         \includegraphics[width=3in]{least_squares_results2}
       \end{array}$
    \end{center}
    \caption{\textit{Results from training LSGANs on churches from the LSUN dataset. Note these are 128x128 images.}}
@@ -253,7 +253,7 @@ Results can be seen in Figure 6, and visually match those presented in the paper
 \begin{figure}[!htb]
    \begin{center}$
       \begin{array}{cccc}
-         \includegraphics[width=4in]{ebgan0_results}
+         \includegraphics[width=4in]{ebgan0_results2}
       \end{array}$
    \end{center}
    \caption{\textit{Results from training EBGAN on faces from the CelebA dataset.}}
@@ -291,7 +291,7 @@ Although the samples are visually similar to the EBGAN results, training took se
 \begin{figure}[!htb]
    \begin{center}$
       \begin{array}{cccc}
-         \includegraphics[width=4in]{wgan_results}
+         \includegraphics[width=4in]{wgan_results2}
       \end{array}$
    \end{center}
    \caption{\textit{Results from training WGAN on faces from the CelebA dataset.}}
@@ -427,22 +427,22 @@ compare, I also tested on a true grayscale image of John F. Kennedy, seen in Fig
          \includegraphics[width=0.75in]{ali_ls_0_1} \hspace{1mm}
          \includegraphics[width=0.75in]{ali_e_100_0} \hspace{1mm}
          \includegraphics[width=0.75in]{ali_e_0_1} \hspace{1mm}
-         
          %\includegraphics[width=0.75in]{ali_w_100_0} \hspace{1mm}
          \includegraphics[width=0.75in]{ali_w_0_1}
 
       \end{array}$
    \end{center}
-   \caption{\textit{Colorizing a true black and white photo. From left to right: Input Image, GAN $L_1=100$ $L_2=0$, GAN $L_1=0$ $L_2=1$,  LSGAN $L_1=100$ $L_2=0$, LSGAN $L_1=0$ $L_2=1$,  EBGAN $L_1=100$ $L_2=0$,
-      EBGAN $L_1=0$ $L_2=1$, WGAN $L_1=100$ $L_2=0$, WGAN $L_1=0$ $L_2=1$. Note no true color image is available for this photo.}}
+   \caption{\textit{Colorizing true black and white photos. From left to right: Input Image, GAN $L_1=100$ $L_2=0$, GAN $L_1=0$ $L_2=1$,  LSGAN $L_1=100$ $L_2=0$, LSGAN $L_1=0$ $L_2=1$,  EBGAN $L_1=100$ $L_2=0$,
+      EBGAN $L_1=0$ $L_2=1$, WGAN $L_1=100$ $L_2=0$, WGAN $L_1=0$ $L_2=1$. Note no true color images are available for these photos.}}
 \end{figure}
 
 
 \section{Conclusion and Future Work}
 I explored various approaches towards training adversarial networks for image generation, and after verifying their results, applied their methods towards the ill-posed problem of automatically colorizing
 a grayscale image. The combination of fine hyperparameter tuning and long turnaround time for results poses an inherent challenge. The training of GANs is highly unstable, and even the smallest of
-changes may lead to inadequate results. For example, a typo while training DCGANs that set the learning rate to $\alpha = 0.0001$ instead of $\alpha = 0.0002$ caused the output from the generator to lack
-any structure similar to MNIST. Future work involves exploring these variations, as well as tackling the multiclass colorization problem.
+changes may lead to inadequate results. %For example, a typo while training DCGANs that set the learning rate to $\alpha = 0.0001$ instead of $\alpha = 0.0002$ caused the output from the generator to lack
+%any structure similar to MNIST.
+Future work involves exploring these variations, as well as tackling the multiclass colorization problem.
 
 
 \pagebreak
