@@ -4,6 +4,13 @@ Grayscale images could contain various degrees and intensities of colors, making
 problem. Therefore, we would not like to recover the ground truth colors, but rather generate plausible
 colors.
 
+![jfkgray](http://i.imgur.com/0syARFb.png)
+![jfkcol](http://i.imgur.com/LJ9Kkfk.png)
+
+![aligray](http://i.imgur.com/hVf5hkp.png)
+![alicol](http://i.imgur.com/7PaEtUd.png)
+
+
 ### Implementation
 There will only be one train file, and will take in a configuration file defining what loss (type of GAN),
 and what architecture to use.
