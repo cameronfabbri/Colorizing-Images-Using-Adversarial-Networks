@@ -20,7 +20,8 @@ EBGAN L1=0 L2=1, WGAN L1=100 L2=0, WGAN L1=0 L2=1, True Image.
 
 ![all](http://i.imgur.com/zXZr5iw.jpg)
 
-Below show some results on photos outside the dataset with no true color version.
+Below show some results on photos outside the dataset with no true color version. From left to right: Input Image, GAN L1=100 L2=0, GAN L1=0 L2=1,
+LSGAN L1=100 L2=0, LSGAN L1=0 L2=1, EBGAN L1=100 L2=0, EBGAN L1=0 L2=1, WGAN L1=100 L2=0, WGAN L1=0 L2=1
 
 ![allali](http://i.imgur.com/zhD5gsn.png)
 
