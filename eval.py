@@ -48,7 +48,7 @@ if __name__ == '__main__':
    EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'_'+str(UPCONVS)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
    
-   DATASET = 'true_gray'
+   #DATASET = 'true_gray'
    print
    print 'PRETRAIN_EPOCHS: ',PRETRAIN_EPOCHS
    print 'GAN_EPOCHS:      ',GAN_EPOCHS
@@ -76,13 +76,10 @@ if __name__ == '__main__':
    if ARCHITECTURE == 'pix2pix':
       import pix2pix
       predict_ab = pix2pix.netG(test_L, 0, UPCONVS)
-   if ARCHITECTURE == 'colorarch':
-      import colorarch
-      predict_ab = colorarch.netG(test_L, BATCH_SIZE, 0)
-   if ARCHITECTURE == 'cganarch':
-      import cganarch
+   if ARCHITECTURE == 'colcolgan':
+      import ColColGAN
       z = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 64, 64, 1))
-      predict_ab = cganarch.netG(test_L, z, 0)
+      predict_ab = ColColGAN.netG(test_L, 0)
 
    # reconstruct prediction image from test_L and predict_ab
    prediction = data_ops.augment(predict_ab, test_L)

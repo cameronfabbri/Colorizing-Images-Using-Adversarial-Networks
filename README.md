@@ -1,44 +1,31 @@
 # Colorizing-Images-Using-Adversarial-Networks
-Given a grayscale photgraph as input, can we generate a *plausible* color version of the photograph?
-Grayscale images could contain various degrees and intensities of colors, making this an ill-posed
-problem. Therefore, we would not like to recover the ground truth colors, but rather generate plausible
-colors.
+This is a project comparing multiple variations of Generative Adversarial Networks (GANs)
+towards automatic image colorization, currently [in progress](http://irvlab.dl.umn.edu/projects/adversarial-image-colorization)
 
-### Implementation
-There will only be one train file, and will take in a configuration file defining what loss (type of GAN),
-and what architecture to use.
+### GAN Variations
+* [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
+* [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
+* [Least Squares GANs](https://arxiv.org/pdf/1611.04076v2.pdf)
+* [Wasserstein GAN](https://arxiv.org/pdf/1701.07875.pdf)
 
-### To-Do
-Get imagenet working
+![jfkgray](http://i.imgur.com/0syARFb.png)
+![jfkcol](http://i.imgur.com/LJ9Kkfk.png)
 
-#### Project Ideas/Goals
-* Implement the [state of the art](http://richzhang.github.io/colorization/) for colorizing grayscale photos.
-* [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
-* Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
-* Try also with normal GANs
-* See if we can come up with varying colors by passing in a noise vector with the image.
-* Can we pretrain the generator? Basically do the Colorization paper with a random seed
-and the grayscale image, when it converges start training it on a GAN.
-* Use the LAB colorspace as in the state of the art paper
-* Could try pretraining every GAN before colorization, not even on colorization. Just train
-it normally, then you will get all sorts of things for free when starting to train on color.
-Not sure if you would have to alter z to be the same size as the input image, but we'll figure
-that out.
-can have some way of altering the color.
+![aligray](http://i.imgur.com/B9S7FwL.png)
+![alicol](http://i.imgur.com/7PaEtUd.png)
 
-#### Things to compare
-* State of the art colorization mentioned above.
-* One or more state of the art general models (Alexnet, Inception, ResNet, etc)
-* Energy-Based GANs
-* Wasserstein GANs
-* DCGANs
-* Pretrained versions of the generator for the different GANs
+I used a combination of L1 and L2 loss along with the different GAN variations. I trained on the CelebA dataset, below shows some
+results on the test set. From left to right: Input Image, GAN L1=100 L2=0, GAN L1=0 L2=1, LSGAN L1=100 L2=0, LSGAN L1=0 L2=1, EBGAN L1=100 L2=0,
+EBGAN L1=0 L2=1, WGAN L1=100 L2=0, WGAN L1=0 L2=1, True Image.
 
-Need to think about how the generator will actually work. [This](http://richzhang.github.io/colorization/)
-work explains why just taking the L2 norm between true and generated images produces
-less saturated and more brown/green (averaged) images. Could use their approach for
-the generator. I would also like to try generating color channels individually
-and see what that yields.
+![all](http://i.imgur.com/zXZr5iw.jpg)
+
+Below show some results on photos outside the dataset with no true color version. From left to right: Input Image, GAN L1=100 L2=0, GAN L1=0 L2=1,
+LSGAN L1=100 L2=0, LSGAN L1=0 L2=1, EBGAN L1=100 L2=0, EBGAN L1=0 L2=1, WGAN L1=100 L2=0, WGAN L1=0 L2=1
+
+![allali](http://i.imgur.com/zhD5gsn.png)
+
+Currently training on Imagenet to see how it works on that.
 
 
 #### Useful links:
@@ -51,11 +38,6 @@ and see what that yields.
 
 [Automatic Colorization of Grayscale Images](http://cs229.stanford.edu/proj2013/KabirzadehSousaBlaes-AutomaticColorizationOfGrayscaleImages.pdf)
 
-
-
-First paper on GANs
-
-[Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
 ___
 
 
