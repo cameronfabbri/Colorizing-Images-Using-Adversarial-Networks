@@ -1,8 +1,6 @@
 # Colorizing-Images-Using-Adversarial-Networks
-Given a grayscale photgraph as input, can we generate a *plausible* color version of the photograph?
-Grayscale images could contain various degrees and intensities of colors, making this an ill-posed
-problem. Therefore, we would not like to recover the ground truth colors, but rather generate plausible
-colors.
+This is a project comparing multiple variations of Generative Adversarial Networks (GANs)
+towards automatic image colorization.
 
 
 ![jfkgray](http://i.imgur.com/0syARFb.png)
@@ -12,20 +10,9 @@ colors.
 ![alicol](http://i.imgur.com/7PaEtUd.png)
 
 
-#### Project Ideas/Goals
-* Implement the [state of the art](http://richzhang.github.io/colorization/) for colorizing grayscale photos.
-* [Use Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
-* Use [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
-* Try also with normal GANs
-* See if we can come up with varying colors by passing in a noise vector with the image.
-* Can we pretrain the generator? Basically do the Colorization paper with a random seed
-and the grayscale image, when it converges start training it on a GAN.
-* Use the LAB colorspace as in the state of the art paper
-* Could try pretraining every GAN before colorization, not even on colorization. Just train
-it normally, then you will get all sorts of things for free when starting to train on color.
-Not sure if you would have to alter z to be the same size as the input image, but we'll figure
-that out.
-can have some way of altering the color.
+### GAN Variations
+* [Generative Adversarial Networks](https://arxiv.org/pdf/1406.2661v1.pdf)
+* [Energy-Based GANs](https://arxiv.org/pdf/1609.03126v3.pdf)
 
 #### Things to compare
 * State of the art colorization mentioned above.
