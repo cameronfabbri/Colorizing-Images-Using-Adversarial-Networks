@@ -15,6 +15,12 @@ towards automatic image colorization.
 ![alicol](http://i.imgur.com/7PaEtUd.png)
 
 
+
+![allali](http://i.imgur.com/zhD5gsn.png)
+![all](http://i.imgur.com/zXZr5iw.jpg)
+
+
+
 #### Useful links:
 
 [Colorful Image Colorization](https://arxiv.org/pdf/1603.08511.pdf)
