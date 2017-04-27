@@ -180,7 +180,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
    if dataset == 'true_gray':
       train_paths = []
       test_paths  = pickle.load(open('/home/fabbric/Research/colorgans/files/true_gray/true_gray.pkl', 'rb'))
-   
+
    if dataset == 'looneytunes':
       print 'Using Looney Tunes'
       pkl_train_file = 'files/looneytunes_train.pkl'
@@ -207,6 +207,7 @@ def loadData(data_dir, dataset, batch_size, jitter=True, train=True, SIZE=256):
          print 'Found pickle file'
          train_paths = pickle.load(open(pkl_train_file, 'rb'))
          test_paths  = pickle.load(open(pkl_test_file, 'rb'))
+         test_paths = test_paths[54:58]
       else:
          train_dir = data_dir+'train/'
          test_dir  = data_dir+'test/'
