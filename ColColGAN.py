@@ -96,7 +96,7 @@ def netG(L_image, num_gpu):
 	        conv9_1 = tf.nn.relu(conv9_1) 
 	  with tf.variable_scope('g_conv9_2'):
 	        conv9_2 = conv2d_transpose(conv9_1, 2, stride=2, kernel_size=4)
-	        conv9_2 = tf.nn.relu(conv9_2)
+	        conv9_2 = tf.nn.tanh(conv9_2)
 	        
       return conv9_2
 
