@@ -3,6 +3,7 @@
 \usepackage{multirow}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
+\graphicspath{{../images/}}
 \usepackage{multimedia}
 
 \usetheme{Berlin}  %{Berlin}{Hannover}{Singapore}{CambridgeUS}
@@ -37,8 +38,8 @@
 
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%% Background
 \begin{frame}
 \frametitle{\textbf{Background}}
 \begin{itemize}
@@ -48,7 +49,7 @@
 	\item Classification
 	\end{enumerate}
 	
-	\item Domain choices:
+	\item Colorspace choices:
   
 	\begin{enumerate}[$-$]
 	\item  \textbf{LAB}, RGB
@@ -66,6 +67,49 @@
 	\end{enumerate}
 	
 \end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%% GANs
+\begin{frame}
+\frametitle{\textbf{Generative Adversarial Networks (GANs)}}
+   \begin{itemize}
+      \item Two player minimax game
+	   \begin{enumerate}[$-$]
+         \item Discriminator \textbf{D}
+         \item Generator \textbf{G}
+      \hspace{30mm}\includegraphics[width=0.3in]{noise} \hspace{2mm}\includegraphics[width=0.5in]{arrow} \hspace{1mm} \includegraphics[width=0.3in]{5}
+	   \end{enumerate}
+      \item D is trained to discriminate between a real image and a generated image
+	   \item G is trained to generate an image that will fool D
+	   \item Both G and D are neural networks
+      \[\min\limits_{G}\max\limits_{D} \mathbb{E}_{x \sim p_{data(x)}} [logD(\textbf{\textit{x}})] + \mathbb{E}_{z \sim p_z(z)}[log(1 - D(G(z)))]\]
+	   \item Conditional GANs generate images given conditional information, such as a class label.
+   \end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%% Alternative 
+\begin{frame}
+\frametitle{\textbf{GAN Variations}}
+   \begin{itemize}
+      \item Deep Convolutional GANs (DCGANs)
+	   \begin{enumerate}[$-$]
+         \item Bridge the gap between GANs and Deep Learning
+      \end{enumerate}
+      \item Least Squares GANs (LSGANs)
+	   \begin{enumerate}[$-$]
+         \item Use a least squares loss for the discriminator
+      \end{enumerate}
+      \item Energy-Based GANs (EBGANs)
+	   \begin{enumerate}[$-$]
+         \item Model the discriminator as an energy function
+      \end{enumerate}
+      \item Wasserstein GAN (WGAN)
+	   \begin{enumerate}[$-$]
+         \item Minimizes the Earth Mover distance between two distributions
+      \end{enumerate}
+   \end{itemize}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%
 
