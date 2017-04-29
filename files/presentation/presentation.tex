@@ -5,6 +5,8 @@
 \usepackage{graphicx}
 \graphicspath{{../images/}}
 \usepackage{multimedia}
+\usepackage{color}
+\usepackage{caption}
 
 \usetheme{Berlin}  %{Berlin}{Hannover}{Singapore}{CambridgeUS}
 
@@ -28,7 +30,7 @@
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section*{Introduction}
+\section*{Preliminaries}
 %%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{\textbf{Image Colorization}}
@@ -70,7 +72,88 @@
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%% GANs
+%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Classical Models}
+\begin{frame}
+\frametitle{\textbf{Classical Approaches}}
+\framesubtitle{\textbf{Colorization using User-specified Prior [4]}}
+\includegraphics[width=\linewidth]{5.pdf}
+
+\vspace{-3mm}
+\begin{table}
+
+\centering
+\begin{tabular}{llll}
+{\color{blue} \textbf{Pros}} & & & {\color{red} \textbf{Cons}} \\
+Fast & & & Not automatic \\
+Reliable & & & Not scalable
+
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{\textbf{Classical Approaches}}
+\framesubtitle{\textbf{Colorization using Multi-modal Prediction [5]}}
+\includegraphics[width=\linewidth]{4.pdf}
+
+\vspace{-5mm}
+\begin{table}
+\centering
+\begin{tabular}{llll}
+{\color{blue} \textbf{Pros}} & & & {\color{red} \textbf{Cons}} \\
+Automatic & & & Depends heavily on reference prior  \\
+Handles multimodality & & & Not practical
+
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+
+\section*{DL: Generative Models}
+
+\begin{frame}
+\frametitle{\textbf{Generative Approach}}
+\framesubtitle{\textbf{Colorful Image Colorization model [1]}}
+\includegraphics[width=\linewidth]{7.pdf}
+
+
+\begin{table}
+\footnotesize
+\centering
+\begin{tabular}{|l|l|l|}
+\hline 
+\textbf{Model Changes} & {\textbf{Original model}}  & {\color{blue} \textbf{Adopted model}} \\
+\hline \hline
+Output & Classification  Probabilities & {\color{blue} Image}  \\ \hline
+Trained on & ImageNet & {\color{blue} CelebA, Places2 }\\ \hline
+Implementation & Caffe & {\color{blue}Tensor-flow} \\ \hline
+
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{\textbf{Results}}
+\framesubtitle{\textbf{Colorful Image Colorization model as generator only}}
+\includegraphics[width=\linewidth]{81.pdf}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%% GANs
+\section*{DL: Adversarial Models}
+\begin{frame}
+\frametitle{\textbf{Results}}
+\framesubtitle{\textbf{Colorful Image Colorization model as generator in a GAN}}
+\includegraphics[width=\linewidth]{82.pdf}
+\end{frame}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%% GANs
 \begin{frame}
 \frametitle{\textbf{Generative Adversarial Networks (GANs)}}
    \begin{itemize}
@@ -111,14 +194,7 @@
       \end{enumerate}
    \end{itemize}
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%
 
-
-\section*{Background}
-
-\section*{Classical and Generative Models}
-
-\section*{GAN-based Models}
 
 \section*{Results}
 
