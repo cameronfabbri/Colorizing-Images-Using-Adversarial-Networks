@@ -7,7 +7,7 @@
 \usepackage{multimedia}
 \usepackage{color}
 \usepackage{caption}
-
+\usepackage{wrapfig}
 \usetheme{Berlin}  %{Berlin}{Hannover}{Singapore}{CambridgeUS}
 
 \title{Generative Adversarial Networks for Automatic Image Colorization}
@@ -153,50 +153,146 @@ Implementation & Caffe & {\color{blue}Tensor-flow} \\ \hline
 
 
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%% GANs
 \begin{frame}
 \frametitle{\textbf{Generative Adversarial Networks (GANs)}}
-   \begin{itemize}
-      \item Two player minimax game
-	   \begin{enumerate}[$-$]
-         \item Discriminator \textbf{D}
-         \item Generator \textbf{G}
-      \hspace{30mm}\includegraphics[width=0.3in]{noise} \hspace{2mm}\includegraphics[width=0.5in]{arrow} \hspace{1mm} \includegraphics[width=0.3in]{5}
-	   \end{enumerate}
-      \item D is trained to discriminate between a real image and a generated image
-	   \item G is trained to generate an image that will fool D
-	   \item Both G and D are neural networks
+
+\begin{tabular}{ll}
+\begin{minipage}{0.5\textwidth}
+    \begin{itemize}
+        \item Two player minimax game
+	     \begin{enumerate}[$-$]
+           \item Discriminator \textbf{D}
+           \item Generator \textbf{G}
+           \end{enumerate}
+       \item D is trained to discriminate between a real image and a generated image
+         \end{itemize}
+\end{minipage}
+&
+\begin{minipage}{0.5\textwidth}
+\includegraphics[width=0.9 \linewidth]{9.pdf}\end{minipage}
+\end{tabular}
+
+
+\begin{itemize}
+\addtolength{\itemindent}{2.5mm}
+  \item G is trained to generate an image that will fool D
+  \item Both G and D are neural networks
       \[\min\limits_{G}\max\limits_{D} \mathbb{E}_{x \sim p_{data(x)}} [logD(\textbf{\textit{x}})] + \mathbb{E}_{z \sim p_z(z)}[log(1 - D(G(z)))]\]
-	   \item Conditional GANs generate images given conditional information, such as a class label.
-   \end{itemize}
+  \item Conditional GANs generate images given conditional information, such as a class label.
+\end{itemize}
+
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%% Alternative 
+
 \begin{frame}
 \frametitle{\textbf{GAN Variations}}
-   \begin{itemize}
-      \item Deep Convolutional GANs (DCGANs)
+\begin{itemize}
+\addtolength{\itemindent}{2.5mm}
+\item Deep Convolutional GANs (DCGANs)
 	   \begin{enumerate}[$-$]
          \item Bridge the gap between GANs and Deep Learning
       \end{enumerate}
+\end{itemize}
+
+\begin{tabular}{ll}
+\begin{minipage}{0.57\textwidth}
+   \begin{itemize}      
       \item Least Squares GANs (LSGANs)
 	   \begin{enumerate}[$-$]
-         \item Use a least squares loss for the discriminator
+         \item Use a least squares loss for the discriminator [7]
       \end{enumerate}
+      \vspace{1.5mm}
       \item Energy-Based GANs (EBGANs)
 	   \begin{enumerate}[$-$]
          \item Model the discriminator as an energy function
       \end{enumerate}
-      \item Wasserstein GAN (WGAN)
+   \end{itemize}
+\end{minipage}
+&
+\begin{minipage}{0.43\textwidth}
+\includegraphics[width=\linewidth]{10.pdf}\end{minipage}
+\end{tabular}
+
+\begin{itemize}
+\addtolength{\itemindent}{2.5mm}
+  \item Wasserstein GAN (WGAN)
 	   \begin{enumerate}[$-$]
          \item Minimizes the Earth Mover distance between two distributions
       \end{enumerate}
-   \end{itemize}
+\end{itemize}
+
+
 \end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%
+
 
 
 \section*{Results}
+\begin{frame}
+\frametitle{\textbf{GAN Comparison Results}}
+\centering
+\includegraphics[width= \linewidth]{11.pdf}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{\textbf{GANs Towards Colorization}}
+
+\begin{tabular}{ll}
+\begin{minipage}{0.55\textwidth}
+   \begin{itemize}      
+      \item Tested two generators
+	   \begin{enumerate}[$-$]
+         \item Pix2Pix
+         \item Colorful Image Colorization
+         \vspace{1mm}
+      \end{enumerate}
+      \item Pix2Pix generator is  modeled as an encoder-decoder with skip connections
+      \vspace{1mm}
+      \item Combine L1 and L2 loss with GAN Variatons
+   \end{itemize}
+\end{minipage}
+&
+\begin{minipage}{0.5\textwidth}
+\hspace{-5mm}
+\includegraphics[width=\linewidth]{12.pdf}\end{minipage}
+\end{tabular}
+
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{\textbf{Results in Comparison}}
+\centering
+\includegraphics[width= \linewidth]{13.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{\textbf{Legacy Grayscale Results}}
+\centering
+\includegraphics[width= 0.95 \linewidth]{14.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{\textbf{Lessons Learned}}
+
+\begin{itemize}
+\item Automatic colorization is difficult due to
+\begin{enumerate}[$-$]
+\item Ambiguity
+\item Multi-modality
+\end{enumerate}
+\item Need large-scale training to \textit{learn} colorization
+\item ?
+\item ?
+\item ?
+\end{itemize}
+\end{frame}
 
 
 
@@ -211,7 +307,7 @@ Implementation & Caffe & {\color{blue}Tensor-flow} \\ \hline
 
 \begin{frame}
 \frametitle{\textbf{References}}
-\footnotesize
+\tiny
 \begin{enumerate}
 \item Richard Zhang, Phillip Isola, and Alexei A Efros. Colorful image colorization. In European Conference on Computer Vision,
 pages 649–666. Springer, 2016.
@@ -219,6 +315,19 @@ pages 649–666. Springer, 2016.
 automatic color correction. In Image Processing (ICIP), 2013 20th IEEE International Conference on, pages 3412–3416. IEEE, 2013.
 \item Luz A Torres-Méndez and Gregory Dudek. Color correction of underwater images for aquatic robot inspection. In International
 Workshop on Energy Minimization Methods in Computer Vision and Pattern Recognition, pages 60–73. Springer, 2005.
+\item Anat Levin, Dani Lischinski, and Yair Weiss. Colorization using optimization. In ACM Transactions on Graphics (ToG), volume 23, pages 689–694. ACM, 2004.
+\item Guillaume Charpiat, Matthias Hofmann, and Bernhard Schölkopf. Automatic image colorization via multimodal predictions. Computer Vision–ECCV 2008, pages 126–139, 2008.
+\item Goodfellow, Ian, et al. ”Generative adversarial nets.” Advances in neural information processing systems. 2014.
+\item Mao, Xudong, et al. ”Least squares generative adversarial networks.” arXiv preprint ArXiv:1611.04076 (2016).
+\item Arjovsky, Martin, Soumith Chintala, and Lon Bottou. ”Wasserstein gan.” arXiv preprint arXiv:1701.07875 (2017).
+\item Zhao, Junbo, Michael Mathieu, and Yann LeCun. ”Energy-based generative adversarial network.” arXiv preprint
+arXiv:1609.03126 (2016).
+
+
+
+
+
+
 
 
 
