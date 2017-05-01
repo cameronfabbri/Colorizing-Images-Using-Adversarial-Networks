@@ -126,6 +126,7 @@ In the results state above, colorful colorization model is used as a generator o
 The colorful colorization model, as a generator alone, and as a generator in a GAN, achieve decent colorization performance. Next, we discuss other GAN based models for image colorization, which we investigated in our project. 
  
 
+
  
 
 \section{Adversarial Approaches}
@@ -155,12 +156,12 @@ order to provide some sense of ground truth. These can be expressed as:
 \[ \mathcal{L}_{L_2}(G) = \mathbb{E}_{x,y\sim p_{data}(x,y)}[(y-G(x))^2] \]
 
 
-\noindent These are able to capture low frequencies, but have been shown to lack in capturing high
-frequencies, resulting in blurry images in the case of autoencoders, or saturated colors in the case of
-colorization. These imperfections should in theory be rejected by the discriminator, which results in
-successfully capturing high frequencies in images such as sharp edges and bright colors. Note that using
-these losses along with the GAN loss does not change the discriminator's objective, it is the generator
-that is required to fool the discriminator as well as be near the ground truth.
+\noindent where $x$ is the grayscale image, $y$ is the true corresponding $ab$ color channels, and $G(x)$ is the generated $ab$ color channels. These are able to capture low frequencies, but have been shown to lack in 
+capturing high frequencies, resulting in blurry images in the case of autoencoders, or saturated colors in
+the case of colorization. These imperfections should in theory be rejected by the discriminator, which
+results in successfully capturing high frequencies in images such as sharp edges and bright colors. Note
+that using these losses along with the GAN loss does not change the discriminator's objective, it is the
+generator that is required to fool the discriminator as well as be near the ground truth.
 
 \subsection{DCGANs}
 Because of the high dimensionality and spacial structure of images, we chose to use Deep Convolutional GANs
@@ -272,7 +273,7 @@ the CelebA dataset. Some results can be seen in Figure X.
 %\end{figure}  
 
 
-\section{Conclusion}
+\section{Conclusion and Future Work}
 Conclusion
 
 \vspace{1mm}
