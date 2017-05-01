@@ -68,6 +68,60 @@ need to be added. need to be added. need to be added. need to be added. need to 
 need to be added. need to be added. need to be added. need to be added. need to be added.}  
 
 \section{Generative Approaches}
+In our project, we tried two classical methods: \textit{colorization using optimization} \cite{levin2004colorization}, \textit{colorization via multimodal predictions} \cite{charpiat2008automatic}. The former is not an automatic approach (user provides color distribution prior), whereas, the later uses a set of reference images to formulate color distribution. Their operations are discussed in our term report; this paper focuses on the third generative approach, \textit{colorful image colorization} \cite{zhang2016colorful}, which is adopted in our project. 
+
+\subsection{\textbf{Colorful Image Colorization}}
+Colorful image colorization \cite{zhang2016colorful} is considered as a major breakthrough on this problem. Published on 2016, it has managed to set a new benchmark for performance. It is an automatic approach that produces realistic colorizations based on a CNN-based model. 
+It poses the problem as a multi-modal classification problem. The objective function is carefully designed to map the image-to-image translation problem to a classification problem. First, it takes advantage of the fact that $A$, $B$ color components of LAB colorspace for natural images are concentrated in a small region, which can be discretized into finite number of bins ($Q$), as illustrated in the top row of Fig \ref{fig:col_main}. 
+Given the lightness channel ($L_p$) of a pixel $p$, its $A$, $B$ pair corresponds to a particular bin (out of $313$ bins in total), which is mapped to a 1-hot vector ($Z_p$). 
+Consequently, task of the classification model, is to predict which bin each pixel corresponds to. That is, the output is a $313$-mode probability distribution ($ \hat{Z_p}$) for each pixel $p$. The objective function is modelled as a cross entropy loss between $Z$ and $\hat{Z}$, expressed as follows: 
+
+\[ L_{col}(Z, \hat{Z}) = - \sum_p Z_p \sum_{q \in Q} Z_p[q] log(\hat{Z_p}[q])   \] 
+
+This cross-entropy loss can be further augmented with class rebalancing, to encourage rare colors. The detailed model specification, as shown in the bottom-row of Fig. \ref{fig:col_main}, is an 8-layer CNN architecture where each conv layer refers to a block of $2$ or $3$ repeated
+conv and ReLU layers \cite{nair2010rectified}, followed by a BatchNorm layer \cite{ioffe2015batch}. The network has no pool layers; 
+all changes in resolution are achieved through spatial down-sampling or up-sampling between conv blocks.
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8 \linewidth]{Figs/one.jpg} 
+%\vspace{-5mm}
+\caption{Architecture of colorful image colorization model \cite{zhang2016colorful} that is adopted in our evaluation}
+\label{fig:col_main}
+\end{figure}  
+
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=0.8 \linewidth]{Figs/4.pdf} 
+\includegraphics[width=0.7 \linewidth]{Figs/82.pdf}
+\vspace{-1mm}
+\caption{Results for the colorful colorization model \cite{zhang2016colorful} with (a) L1 and (b) L2 loss is shown; First $4$ columns show few examples from the test set of CelebA \cite{celebA} dataset, while the rest ($3$) columns correspond to Places2 \cite{places2} dataset. Comparison for colorful colorization model used as a generator only (Col. Col. (G)), and as a generator in a GAN (Col. Col. (GAN)), is shown in (c); also, results obtained by colorization via multi-modal prediction \cite{charpiat2008automatic} is provided in the last column to demonstrate the degree of improvements using colorful colorization model.}
+%\vspace{-20mm}
+\label{fig:res_full}
+\end{figure}  
+
+
+While working on designing a generator for our GAN-based model, we investigated this model with different objective functions ($L_1$ loss, $L_2$ loss, least-squared loss, etc.) instead of their cross-entropy based loss function. This is due to the fact that in a GAN-based model, \textit{discriminator} expects an image from the \textit{generator}, 
+and tries to discriminate it as real or fake in order to force the generator to get better.  
+Therefore, rather than adopting their classification model directly, I implemented their architecture 
+using objective functions based on $L_1$, $L_2$, least-squared loss (so that it outputs an image, not classification probabilities). Additionally, it made our model end-to-end trainable, which can be easily incorporated in a GAN-based architecture. 
+
+Given an input image $I$, the network is fed with its $L$ channel ($I_L$); the output layer of the network is adjusted to predict $\hat{I}_{AB}$. We have found $L_1$ and $L_2$ loss functions perform quite well with this model. These loss functions between true $I_{AB}$ and $\hat{I}_{AB}$ can be expressed as follows:
+
+\[ L_1 (I_{AB}, \hat{I}_{AB}) = \lambda \sum_p | I_{AB}[p] - \hat{I}_{AB}[p] | \]  
+\[ L_2 (I_{AB}, \hat{I}_{AB}) = \lambda \sum_p ( I_{AB}[p] - \hat{I}_{AB}[p] )^2 \]  
+
+Here, $\lambda$ is a normalization constant. CelebA datasets \cite{celebA} is used for training primarily, that has $195K$ training examples (a total of  $202K$ images); 
+In a separate training, a set of $200K$ images from Places2 dataset \cite{places2} were also used for training\footnote{Larger datasets like ImageNet \cite{deng2009imagenet} and full Places2 challenge dataset were not used for the project due to time constraint; however, we are planning to train our final GAN-based model over these datasets during the summer.}. Training was performed using two $1080$ gpus (in a core-i7 machine having $64$GB RAM); training time for $100K$ iterations with a batch size $32$ was about $2$-$3$ days for each trial. The implementation is done using tensoflow \cite{abadi2016tensorflow} in python.    
+
+
+We found that this model performs better with $L_1$ loss function compared to $L_2$ loss. Additionally, training is much smoother for $L_1$ loss as well, as evident from Fig \ref{fig:loss}. This might be because of the averaging effect of $2$-norm which causes a blurry colorization (similar phenomena is discussed in \cite{zhang2016colorful}). The results on few test cases are shown in Fig. \ref{fig:res_full}. 
+
+It is to be noted that these results were found while designing it as a generator only, we will discuss results for our GAN-based models in the project report. Currently, the loss function ($L_{col}$) for classification model of the original paper is being tried out, to investigate how it performs over these datasets.    
+
+ 
 
 \section{Adversarial Approaches}
 
