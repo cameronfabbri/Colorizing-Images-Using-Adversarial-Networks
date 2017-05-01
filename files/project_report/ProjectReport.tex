@@ -238,7 +238,27 @@ $ab$ color channels for $x$. We combine the EBGAN objective with $L_1$ and $L_2$
 \[ G^* = \lambda_1 \mathcal{L}_{cEBGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
 
 \noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. We evaluated EBGANs on
-the CelebA dataset. Some results can be seen in Figure X.
+the CelebA dataset. Some results can be seen in Figure X. 
+
+\subsection{WGAN}
+The Wasserstein GAN (WGAN) approximates the Earth Mover (EM) distance given a set of $K$-Lipschitz functions 
+$f$. In order to have the parameters $w$ lie in a compact space and ensure $f$ is $K$-Lipschitz, the weights
+of the network are clamped to some range. Because the EM distance is continuous and differentiable, the
+discriminator (critic) should be trained to optimality, which offers better gradients to the generator. This 
+offers stable training at the expense of slow training, because the critic must be updated multiple times
+for one update of the generator. Our conditional WGAN objective function is:
+
+\[\mathcal{L}_{cWGAN} = \max\limits_{w \in W} \mathbb{E}_{x,y \sim \mathbb{P}_{data}}[f_w(x,y)] -
+\mathbb{E}_{x \sim p_{data}}[f_w(G(x))]\]
+
+\noindent where $x$ represents the grayscale image and $y$ represents the corresponding
+$ab$ color channels for $x$. We combine the WGAN objective with $L_1$ and $L_2$ to give our final objective:
+
+
+\[ G^* = \lambda_1 \mathcal{L}_{cWGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
+
+\noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. We evaluated WGAN on
+the CelebA dataset. Some results can be seen in Figure X. 
 
 %\begin{figure}[h]
    %\centering
