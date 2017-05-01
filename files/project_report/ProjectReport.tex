@@ -5,6 +5,7 @@
 \newcommand{\doctitle}{Automatic Image Colorization using Generative Adversarial Networks}
 
 \graphicspath{{Figs/}}
+\graphicspath{{../images/}}
 
 
 \title{\textbf{\doctitle}\\ \vspace{3mm}
@@ -219,12 +220,12 @@ We combine the LSGAN objective with $L_1$ and $L_2$ to give our final objective:
 \noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. We evaluated LSGANs on
 the CelebA dataset. Some results can be seen in Figure X.
 
-%\begin{figure}[h]
-   %\centering
-   %\includegraphics[width=0.8]{dcgan_results} 
-   %\caption{Results of DCGANs evaluated on CelebA}
-   %\label{fi}
-%\end{figure}  
+\begin{figure}[h]
+   \centering
+%   \includegraphics[width=0.8]{} 
+   \caption{Results of DCGANs evaluated on CelebA}
+   \label{fi}
+\end{figure}  
 
 \subsection{EBGANs}
 Energy-Based GANs (EBGANs) model the discriminator as an energy function that attributes low energies to
