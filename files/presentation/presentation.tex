@@ -134,8 +134,8 @@ Handles multimodality & & & Not practical
 Output & Classification  Probabilities & {\color{blue} Image}  \\ \hline
  & Cross-entropy based & {\color{blue} L1, L2} \\ 
 Loss function & {\tiny $L_{col}(Z, \hat{Z}) = - \sum_p Z_p \sum_{q \in Q} Z_p[q] log(\hat{Z_p}[q])$ } &  
-     {\tiny $L_1 = \lambda \sum_p | I_{AB}[p] - \hat{I}_{AB}[p] |$} \\ 
-     & & {\tiny$L_2 = \lambda \sum_p ( I_{AB}[p] - \hat{I}_{AB}[p] )^2$} \\ \hline
+     {\tiny $L_1: \lambda \sum_p | I_{AB}[p] - \hat{I}_{AB}[p] |$} \\ 
+     & & {\tiny$L_2: \lambda \sum_p ( I_{AB}[p] - \hat{I}_{AB}[p] )^2$} \\ \hline
 Trained on & ImageNet & {\color{blue} CelebA, Places2 }\\ \hline
 Implementation & Caffe & {\color{blue}TensorFlow} \\ \hline
 Training & {\color {red}Not end-to-end} & {\color{blue} End-to-end} \\ \hline
@@ -326,7 +326,7 @@ Workshop on Energy Minimization Methods in Computer Vision and Pattern Recogniti
 \item Guillaume Charpiat, Matthias Hofmann, and Bernhard Schölkopf. \textit{Automatic image colorization via multimodal predictions}. Computer Vision–ECCV 2008, pages 126–139, 2008.
 \item Goodfellow, Ian, et al. \textit{Generative adversarial nets}. Advances in neural information processing systems. 2014.
 \item Mao, Xudong, et al. \textit{Least squares generative adversarial networks}. arXiv preprint ArXiv:1611.04076 (2016).
-\item Arjovsky, Martin, Soumith Chintala, and Lon Bottou. \textit{Wasserstein gan}. arXiv preprint arXiv:1701.07875 (2017).
+\item Arjovsky, Martin, Soumith Chintala, and Leon Bottou. \textit{Wasserstein gan}. arXiv preprint arXiv:1701.07875 (2017).
 \item Zhao, Junbo, Michael Mathieu, and Yann LeCun. \textit{Energy-based generative adversarial network}. arXiv preprint arXiv:1609.03126 (2016).
 \item Radford, Alec, Luke Metz, and Soumith Chintala. \textit{Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks}. ICLR (2016): https://arxiv.org/abs/1511.06434.
 
