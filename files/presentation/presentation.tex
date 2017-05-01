@@ -119,17 +119,26 @@ Handles multimodality & & & Not practical
 \framesubtitle{\textbf{Colorful Image Colorization model [1]}}
 \includegraphics[width=\linewidth]{7.pdf}
 
+\end{frame}
+
+\begin{frame}
+\frametitle{\textbf{Colorful Image Colorization model [1]}}
+\framesubtitle{\textbf{Adopted Changes}}
 
 \begin{table}
-\footnotesize
 \centering
 \begin{tabular}{|l|l|l|}
 \hline 
 \textbf{Model Changes} & {\textbf{Original model}}  & {\color{blue} \textbf{Adopted model}} \\
 \hline \hline
 Output & Classification  Probabilities & {\color{blue} Image}  \\ \hline
+ & Cross-entropy based & {\color{blue} L1, L2} \\ 
+Loss function & {\tiny $L_{col}(Z, \hat{Z}) = - \sum_p Z_p \sum_{q \in Q} Z_p[q] log(\hat{Z_p}[q])$ } &  
+     {\tiny $L_1 = \lambda \sum_p | I_{AB}[p] - \hat{I}_{AB}[p] |$} \\ 
+     & & {\tiny$L_2 = \lambda \sum_p ( I_{AB}[p] - \hat{I}_{AB}[p] )^2$} \\ \hline
 Trained on & ImageNet & {\color{blue} CelebA, Places2 }\\ \hline
 Implementation & Caffe & {\color{blue}Tensor-flow} \\ \hline
+Training & {\color {red}Not end-to-end} & {\color{blue} End-to-end} \\ \hline
 
 \end{tabular}
 \end{table}
@@ -147,7 +156,7 @@ Implementation & Caffe & {\color{blue}Tensor-flow} \\ \hline
 \begin{frame}
 \frametitle{\textbf{Results}}
 \framesubtitle{\textbf{Colorful Image Colorization model as generator in a GAN}}
-\includegraphics[width=\linewidth]{82.pdf}
+\includegraphics[width=0.9 \linewidth]{82.pdf}
 \end{frame}
 
 
