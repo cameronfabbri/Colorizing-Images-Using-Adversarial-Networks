@@ -144,7 +144,19 @@ as shown in [REF], with the normal GANs loss, as the discriminator gets better, 
 generator, and therefore the generator itself, become worse. For this reason we chose to explore other
 options for the discriminator loss. Our model is set up as a \textit{conditional} GAN (cGAN), in which the
 generator is conditioned on the grayscale image. The rest of this section compares the different GAN
-formulations, and ends with our architecture designs.
+formulations, and ends with our architecture designs. We combine the GAN objective with $L_1$ and $L_2$ in
+order to provide some sense of ground truth. These can be expressed as:
+
+\[ \mathcal{L}_{L_1}(G) = \mathbb{E}_{x,y\sim p_{data}(x,y)}[||y-G(x)||_1] \]
+\[ \mathcal{L}_{L_2}(G) = \mathbb{E}_{x,y\sim p_{data}(x,y)}[(y-G(x))^2] \]
+
+
+\noindent These are able to capture low frequencies, but have been shown to lack in capturing high
+frequencies, resulting in blurry images in the case of autoencoders, or saturated colors in the case of
+colorization. These imperfections should in theory be rejected by the discriminator, which results in
+successfully capturing high frequencies in images such as sharp edges and bright colors. Note that using
+these losses along with the GAN loss does not change the discriminator's objective, it is the generator
+that is required to fool the discriminator as well as be near the ground truth.
 
 \subsection{DCGANs}
 Because of the high dimensionality and spacial structure of images, we chose to use Deep Convolutional GANs
@@ -156,17 +168,6 @@ given as:
 
 \noindent where $p_{data}$ represents the true data, and $p_z$ represents some noise prior, e.g.
 $z \sim \mathcal{N}$. 
-We combine the GAN objective with $L_1$ and $L_2$ in order to provide some sense of ground truth. These can
-be expressed as:
-
-\[ \mathcal{L}_{L_1}(G) = \mathbb{E}_{x,y\sim p_{data}(x,y)}[||y-G(x)||_1] \]
-\[ \mathcal{L}_{L_2}(G) = \mathbb{E}_{x,y\sim p_{data}(x,y)}[(y-G(x))^2] \]
-
-
-\noindent These are able to capture low frequencies, but have been shown to lack in capturing high
-frequencies, resulting in blurry images in the case of autoencoders, or saturated colors in the case of
-colorization. These imperfections should in theory be rejected by the discriminator, which results in
-successfully capturing high frequencies in images such as sharp edges and bright colors. The objective
 for our conditional DCGAN can be expressed as:
 
 \[ \mathcal{L}_{DCGAN}(G,D) = \mathbb{E}_{x,y \sim p_{data}} log D(x,y) + \mathbb{E}_{x \sim p_{data}}
@@ -189,45 +190,29 @@ dataset. Some results can be seen in Figure X.
    %\centering
    %\includegraphics[width=0.8]{dcgan_results} 
    %\caption{Results of DCGANs evaluated on CelebA}
-   %\label{fi}
 %\end{figure}  
 
 \subsection{LSGANs}
 Least Squares GANs (LSGANs) provide a least squares loss for the discriminator in order to penalize samples
-that may have fooled the discriminator but do not lie close to the true data distribution.
-The objective functions for $D$ and $G$ are given as:
+that may have fooled the discriminator but do not lie close to the true data distribution. The objectives
+for conditional LSGANs are defined as:
 
-%\[ \mathcal{L}_{DCGAN}(G,D) = \mathbb{E}_{x,y \sim p_{data}} log D(x,y) + \mathbb{E}_{x \sim p_{data}}
-\[\mathcal{L}_{LSGAN}(G,D) = \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(\textbf{\textit{x}})-b)^2] +
-\frac{1}{2} \mathbb{E}_{z \sim p_z(z)}[(D(G(z)) - a)^2] \]
+\[\min\limits_{D} V_{cLSGAN}(D) = \frac{1}{2} \mathbb{E}_{x,y \sim p_{data(x,y)}} [(D(x,y)-b) ^2] +
+\frac{1}{2} \mathbb{E}_{x \sim p_{data}}[(D(G(x)) - a)^2] \]
 
-\[ \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(G(\textbf{\textit{x}}))-c)^2] \]
+\[\min\limits_{G} V_{cLSGAN}(G) = \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(G(x))-c)^2] \]
 
-\noindent where $p_{data}$ represents the true data, $p_z$ represents some noise prior, e.g.
-$z \sim \mathcal{N}$, $a=0$ to denote the fake data, $b=1$ to denote the true data,
-and $c=1$ in order to try and fool $D$.
+\noindent where $a=0$ to denote the fake data, $b=1$ to denote the true data, and $c=1$ in order to try and
+fool $D$. 
 
-We combine the LSGAN objective with $L_1$ and $L_2$ in order to provide some sense of ground truth. These can
-be expressed as:
+\noindent where $p_{data}$ represents the true data, $x$ represents the grayscale image, $y$ represents
+the corresponding $ab$ color channels for $x$. 
+We combine the LSGAN objective with $L_1$ and $L_2$ to give our final objective:
 
-\[ \mathcal{L}_{LSGAN}(G,D) = \mathbb{E}_{x,y \sim p_{data}} log D(x,y) + \mathbb{E}_{x \sim p_{data}}
-log (1-D(x, G(x)))\]
+\[ G^* = \lambda_1 V_{cLSGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
 
-\noindent where $x$ represents the grayscale image, and $y$ represents the $ab$ color values associated with
-$x$. Combining this with our $L_1$ and $L_2$ loss functions gives us our final objective:
-
-\[ G^* = \lambda_1 \mathcal{L}_{DCGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
-
-%\[ \mathcal{L}_D(x_{color}, x_{gray}) = -(D(x_{color}) + D(G(x_{gray})))\]
-%\[ \mathcal{L}_G(x_{gray}) = -(log(D(G(x_{gray})))) + \lambda_1 L_1 + \lambda_2 L_2 \]
-
-\noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. One should note that $z$
-is discarded in this formulation, resulting in a deterministic model. Because of the high volume of information
-given in the grayscale image in comparison to something like
-conditioning on a class label, we believe the model would simply learn to discard $z$ as noise
-(because that's quite literally what it is). Instead, we provide noise in the form of droupout in the
-generator, but have not seen much difference in the output. We evaluated our method on the CelebA
-dataset. Some results can be seen in Figure X.
+\noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. We evaluated LSGANs on
+the CelebA dataset. Some results can be seen in Figure X.
 
 %\begin{figure}[h]
    %\centering
@@ -235,6 +220,33 @@ dataset. Some results can be seen in Figure X.
    %\caption{Results of DCGANs evaluated on CelebA}
    %\label{fi}
 %\end{figure}  
+
+\subsection{EBGANs}
+Energy-Based GANs (EBGANs) model the discriminator as an energy function that attributes low energies to
+the regions near the data manifold and higher energies to other regions. Unlike the other GAN variations
+mentioned, the EBGANs discriminator is modeled as an autoencoder, which aims to provide a more diverse
+set of outputs as opposed to the binary logistic loss. 
+The objectives for conditional EBGANs are defined as:
+
+\[\mathcal{L}_{cEBGAN} D(x,y) = D(x,y) + max(0, (m-D(G(z)))) \]
+\[\mathcal{L}_{cEBGAN} G(x) = D(G(x)) \]
+
+
+\noindent where $m$ is some margin, $x$ represents the grayscale image, $y$ represents the corresponding
+$ab$ color channels for $x$. We combine the EBGAN objective with $L_1$ and $L_2$ to give our final objective:
+
+\[ G^* = \lambda_1 \mathcal{L}_{cEBGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
+
+\noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. We evaluated EBGANs on
+the CelebA dataset. Some results can be seen in Figure X.
+
+%\begin{figure}[h]
+   %\centering
+   %\includegraphics[width=0.8]{dcgan_results} 
+   %\caption{Results of DCGANs evaluated on CelebA}
+   %\label{fi}
+%\end{figure}  
+
 
 \section{Conclusion}
 Conclusion
