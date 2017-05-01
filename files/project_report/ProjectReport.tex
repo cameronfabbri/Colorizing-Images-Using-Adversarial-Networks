@@ -4,6 +4,8 @@
  
 \newcommand{\doctitle}{Automatic Image Colorization using Generative Adversarial Networks}
 
+\graphicspath{{Figs/}}
+
 
 \title{\textbf{\doctitle}\\ \vspace{3mm}
 \small {Project Paper of team: Yet Another Layer [YAL]} \\
@@ -154,8 +156,6 @@ given as:
 
 \noindent where $p_{data}$ represents the true data, and $p_z$ represents some noise prior, e.g.
 $z \sim \mathcal{N}$. 
-%In practice however, the gradients of $1-log(D(G(z)))$ vanish, so $G$ is instead
-% trained to maximize $log(D(G(z)))$
 We combine the GAN objective with $L_1$ and $L_2$ in order to provide some sense of ground truth. These can
 be expressed as:
 
@@ -177,22 +177,67 @@ $x$. Combining this with our $L_1$ and $L_2$ loss functions gives us our final o
 
 \[ G^* = \lambda_1 \mathcal{L}_{DCGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
 
+\noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. One should note that $z$
+is discarded in this formulation, resulting in a deterministic model. Because of the high volume of information
+given in the grayscale image in comparison to something like
+conditioning on a class label, we believe the model would simply learn to discard $z$ as noise
+(because that's quite literally what it is). Instead, we provide noise in the form of droupout in the
+generator, but have not seen much difference in the output. We evaluated our method on the CelebA
+dataset. Some results can be seen in Figure X. 
+
+%\begin{figure}[h]
+   %\centering
+   %\includegraphics[width=0.8]{dcgan_results} 
+   %\caption{Results of DCGANs evaluated on CelebA}
+   %\label{fi}
+%\end{figure}  
+
+\subsection{LSGANs}
+Least Squares GANs (LSGANs) provide a least squares loss for the discriminator in order to penalize samples
+that may have fooled the discriminator but do not lie close to the true data distribution.
+The objective functions for $D$ and $G$ are given as:
+
+%\[ \mathcal{L}_{DCGAN}(G,D) = \mathbb{E}_{x,y \sim p_{data}} log D(x,y) + \mathbb{E}_{x \sim p_{data}}
+\[\mathcal{L}_{LSGAN}(G,D) = \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(\textbf{\textit{x}})-b)^2] +
+\frac{1}{2} \mathbb{E}_{z \sim p_z(z)}[(D(G(z)) - a)^2] \]
+
+\[ \frac{1}{2} \mathbb{E}_{x \sim p_{data(x)}} [(D(G(\textbf{\textit{x}}))-c)^2] \]
+
+\noindent where $p_{data}$ represents the true data, $p_z$ represents some noise prior, e.g.
+$z \sim \mathcal{N}$, $a=0$ to denote the fake data, $b=1$ to denote the true data,
+and $c=1$ in order to try and fool $D$.
+
+We combine the LSGAN objective with $L_1$ and $L_2$ in order to provide some sense of ground truth. These can
+be expressed as:
+
+\[ \mathcal{L}_{LSGAN}(G,D) = \mathbb{E}_{x,y \sim p_{data}} log D(x,y) + \mathbb{E}_{x \sim p_{data}}
+log (1-D(x, G(x)))\]
+
+\noindent where $x$ represents the grayscale image, and $y$ represents the $ab$ color values associated with
+$x$. Combining this with our $L_1$ and $L_2$ loss functions gives us our final objective:
+
+\[ G^* = \lambda_1 \mathcal{L}_{DCGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
+
 %\[ \mathcal{L}_D(x_{color}, x_{gray}) = -(D(x_{color}) + D(G(x_{gray})))\]
 %\[ \mathcal{L}_G(x_{gray}) = -(log(D(G(x_{gray})))) + \lambda_1 L_1 + \lambda_2 L_2 \]
 
 \noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. One should note that $z$
-is discarded in this formulation, resulting in a deterministic model.
-Because of the high volume of information given in the grayscale image in comparison to something like
+is discarded in this formulation, resulting in a deterministic model. Because of the high volume of information
+given in the grayscale image in comparison to something like
 conditioning on a class label, we believe the model would simply learn to discard $z$ as noise
 (because that's quite literally what it is). Instead, we provide noise in the form of droupout in the
-generator, but have not seen much difference in the output.
+generator, but have not seen much difference in the output. We evaluated our method on the CelebA
+dataset. Some results can be seen in Figure X.
+
+%\begin{figure}[h]
+   %\centering
+   %\includegraphics[width=0.8]{dcgan_results} 
+   %\caption{Results of DCGANs evaluated on CelebA}
+   %\label{fi}
+%\end{figure}  
 
 \section{Conclusion}
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
+Conclusion
 
 \vspace{1mm}
 \bibliographystyle{unsrt}
