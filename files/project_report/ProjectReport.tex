@@ -1,17 +1,14 @@
-%\documentclass[10pt]{article}
-%\include{Report_Style_xb}
-%\usepackage[a4paper, margin=0.5in]{geometry}
+\documentclass[10pt]{article}
+\include{Report_Style_xb}
+\usepackage[a4paper, margin=0.5in]{geometry}
  
-%\newcommand{\doctitle}{Automatic Image Colorization using Generative Adversarial Networks}
-
-\documentclass{article} % For LaTeX2e
-\usepackage{iclr2017_conference,times}
-\usepackage{url}
+\newcommand{\doctitle}{Automatic Image Colorization using Generative Adversarial Networks}
 
 \usepackage{amssymb}
 \usepackage{graphicx}
 \graphicspath{{Figs/}}
 \graphicspath{{../images/}}
+
 
 \title{\textbf{\doctitle}\\ \vspace{3mm}
 \small {Team: Yet Another Layer [YAL]} \\
@@ -23,17 +20,14 @@
 \maketitle
 
 \begin{abstract}
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-Abstract need to be added Abstract need to be added Abstract need to be added Abstract need to be added 
-  
+
+
+
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
 Image colorization \cite{zhang2016colorful, cheng2015deep, bugeau2014variational} refers to colorizing a given gray-scale image so that it appears real. 
-A large amount of photographs, videos and movies, mainly antique, lack color; image colorization can provide a modern and vivid view to these images. In addition, surveillance cameras often capture (or store) gray-scale images for convenience. Several underwater inspection and surveillance applications \cite{lu2013underwater, torres2005color} often have to deal with color-less images due to lack of visible light in deep-water. Robust and efficient image colorization techniques can be used in these applications with substantial benefits.   
+A large amount of photographs, videos and movies, mainly antique, lack color; image colorization can provide a modern and vivid view to these images. In addition, surveillance cameras often capture (or store) gray-scale images for convenience. Several underwater inspection and surveillance applications \cite{lu2013underwater, torres2005color} often have to deal with colorless images due to lack of visible light in deep-water. Robust and efficient image colorization techniques can be used in these applications with substantial benefits.   
 
 \begin{figure}[h]
 \vspace{-3mm}
@@ -44,7 +38,7 @@ A large amount of photographs, videos and movies, mainly antique, lack color; im
 \label{fig:col}
 \end{figure}  
 
-Colorizing a gray-scale image (\textit{i.e.}, only intensity values are known) is a difficult and ill-posed problem. Computer vision community have approached this problem in different ways over the last few decades \cite{zhang2016colorful, cheng2015deep, bugeau2014variational, charpiat2008automatic, luan2007natural, konushin2006interactive}. Before the advent of deep-learning \cite{lecun2015deep}, researchers have tried many classical techniques \cite{charpiat2008automatic, luan2007natural, konushin2006interactive, levin2004colorization, lagodzinski2008digital} to capture relationships between color components ($RGB$ or $LAB$) and image level features. 
+Colorizing a grayscale image (\textit{i.e.}, only intensity values are known) is a difficult and ill-posed problem. Computer vision community have approached this problem in different ways over the last few decades \cite{zhang2016colorful, cheng2015deep, bugeau2014variational, charpiat2008automatic, luan2007natural, konushin2006interactive}. Before the advent of deep-learning \cite{lecun2015deep}, researchers have tried many classical techniques \cite{charpiat2008automatic, luan2007natural, konushin2006interactive, levin2004colorization, lagodzinski2008digital} to capture relationships between color components ($RGB$ or $LAB$) and image level features. 
 Due to multi-modality and ill-posed nature of the problem, optimization based techniques \cite{levin2004colorization, charpiat2008automatic} and probabilistic models \cite{lagodzinski2008digital} were the only ones that achieved decent colorization performance in few specific applications. 
 However, overall performance of these techniques, in general, were still poor due to the high non-linearity and abstract nature of color-feature relationship.  
 
