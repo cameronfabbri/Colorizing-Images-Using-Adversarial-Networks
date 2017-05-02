@@ -1,152 +1,134 @@
-\begin{thebibliography}{22}
-\providecommand{\natexlab}[1]{#1}
-\providecommand{\url}[1]{\texttt{#1}}
-\expandafter\ifx\csname urlstyle\endcsname\relax
-  \providecommand{\doi}[1]{doi: #1}\else
-  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+\begin{thebibliography}{10}
 
-\bibitem[cel()]{celebA}
+\bibitem{zhang2016colorful}
+Richard Zhang, Phillip Isola, and Alexei~A Efros.
+\newblock Colorful image colorization.
+\newblock In {\em European Conference on Computer Vision}, pages 649--666.
+  Springer, 2016.
+
+\bibitem{cheng2015deep}
+Zezhou Cheng, Qingxiong Yang, and Bin Sheng.
+\newblock Deep colorization.
+\newblock In {\em Proceedings of the IEEE International Conference on Computer
+  Vision}, pages 415--423, 2015.
+
+\bibitem{bugeau2014variational}
+Aurelie Bugeau, Vinh-Thong Ta, and Nicolas Papadakis.
+\newblock Variational exemplar-based image colorization.
+\newblock {\em IEEE Transactions on Image Processing}, 23(1):298--307, 2014.
+
+\bibitem{lu2013underwater}
+Huimin Lu, Yujie Li, and Seiichi Serikawa.
+\newblock Underwater image enhancement using guided trigonometric bilateral
+  filter and fast automatic color correction.
+\newblock In {\em Image Processing (ICIP), 2013 20th IEEE International
+  Conference on}, pages 3412--3416. IEEE, 2013.
+
+\bibitem{torres2005color}
+Luz~A Torres-M{\'e}ndez and Gregory Dudek.
+\newblock Color correction of underwater images for aquatic robot inspection.
+\newblock In {\em International Workshop on Energy Minimization Methods in
+  Computer Vision and Pattern Recognition}, pages 60--73. Springer, 2005.
+
+\bibitem{charpiat2008automatic}
+Guillaume Charpiat, Matthias Hofmann, and Bernhard Sch{\"o}lkopf.
+\newblock Automatic image colorization via multimodal predictions.
+\newblock {\em Computer Vision--ECCV 2008}, pages 126--139, 2008.
+
+\bibitem{luan2007natural}
+Qing Luan, Fang Wen, Daniel Cohen-Or, Lin Liang, Ying-Qing Xu, and Heung-Yeung
+  Shum.
+\newblock Natural image colorization.
+\newblock In {\em Proceedings of the 18th Eurographics conference on Rendering
+  Techniques}, pages 309--320. Eurographics Association, 2007.
+
+\bibitem{konushin2006interactive}
+Vadim Konushin and Vladimir Vezhnevets.
+\newblock Interactive image colorization and recoloring based on coupled map
+  lattices.
+\newblock In {\em Graphicon’2006 conference proceedings, Novosibirsk
+  Akademgorodok, Russia}, pages 231--234, 2006.
+
+\bibitem{lecun2015deep}
+Yann LeCun, Yoshua Bengio, and Geoffrey Hinton.
+\newblock Deep learning.
+\newblock {\em Nature}, 521(7553):436--444, 2015.
+
+\bibitem{levin2004colorization}
+Anat Levin, Dani Lischinski, and Yair Weiss.
+\newblock Colorization using optimization.
+\newblock In {\em ACM Transactions on Graphics (ToG)}, volume~23, pages
+  689--694. ACM, 2004.
+
+\bibitem{lagodzinski2008digital}
+Przemyslaw Lagodzinski and Bogdan Smolka.
+\newblock Digital image colorization based on probabilistic distance
+  transformation.
+\newblock In {\em ELMAR, 2008. 50th International Symposium}, volume~2, pages
+  495--498. IEEE, 2008.
+
+\bibitem{varga2016fully}
+Domonkos VARGA and Tam{\'a}s Szir{\'a}nyi.
+\newblock Fully automatic image colorization based on convolutional neural
+  network.
+\newblock {\em 4th Winter School of PhD Students in Informatics and
+  Mathematics}, page~36, 2016.
+
+\bibitem{li2017watergan}
+Jie Li, Katherine~A Skinner, Ryan~M Eustice, and Matthew Johnson-Roberson.
+\newblock Watergan: Unsupervised generative network to enable real-time color
+  correction of monocular underwater images.
+\newblock {\em arXiv preprint arXiv:1702.07392}, 2017.
+
+\bibitem{reinhard2001color}
+Erik Reinhard, Michael Adhikhmin, Bruce Gooch, and Peter Shirley.
+\newblock Color transfer between images.
+\newblock {\em IEEE Computer graphics and applications}, 21(5):34--41, 2001.
+
+\bibitem{vrhel1992color}
+Michael~J Vrhel and HJ~Trussell.
+\newblock Color correction using principal components.
+\newblock {\em Color Research \& Application}, 17(5):328--338, 1992.
+
+\bibitem{deshpande2015learning}
+Aditya Deshpande, Jason Rock, and David Forsyth.
+\newblock Learning large-scale automatic image colorization.
+\newblock In {\em Proceedings of the IEEE International Conference on Computer
+  Vision}, pages 567--575, 2015.
+
+\bibitem{nair2010rectified}
+Vinod Nair and Geoffrey~E Hinton.
+\newblock Rectified linear units improve restricted boltzmann machines.
+\newblock In {\em Proceedings of the 27th international conference on machine
+  learning (ICML-10)}, pages 807--814, 2010.
+
+\bibitem{ioffe2015batch}
+Sergey Ioffe and Christian Szegedy.
+\newblock Batch normalization: Accelerating deep network training by reducing
+  internal covariate shift.
+\newblock {\em arXiv preprint arXiv:1502.03167}, 2015.
+
+\bibitem{celebA}
 Celeba dataset.
 \newblock \url{http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html}.
 \newblock Accessed: 04-20-2017.
 
-\bibitem[pla()]{places2}
+\bibitem{places2}
 Places2 dataset.
 \newblock \url{http://places2.csail.mit.edu/download.html}.
 \newblock Accessed: 04-20-2017.
 
-\bibitem[Abadi et~al.(2016)Abadi, Agarwal, Barham, Brevdo, Chen, Citro,
-  Corrado, Davis, Dean, Devin, et~al.]{abadi2016tensorflow}
+\bibitem{deng2009imagenet}
+Jia Deng, Wei Dong, Richard Socher, Li-Jia Li, Kai Li, and Li~Fei-Fei.
+\newblock Imagenet: A large-scale hierarchical image database.
+\newblock In {\em Computer Vision and Pattern Recognition, 2009. CVPR 2009.
+  IEEE Conference on}, pages 248--255. IEEE, 2009.
+
+\bibitem{abadi2016tensorflow}
 Mart{\'\i}n Abadi, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen,
   Craig Citro, Greg~S Corrado, Andy Davis, Jeffrey Dean, Matthieu Devin, et~al.
 \newblock Tensorflow: Large-scale machine learning on heterogeneous distributed
   systems.
-\newblock \emph{arXiv preprint arXiv:1603.04467}, 2016.
-
-\bibitem[Bugeau et~al.(2014)Bugeau, Ta, and Papadakis]{bugeau2014variational}
-Aurelie Bugeau, Vinh-Thong Ta, and Nicolas Papadakis.
-\newblock Variational exemplar-based image colorization.
-\newblock \emph{IEEE Transactions on Image Processing}, 23\penalty0
-  (1):\penalty0 298--307, 2014.
-
-\bibitem[Charpiat et~al.(2008)Charpiat, Hofmann, and
-  Sch{\"o}lkopf]{charpiat2008automatic}
-Guillaume Charpiat, Matthias Hofmann, and Bernhard Sch{\"o}lkopf.
-\newblock Automatic image colorization via multimodal predictions.
-\newblock \emph{Computer Vision--ECCV 2008}, pp.\  126--139, 2008.
-
-\bibitem[Cheng et~al.(2015)Cheng, Yang, and Sheng]{cheng2015deep}
-Zezhou Cheng, Qingxiong Yang, and Bin Sheng.
-\newblock Deep colorization.
-\newblock In \emph{Proceedings of the IEEE International Conference on Computer
-  Vision}, pp.\  415--423, 2015.
-
-\bibitem[Deng et~al.(2009)Deng, Dong, Socher, Li, Li, and
-  Fei-Fei]{deng2009imagenet}
-Jia Deng, Wei Dong, Richard Socher, Li-Jia Li, Kai Li, and Li~Fei-Fei.
-\newblock Imagenet: A large-scale hierarchical image database.
-\newblock In \emph{Computer Vision and Pattern Recognition, 2009. CVPR 2009.
-  IEEE Conference on}, pp.\  248--255. IEEE, 2009.
-
-\bibitem[Deshpande et~al.(2015)Deshpande, Rock, and
-  Forsyth]{deshpande2015learning}
-Aditya Deshpande, Jason Rock, and David Forsyth.
-\newblock Learning large-scale automatic image colorization.
-\newblock In \emph{Proceedings of the IEEE International Conference on Computer
-  Vision}, pp.\  567--575, 2015.
-
-\bibitem[Ioffe \& Szegedy(2015)Ioffe and Szegedy]{ioffe2015batch}
-Sergey Ioffe and Christian Szegedy.
-\newblock Batch normalization: Accelerating deep network training by reducing
-  internal covariate shift.
-\newblock \emph{arXiv preprint arXiv:1502.03167}, 2015.
-
-\bibitem[Konushin \& Vezhnevets(2006)Konushin and
-  Vezhnevets]{konushin2006interactive}
-Vadim Konushin and Vladimir Vezhnevets.
-\newblock Interactive image colorization and recoloring based on coupled map
-  lattices.
-\newblock In \emph{Graphicon’2006 conference proceedings, Novosibirsk
-  Akademgorodok, Russia}, pp.\  231--234, 2006.
-
-\bibitem[Lagodzinski \& Smolka(2008)Lagodzinski and
-  Smolka]{lagodzinski2008digital}
-Przemyslaw Lagodzinski and Bogdan Smolka.
-\newblock Digital image colorization based on probabilistic distance
-  transformation.
-\newblock In \emph{ELMAR, 2008. 50th International Symposium}, volume~2, pp.\
-  495--498. IEEE, 2008.
-
-\bibitem[LeCun et~al.(2015)LeCun, Bengio, and Hinton]{lecun2015deep}
-Yann LeCun, Yoshua Bengio, and Geoffrey Hinton.
-\newblock Deep learning.
-\newblock \emph{Nature}, 521\penalty0 (7553):\penalty0 436--444, 2015.
-
-\bibitem[Levin et~al.(2004)Levin, Lischinski, and Weiss]{levin2004colorization}
-Anat Levin, Dani Lischinski, and Yair Weiss.
-\newblock Colorization using optimization.
-\newblock In \emph{ACM Transactions on Graphics (ToG)}, volume~23, pp.\
-  689--694. ACM, 2004.
-
-\bibitem[Li et~al.(2017)Li, Skinner, Eustice, and
-  Johnson-Roberson]{li2017watergan}
-Jie Li, Katherine~A Skinner, Ryan~M Eustice, and Matthew Johnson-Roberson.
-\newblock Watergan: Unsupervised generative network to enable real-time color
-  correction of monocular underwater images.
-\newblock \emph{arXiv preprint arXiv:1702.07392}, 2017.
-
-\bibitem[Lu et~al.(2013)Lu, Li, and Serikawa]{lu2013underwater}
-Huimin Lu, Yujie Li, and Seiichi Serikawa.
-\newblock Underwater image enhancement using guided trigonometric bilateral
-  filter and fast automatic color correction.
-\newblock In \emph{Image Processing (ICIP), 2013 20th IEEE International
-  Conference on}, pp.\  3412--3416. IEEE, 2013.
-
-\bibitem[Luan et~al.(2007)Luan, Wen, Cohen-Or, Liang, Xu, and
-  Shum]{luan2007natural}
-Qing Luan, Fang Wen, Daniel Cohen-Or, Lin Liang, Ying-Qing Xu, and Heung-Yeung
-  Shum.
-\newblock Natural image colorization.
-\newblock In \emph{Proceedings of the 18th Eurographics conference on Rendering
-  Techniques}, pp.\  309--320. Eurographics Association, 2007.
-
-\bibitem[Nair \& Hinton(2010)Nair and Hinton]{nair2010rectified}
-Vinod Nair and Geoffrey~E Hinton.
-\newblock Rectified linear units improve restricted boltzmann machines.
-\newblock In \emph{Proceedings of the 27th international conference on machine
-  learning (ICML-10)}, pp.\  807--814, 2010.
-
-\bibitem[Reinhard et~al.(2001)Reinhard, Adhikhmin, Gooch, and
-  Shirley]{reinhard2001color}
-Erik Reinhard, Michael Adhikhmin, Bruce Gooch, and Peter Shirley.
-\newblock Color transfer between images.
-\newblock \emph{IEEE Computer graphics and applications}, 21\penalty0
-  (5):\penalty0 34--41, 2001.
-
-\bibitem[Torres-M{\'e}ndez \& Dudek(2005)Torres-M{\'e}ndez and
-  Dudek]{torres2005color}
-Luz~A Torres-M{\'e}ndez and Gregory Dudek.
-\newblock Color correction of underwater images for aquatic robot inspection.
-\newblock In \emph{International Workshop on Energy Minimization Methods in
-  Computer Vision and Pattern Recognition}, pp.\  60--73. Springer, 2005.
-
-\bibitem[VARGA \& Szir{\'a}nyi(2016)VARGA and Szir{\'a}nyi]{varga2016fully}
-Domonkos VARGA and Tam{\'a}s Szir{\'a}nyi.
-\newblock Fully automatic image colorization based on convolutional neural
-  network.
-\newblock \emph{4th Winter School of PhD Students in Informatics and
-  Mathematics}, pp.\ ~36, 2016.
-
-\bibitem[Vrhel \& Trussell(1992)Vrhel and Trussell]{vrhel1992color}
-Michael~J Vrhel and HJ~Trussell.
-\newblock Color correction using principal components.
-\newblock \emph{Color Research \& Application}, 17\penalty0 (5):\penalty0
-  328--338, 1992.
-
-\bibitem[Zhang et~al.(2016)Zhang, Isola, and Efros]{zhang2016colorful}
-Richard Zhang, Phillip Isola, and Alexei~A Efros.
-\newblock Colorful image colorization.
-\newblock In \emph{European Conference on Computer Vision}, pp.\  649--666.
-  Springer, 2016.
+\newblock {\em arXiv preprint arXiv:1603.04467}, 2016.
 
 \end{thebibliography}
