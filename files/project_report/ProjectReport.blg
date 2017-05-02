@@ -1,0 +1,52 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: ProjectReport.aux
+The style file: unsrt.bst
+Database file #1: cvbibs.bib
+Repeated entry---line 131 of file cvbibs.bib
+ : @article{bugeau2014variational
+ :                               ,
+I'm skipping whatever remains of this entry
+Warning--can't use both volume and number fields in levin2004colorization
+You've used 25 entries,
+            1791 wiz_defined-function locations,
+            586 strings with 8123 characters,
+and the built_in function-call counts, 7178 in all, are:
+= -- 675
+> -- 288
+< -- 16
++ -- 105
+- -- 80
+* -- 420
+:= -- 1015
+add.period$ -- 81
+call.type$ -- 25
+change.case$ -- 25
+chr.to.int$ -- 0
+cite$ -- 26
+duplicate$ -- 363
+empty$ -- 695
+format.name$ -- 80
+if$ -- 1703
+int.to.chr$ -- 0
+int.to.str$ -- 25
+missing$ -- 23
+newline$ -- 128
+num.names$ -- 23
+pop$ -- 111
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 236
+stack$ -- 0
+substring$ -- 490
+swap$ -- 156
+text.length$ -- 16
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 1
+while$ -- 68
+width$ -- 27
+write$ -- 276
+(There was 1 error message)
