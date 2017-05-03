@@ -32,7 +32,7 @@ Least Squares GANs, Energy-Based GANs, and Wasserstein GANs.
 
 \section{Introduction}\label{sec:intro}
 Image colorization \cite{zhang2016colorful, cheng2015deep, bugeau2014variational} refers to colorizing a given grayscale image so that it appears real. 
-A large amount of photographs, videos and movies, mainly antique, lack color; image colorization can provide a modern and vivid view to these images. In addition, surveillance cameras often capture (or store) gray-scale images for convenience. Several underwater inspection and surveillance applications \cite{lu2013underwater, torres2005color} often have to deal with colorless images due to lack of visible light in deep-water. Robust and efficient image colorization techniques can be used in these applications with substantial benefits.   
+A large amount of photographs, videos, and movies, mainly antique, lack color; image colorization can provide a modern and vivid view to these images. In addition, surveillance cameras often capture (or store) gray-scale images for convenience. Several underwater inspection and surveillance applications \cite{lu2013underwater, torres2005color} often have to deal with colorless images due to lack of visible light in deep-water. Robust and efficient image colorization techniques can be used in these applications with substantial benefits.   
 
 \begin{figure}[h]
 \vspace{-3mm}
@@ -124,7 +124,7 @@ is shown in (c); also, results obtained by colorization via multi-modal predicti
 While working on designing a generator for our GAN-based model, we investigated this model with different objective functions ($L_1$ loss, $L_2$ loss, least-squared loss, etc.) instead of their cross-entropy based loss function. This is due to the fact that in a GAN-based model, \textit{discriminator} expects an image from the \textit{generator}, 
 and tries to discriminate it as real or fake in order to force the generator to get better.  
 Therefore, rather than adopting their classification model directly, we implemented their architecture 
-using objective functions based on $L_1$, $L_2$, least-squared loss (so that it outputs an image, not classification probabilities). Additionally, it made our model end-to-end trainable, which can be easily
+using objective functions based on $L_1$, $L_2$, and least-squared loss, so that it outputs an image, not classification probabilities. Additionally, it made our model end-to-end trainable, which can be easily
 incorporated in a GAN-based architecture. 
 
 Given an input image $I$, the network is fed with its $L$ channel $I_L$; the output layer of the network is adjusted to predict $\hat{I}_{AB}$. We have found $L_1$ and $L_2$ loss functions perform quite well with this model. These loss functions between true $I_{AB}$ and $\hat{I}_{AB}$ can be expressed as follows:
@@ -151,7 +151,6 @@ colorization.
 %for Places2 dataset, we observed that it can colorize objects with monotonous colors (such as grass, roads, etc.) very well. However, it has difficulty colorizing opaque objects (such as glass, sky with clouds, etc.).
 %In the results state above, colorful colorization model is used as a generator only (\textbf{Col. Col. (G)}); we also used this model as a generator in a GAN (\textbf{Col. Col. (GAN)}) to investigate its performance. As illustrated in Fig. \ref{fig:res_full}(c), images colorized  by Col. Col. (GAN) are more realistic and consistent than Col. Col. (G). In addition, we provided results obtained by colorization via multi-modal prediction \cite{charpiat2008automatic} to demonstrate the degree of improvements using colorful colorization model. 
 
- 
 
 \section{Adversarial Approaches}
 Generative Adversarial Networks (GANs) \cite{goodfellow2014generative} are a recent class of generative models based on game theory
@@ -167,7 +166,7 @@ we experimented with three different variations: Least Squares GANs (LSGAN), Ene
 Pix2Pix \cite{isola2016image} model which uses the original GANs loss, but also show that often their generator fails to generate
 any color at all. We hypothesize that in comparison to the common task in which GANs are trained to generate
 an image from a noise prior, the discriminator for the task of colorization has a much more difficult job
-due to the visual similarity between images. For this reason, a much stronger discriminator is needed, but
+due to the visual similarity already contained between images. For this reason, a much stronger discriminator is needed, but
 as shown in \cite{arjovsky2017towards}, with the orinigal GANs loss, as the discriminator gets better, the gradients passed to the
 generator, and therefore the generator itself, become worse. \textit{This leaves us with both the need for a better discriminator,
 and proof that a better discriminator may in fact hurt performance.} For this reason we chose to explore other
@@ -178,7 +177,6 @@ order to provide some sense of ground truth. These can be expressed as:
 
 \[ \mathcal{L}_{L_1}(G) = \mathbb{E}_{x,y\sim p_{data}(x,y)}[||y-G(x)||_1] \]
 \[ \mathcal{L}_{L_2}(G) = \mathbb{E}_{x,y\sim p_{data}(x,y)}[(y-G(x))^2] \]
-
 
 \noindent where $x$ is the grayscale image, $y$ is the true corresponding $ab$ color channels, and $G(x)$ is the generated $ab$ color channels. 
 These are able to capture low frequencies, but have been shown to lack in 
@@ -292,14 +290,15 @@ $ab$ color channels for $x$. We combine the WGAN objective with $L_1$ and $L_2$ 
 the CelebA dataset, for which results can be seen in Figure 5. 
 
 \section{Architecture and Training Details}
-We adopted the architecture seen in the Pix2Pix paper \cite{isola2016image} for our generator in each GAN variation, which is set up as an encoder-decoder. The 
-discriminator set up as a PatchGAN, which instead of classifying an image as real or fake, classifies a $N \times N$ patch in the image. This allows for a texture style loss given
+We experimented with both the architecture seen in the Pix2Pix paper \cite{isola2016image} and from \cite{zhang2016colorful} for our generator. The Pix2Pix architecture is set up as an
+encoder-decoder, and the  discriminator set up as a PatchGAN, which instead of classifying an image as real or fake, classifies a $N \times N$ patch in the image. This allows for a texture
+style loss given
 by the discriminator. All GAN variations except EBGANs use the PatchGAN discriminator model, where the discriminator in EBGANs is kept as an autoencoder as described in \cite{zhao2016energy}.
 
 Early layers in CNNs are able to learn low level features such as edges and corners, which are used in subsequent layers to learn higher level features. As a result, these low level features are
 somewhat lost as you progress through the network, which for problems such as classification is okay, given the output of the network is ultimately a label. For tasks such as
 image-to-image translation, where the network's output is visually very similar to the input, these low level features are important. In the case of colorization, the
-output color image has very similar edges and corners as the input grayscale image. It is for this reason that we choose to use skip connections in their network, which concatenates the
+output color image has very similar edges and corners as the input grayscale image. It is for this reason that we choose to use skip connections in our network, which concatenates the
 activations from layer $i$ to layer $n-i$, where $n$ is the total number of layers. Hyperparameter details are shown in Table 1. All models were trained on the CelebA dataset with a batch size of 4
 on a GTX 1080.
 
