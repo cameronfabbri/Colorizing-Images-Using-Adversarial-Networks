@@ -78,7 +78,7 @@ recent approaches towards training adversarial networks. Furthermore, we compare
 We first experimented with two classical methods: \textit{colorization using optimization} \cite{levin2004colorization}, \textit{colorization via multimodal predictions} \cite{charpiat2008automatic}.
 The former is not an automatic approach (user provides color distribution prior), whereas, the latter uses a set of reference images to formulate color distribution.
 %Their operations are discussed in our term report; This paper focuses on the third generative approach, \textit{colorful image colorization} \cite{zhang2016colorful}, which is adopted in our project. 
-We focus on deep learning approachs, highlighting the Colorful Image Colorization \cite{zhang2016colorful} architecture as our base generative architecture.
+We focus on deep learning approachs, highlighting both the Colorful Image Colorization \cite{zhang2016colorful} and the Pix2Pix \cite{isola2016image} architecture as our base generative model.
 
 \subsection{\textbf{Adopted Model: Colorful Image Colorization}}
 Colorful image colorization \cite{zhang2016colorful} is considered a major breakthrough on this problem, and has set a new benchmark for performance.
@@ -164,7 +164,7 @@ Regular GANs modeled the discriminator as a classifier with the sigmoid cross en
 which has been shown to suffer from the vanishing gradient problem. In addition to regular GANs,
 we experimented with three different variations: Least Squares GANs (LSGAN), Energy-Based GANs (EBGAN), and Wasserstein GAN
 (WGAN). There has been little work in using GANs for the task of image colorization. Most notable is the
-Pix2Pix model which uses the original GANs loss, but also show that often their generator fails to generate
+Pix2Pix \cite{isola2016image} model which uses the original GANs loss, but also show that often their generator fails to generate
 any color at all. We hypothesize that in comparison to the common task in which GANs are trained to generate
 an image from a noise prior, the discriminator for the task of colorization has a much more difficult job
 due to the visual similarity between images. For this reason, a much stronger discriminator is needed, but
@@ -255,7 +255,7 @@ The objectives for conditional EBGANs are defined as:
 
 
 \noindent where $m$ is some margin, $x$ represents the grayscale image, $y$ represents the corresponding
-$ab$ color channels for $x$. We combine the EBGAN objective with $L_1$ and $L_2$ to give our final objective:
+$ab$ color channels for $x$. In our experiments, we used $m = 40$. We combine the EBGAN objective with $L_1$ and $L_2$ to give our final objective:
 
 \[ G^* = \lambda_1 \mathcal{L}_{cEBGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
 
@@ -289,7 +289,7 @@ $ab$ color channels for $x$. We combine the WGAN objective with $L_1$ and $L_2$ 
 \[ G^* = \lambda_1 \mathcal{L}_{cWGAN} + \lambda_2 \mathcal{L}_{L_1} + \lambda_3 \mathcal{L}_{L_2} \]
 
 \noindent where $\lambda_1$, $\lambda_2$, and $\lambda_3$ are hyperparameters. We evaluated WGAN on
-the CelebA dataset. Some results can be seen in Figure X. 
+the CelebA dataset, for which results can be seen in Figure 5. 
 
 \section{Architecture and Training Details}
 We adopted the architecture seen in the Pix2Pix paper \cite{isola2016image} for our generator in each GAN variation, which is set up as an encoder-decoder. The 
@@ -300,7 +300,8 @@ Early layers in CNNs are able to learn low level features such as edges and corn
 somewhat lost as you progress through the network, which for problems such as classification is okay, given the output of the network is ultimately a label. For tasks such as
 image-to-image translation, where the network's output is visually very similar to the input, these low level features are important. In the case of colorization, the
 output color image has very similar edges and corners as the input grayscale image. It is for this reason that we choose to use skip connections in their network, which concatenates the
-activations from layer $i$ to layer $n-i$, where $n$ is the total number of layers. Hyperparameter details are shown in Table 1. All models were trained on the CelebA dataset with batch size 4.
+activations from layer $i$ to layer $n-i$, where $n$ is the total number of layers. Hyperparameter details are shown in Table 1. All models were trained on the CelebA dataset with a batch size of 4
+on a GTX 1080.
 
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -319,25 +320,29 @@ activations from layer $i$ to layer $n-i$, where $n$ is the total number of laye
 
 It is worth noting that although WGAN and EBGANs did not train for nearly as long as DCGAN and LSGAN (due to time constraints), they still provided very competive performance.
 At only one or two epochs, they show better performance than DCGAN did at four epochs, showing great promise for future work.
+
 Although training data is essentially free due to the fact that any color image can be converted to black and white, the resulting image is not a "true" black and white photo. To
 compare our results, we also tested on true black and white images of John F. Kennedy and Muhammad Ali, seen in Figure 10. Note these images not only weren't trained on, but are completely outside of our dataset.
 
 \begin{figure}[!htb]
    \begin{center}$
       \begin{array}{cccc}
-         \includegraphics[width=4in]{legacy}
+         %\includegraphics[width=4in]{legacy}
+         \includegraphics[width=4in]{legacy_pix} \hspace{10mm}
+         \includegraphics[width=1.45in]{legacy_colcol}
       \end{array}$
    \end{center}
-   \caption{Top: Results using various GAN models. Bottom: Results using the \cite{zhao2016energy} model.}
+   \caption{Left: Results using various GAN models. Right: Results using the model from \cite{zhao2016energy}.}
 \end{figure}
 
 \section{Conclusion and Future Work}
-We investigated automatic image colorization using Generative Adversarial Networks (GANs). 
-We explored few classic algorithms, current state-of-the-art based on deep-learning, and a number of other models based on GANs. 
+We investigated automatic image colorization using Generative Adversarial Networks. 
+We explored classic algorithms, current state-of-the-art based on deep-learning, and a number of other models based on GANs. 
 We also presented a comparative study of performance of these algorithms which are trained over CelebA dataset. 
-Our GAN-based models provide very good colorization performance and run at real-time ($30$fps on cpu, $60$fps on gpu). 
-In our future work, we want to train our models on larger datasets such as ImageNet. 
-Additionally, we look forward to design a good objective function to boost our models in terms of training time and colorization performance.
+Our GAN-based models provide very good colorization performance and run at real-time ($30$fps on CPU, $60$fps on GPU). 
+In our future work, we want to train our models on larger datasets such as ImageNet for multiclass colorization.
+
+\pagebreak
 
 \vspace{1mm}
 \bibliographystyle{unsrt}
