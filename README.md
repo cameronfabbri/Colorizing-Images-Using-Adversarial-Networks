@@ -11,7 +11,7 @@ towards automatic image colorization, currently [in progress](http://irvlab.dl.u
 ![jfkgray](http://i.imgur.com/0syARFb.png)
 ![jfkcol](http://i.imgur.com/LJ9Kkfk.png)
 
-![aligray](http://i.imgur.com/B9S7FwL.png)
+![aligray](http://i.imgur.com/7bjJt0n.png)
 ![alicol](http://i.imgur.com/7PaEtUd.png)
 
 I used a combination of L1 and L2 loss along with the different GAN variations. I trained on the CelebA dataset, below shows some
