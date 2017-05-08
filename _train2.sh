@@ -1,0 +1,1 @@
+python train.py --ARCHITECTURE=pix2pix --DATASET=celeba --DATA_DIR=/mnt/data2/images/celeba/images/ --BATCH_SIZE=4 --GAN_LR=5e-5 --JITTER=0 --LOSS_METHOD=wasserstein --SIZE=256 --L1_WEIGHT=0.0 --L2_WEIGHT=1.0 --GAN_WEIGHT=1.0 --UPCONVS=0 --GAN_EPOCHS=8

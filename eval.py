@@ -48,7 +48,7 @@ if __name__ == '__main__':
    EXPERIMENT_DIR = 'checkpoints/'+ARCHITECTURE+'_'+DATASET+'_'+LOSS_METHOD+'_'+str(PRETRAIN_EPOCHS)+'_'+str(GAN_EPOCHS)+'_'+str(PRETRAIN_LR)+'_'+str(NUM_CRITIC)+'_'+str(GAN_LR)+'_'+str(JITTER)+'_'+str(SIZE)+'_'+str(L1_WEIGHT)+'_'+str(L2_WEIGHT)+'_'+str(GAN_WEIGHT)+'_'+str(UPCONVS)+'/'
    IMAGES_DIR = EXPERIMENT_DIR+'images/'
    
-   DATASET = 'true_gray'
+   #DATASET = 'true_gray'
    print
    print 'PRETRAIN_EPOCHS: ',PRETRAIN_EPOCHS
    print 'GAN_EPOCHS:      ',GAN_EPOCHS
@@ -108,9 +108,13 @@ if __name__ == '__main__':
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess, coord=coord)
 
+   import time
    colored = sess.run(prediction)
+   start = time.time()
    true_   = sess.run(true_image)
-   
+   end = time.time()
+   print end-start
+   #exit()
    step = sess.run(global_step)
 
    # save out both
