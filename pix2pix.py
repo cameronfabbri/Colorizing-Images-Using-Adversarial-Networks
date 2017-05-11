@@ -57,9 +57,11 @@ def netG(L_images, num_gpu, UPCONVS):
          with tf.variable_scope('g_dec3'):
             dec_convt3 = tf.concat([enc_conv6, dec_convt2], axis=3)
             print dec_convt3
-            #dec_convt3 = conv2d_transpose(dec_convt3, 512, stride=2, kernel_size=4)
-            dec_convt3 = tf.image.resize_nearest_neighbor(dec_convt3, [8,8])
-            dec_convt3 = conv2d(dec_convt3, 512, stride=1, kernel_size=3)
+            if UPCONVS:
+               dec_convt3 = tf.image.resize_nearest_neighbor(dec_convt3, [8,8])
+               dec_convt3 = conv2d(dec_convt3, 512, stride=1, kernel_size=3)
+            else:
+               dec_convt3 = conv2d_transpose(dec_convt3, 512, stride=2, kernel_size=4)
             dec_convt3 = batch_norm(dec_convt3)
             dec_convt3 = relu(dec_convt3)
          with tf.variable_scope('g_dec4'):
@@ -109,6 +111,7 @@ def netG(L_images, num_gpu, UPCONVS):
             
          print dec_convt8
 
+   exit()
    return dec_convt8
 
 
