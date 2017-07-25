@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, 'ops/')
 from tf_ops import lrelu, conv2d, batch_norm, conv2d_transpose, relu, tanh
 
-def netG(L_images, num_gpu, UPCONVS):
+def netG(L_images, UPCONVS, num_gpu=1):
    
    if num_gpu == 0: gpus = ['/cpu:0']
    elif num_gpu == 1: gpus = ['/gpu:0']
@@ -111,11 +111,10 @@ def netG(L_images, num_gpu, UPCONVS):
             
          print dec_convt8
 
-   exit()
    return dec_convt8
 
 
-def netD(L_images, ab_images, num_gpu, reuse=False):
+def netD(L_images, ab_images=None, num_gpu=1, reuse=False):
    ndf = 64
    n_layers = 3
    layers = []
@@ -132,7 +131,11 @@ def netD(L_images, ab_images, num_gpu, reuse=False):
       for d in gpus:
          with tf.device(d):
 
-            input_images = tf.concat([L_images, ab_images], axis=3)
+            s = L_images.get_shape().as_list()[-1]
+            if s == 1: input_images = tf.concat([L_images, ab_images], axis=3)
+            else: input_images = L_images
+
+            print 'input_images:',input_images
 
             with tf.variable_scope('d_conv1'): conv1 = lrelu(conv2d(input_images, 64, kernel_size=4, stride=2))
             with tf.variable_scope('d_conv2'): conv2 = lrelu(batch_norm(conv2d(conv1, 128, kernel_size=4, stride=2)))

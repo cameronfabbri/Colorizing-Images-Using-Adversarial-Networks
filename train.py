@@ -128,11 +128,11 @@ if __name__ == '__main__':
    # The color channels in [-1, 1] range
    ab_image  = Data.targets
 
+   lab_images = tf.concat([L_image, ab_image], axis=3)
+
    if ARCHITECTURE == 'pix2pix':
       # generated ab values from generator
-      gen_ab = pix2pix.netG(L_image, NUM_GPU, UPCONVS)
-   elif ARCHITECTURE == 'colcolgan':
-      gen_ab = ColColGAN.netG(L_image, NUM_GPU)
+      gen_ab = pix2pix.netG(L_image, UPCONVS)
 
    # D's decision on real images and fake images
    if LOSS_METHOD == 'energy':
@@ -140,19 +140,29 @@ if __name__ == '__main__':
       D_fake, embeddings_fake, decoded_fake = pix2pix.energyNetD(L_image, gen_ab, BATCH_SIZE, reuse=True)
    else:
       if ARCHITECTURE == 'pix2pix':
-         D_real = pix2pix.netD(L_image, ab_image, NUM_GPU)
-         D_fake = pix2pix.netD(L_image, gen_ab, NUM_GPU, reuse=True)
-      elif ARCHITECTURE == 'colcolgan':
-         D_real = ColColGAN.netD(L_image, ab_image, NUM_GPU)
-         D_fake = ColColGAN.netD(L_image, gen_ab, NUM_GPU, reuse=True)
+         D_real = pix2pix.netD(L_image, ab_images=ab_image)
+         D_fake = pix2pix.netD(L_image, ab_images=gen_ab, reuse=True)
+
+   genlab_images = tf.concat([L_image, gen_ab], axis=3)
 
    e = 1e-12
    if LOSS_METHOD == 'wasserstein':
       print 'Using Wasserstein loss'
       D_real = lrelu(D_real)
       D_fake = lrelu(D_fake)
-      gen_loss_GAN = tf.reduce_mean(D_fake)
+      errD = tf.reduce_mean(D_real) - tf.reduce_mean(D_fake)
       
+      gen_loss_GAN = tf.reduce_mean(D_fake)
+
+      # gradient penalty
+      epsilon = tf.random_uniform([], 0.0, 1.0)
+      x_hat = lab_images*epsilon + (1-epsilon)*genlab_images
+      d_hat = pix2pix.netD(x_hat,reuse=True)
+      gradients = tf.gradients(d_hat, x_hat)[0]
+      slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
+      gradient_penalty = 10*tf.reduce_mean((slopes-1.0)**2)
+      errD += gradient_penalty
+
       if L1_WEIGHT > 0.0:
          print 'Using an L1 weight of',L1_WEIGHT
          gen_loss_L1  = tf.reduce_mean(tf.abs(ab_image-gen_ab))
@@ -164,7 +174,6 @@ if __name__ == '__main__':
       if L1_WEIGHT <= 0.0 and L2_WEIGHT <= 0.0:
          print 'Just using GAN loss, no L1 or L2'
          errG = gen_loss_GAN
-      errD = tf.reduce_mean(D_real - D_fake)
 
    if LOSS_METHOD == 'least_squares':
       print 'Using least squares loss'
@@ -253,14 +262,10 @@ if __name__ == '__main__':
       mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
       tf.add_to_collection('vars', mse_train_op)
       tf.summary.scalar('mse_loss', mse_loss)
-   if LOSS_METHOD == 'wasserstein':
-      G_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR, decay=0.9).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-      D_train_op = tf.train.RMSPropOptimizer(learning_rate=GAN_LR, decay=0.9).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
-   else:
-      #G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR,beta1=0.5).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-      #D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR,beta1=0.5).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
-      G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-      D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
+   
+   
+   G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
+   D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
 
    saver = tf.train.Saver(max_to_keep=1)
    
