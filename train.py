@@ -245,20 +245,10 @@ if __name__ == '__main__':
    d_vars = [var for var in t_vars if 'd_' in var.name]
    g_vars = [var for var in t_vars if 'g_' in var.name]
 
-   # MSE loss for pretraining
-   if PRETRAIN_EPOCHS > 0:
-      print 'Pretraining generator for',PRETRAIN_EPOCHS,'epochs...'
-      mse_loss = tf.reduce_mean((ab_image-gen_ab)**2)
-      #mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR,beta1=0.5).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-      mse_train_op = tf.train.AdamOptimizer(learning_rate=PRETRAIN_LR).minimize(mse_loss, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-      tf.add_to_collection('vars', mse_train_op)
-      tf.summary.scalar('mse_loss', mse_loss)
-   
-   
-   G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step, colocate_gradients_with_ops=True)
-   D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars, colocate_gradients_with_ops=True)
+   G_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errG, var_list=g_vars, global_step=global_step)
+   D_train_op = tf.train.AdamOptimizer(learning_rate=GAN_LR).minimize(errD, var_list=d_vars)
 
-   saver = tf.train.Saver(max_to_keep=1)
+   saver = tf.train.Saver(max_to_keep=2)
    
    init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
    sess = tf.Session(config=tf.ConfigProto(log_device_placement=False))
@@ -270,9 +260,7 @@ if __name__ == '__main__':
    tf.add_to_collection('vars', G_train_op)
    tf.add_to_collection('vars', D_train_op)
 
-   # only keep one model
    ckpt = tf.train.get_checkpoint_state(EXPERIMENT_DIR)
-   # restore previous model if there is one
    if ckpt and ckpt.model_checkpoint_path:
       print "Restoring previous model..."
       try:
@@ -281,79 +269,55 @@ if __name__ == '__main__':
       except:
          print "Could not restore model"
          pass
-   if LOAD_MODEL:
-      ckpt = tf.train.get_checkpoint_state(LOAD_MODEL)
-      print "Restoring model..."
-      try:
-         saver.restore(sess, ckpt.model_checkpoint_path)
-         print "Model restored"
-      except:
-         print "Could not restore model"
-         raise
+   
    ########################################### training portion
    step = sess.run(global_step)
    coord = tf.train.Coordinator()
    threads = tf.train.start_queue_runners(sess, coord=coord)
    merged_summary_op = tf.summary.merge_all()
    start = time.time()
-   while True:
+   
+   epoch_num = step/(num_train/BATCH_SIZE)
+      
+   while epoch_num < GAN_EPOCHS:
       epoch_num = step/(num_train/BATCH_SIZE)
-      while epoch_num < PRETRAIN_EPOCHS:
-         epoch_num = step/(num_train/BATCH_SIZE)
-         s = time.time()
-         sess.run(mse_train_op)
-         mse, summary = sess.run([mse_loss, merged_summary_op])
-         step += 1
-         summary_writer.add_summary(summary, step)
-         print 'step:',step,'mse:',mse,'time:',time.time()-s
-         if step % 500 == 0:
-            print
-            print 'Saving model'
-            print
-            saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
-            saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
-      if PRETRAIN_EPOCHS > 0:
-         print 'Done pretraining....training D and G now'
-         epoch_num = 0
-      while epoch_num < GAN_EPOCHS:
-         epoch_num = step/(num_train/BATCH_SIZE)
-         s = time.time()
+      s = time.time()
 
-         if LOSS_METHOD == 'wasserstein':
-            if step < 10 or step % 500 == 0:
-               n_critic = 100
-            else: n_critic = NUM_CRITIC
-            for critic_itr in range(n_critic):
-               sess.run(D_train_op)
-               sess.run(clip_discriminator_var_op)
-            sess.run(G_train_op)
-            D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
-         
-         elif LOSS_METHOD == 'least_squares':
+      if LOSS_METHOD == 'wasserstein':
+         if step < 10 or step % 500 == 0:
+            n_critic = 100
+         else: n_critic = NUM_CRITIC
+         for critic_itr in range(n_critic):
             sess.run(D_train_op)
-            sess.run(G_train_op)
-            D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
-         elif LOSS_METHOD == 'gan'or LOSS_METHOD == 'energy':
-            sess.run(D_train_op)
-            sess.run(G_train_op)
-            D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
-         elif LOSS_METHOD == 'cnn':
-            sess.run(G_train_op)
-            loss, summary = sess.run([errG, merged_summary_op])
+            sess.run(clip_discriminator_var_op)
+         sess.run(G_train_op)
+         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+      
+      elif LOSS_METHOD == 'least_squares':
+         sess.run(D_train_op)
+         sess.run(G_train_op)
+         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+      elif LOSS_METHOD == 'gan'or LOSS_METHOD == 'energy':
+         sess.run(D_train_op)
+         sess.run(G_train_op)
+         D_loss, G_loss, summary = sess.run([errD, errG, merged_summary_op])
+      elif LOSS_METHOD == 'cnn':
+         sess.run(G_train_op)
+         loss, summary = sess.run([errG, merged_summary_op])
 
-         summary_writer.add_summary(summary, step)
-         if LOSS_METHOD != 'cnn' and step%10==0: print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,'time:',time.time()-s
-         else:
-            if step%50==0:print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
-         step += 1
-         
-         if step%500 == 0:
-            print 'Saving model...'
-            saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
-            saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
-            print 'Model saved\n'
+      summary_writer.add_summary(summary, step)
+      if LOSS_METHOD != 'cnn' and step%10==0: print 'epoch:',epoch_num,'step:',step,'D loss:',D_loss,'G_loss:',G_loss,'time:',time.time()-s
+      else:
+         if step%50==0:print 'epoch:',epoch_num,'step:',step,'loss:',loss,' time:',time.time()-s
+      step += 1
+      
+      if step%500 == 0:
+         print 'Saving model...'
+         saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
+         saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
+         print 'Model saved\n'
 
-      print 'Finished training', time.time()-start
-      saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
-      saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
-      exit()
+   print 'Finished training', time.time()-start
+   saver.save(sess, EXPERIMENT_DIR+'checkpoint-'+str(step))
+   saver.export_meta_graph(EXPERIMENT_DIR+'checkpoint-'+str(step)+'.meta')
+   exit()
